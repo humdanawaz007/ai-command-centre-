@@ -2,6 +2,17 @@ function showStatus(message) {
     document.getElementById("status").innerText = message;
 }
 
+function sendCommand() {
+    const command = document.getElementById("command").value.trim();
+
+    if (command === "") {
+        showStatus("⚠️ Please enter a command first.");
+        return;
+    }
+
+    showStatus("🧠 Command received: " + command);
+}
+
 function runAI() {
     showStatus("🧠 AI Assistant opened. Ready for your command.");
 }
