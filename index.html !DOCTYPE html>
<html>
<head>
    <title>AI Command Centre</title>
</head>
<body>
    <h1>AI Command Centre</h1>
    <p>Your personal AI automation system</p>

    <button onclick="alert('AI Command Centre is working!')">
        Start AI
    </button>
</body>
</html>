@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Command Centre</title>
+</head>
+<body>
+    <h1>AI Command Centre</h1>
+    <p>Your personal AI automation system</p>
+
+    <button onclick="alert('AI Command Centre is working!')">
+        Start AI
+    </button>
+</body>
+</html>
