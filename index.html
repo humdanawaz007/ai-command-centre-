@@ -49,4 +49,54 @@
             padding: 12px;
             border-radius: 8px;
             border: none;
-            margin
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>🧠 AI Command Centre</h1>
+    <p>Your personal AI automation system</p>
+
+    <div class="card">
+        <h2>AI Assistant</h2>
+        <p>Ask your AI to perform tasks.</p>
+        <button onclick="openAssistant()">Open</button>
+    </div>
+
+    <div id="assistant">
+        <h2>🧠 AI Assistant</h2>
+        <p>What would you like me to do?</p>
+
+        <input id="command" placeholder="Type your command...">
+
+        <br>
+
+        <button onclick="sendCommand()">Send</button>
+    </div>
+
+    <p id="status">System ready.</p>
+
+    <script>
+        function openAssistant() {
+            document.getElementById("assistant").style.display = "block";
+            document.getElementById("status").innerText =
+                "🧠 AI Assistant opened. Ready for your command.";
+        }
+
+        function sendCommand() {
+            const command = document.getElementById("command").value;
+
+            if (command.trim() === "") {
+                alert("Please enter a command.");
+                return;
+            }
+
+            document.getElementById("status").innerText =
+                "📋 Command received: " + command;
+        }
+    </script>
+
+</body>
+</html>
