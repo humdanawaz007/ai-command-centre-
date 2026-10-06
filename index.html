@@ -32,6 +32,11 @@ h2{
 margin-top:0;
 }
 
+p{
+color:#b7c6d6;
+line-height:1.5;
+}
+
 input{
 width:100%;
 padding:15px;
@@ -163,6 +168,39 @@ type="button">
 
 <div
 id="videoResult"
+class="result">
+
+Ready.
+
+</div>
+
+</div>
+
+
+<!-- SOCIAL MEDIA ENGINE -->
+
+<div class="card">
+
+<h2>📱 Social Media Engine</h2>
+
+<p>
+Turn one topic into content for multiple platforms.
+</p>
+
+<input
+id="socialTopic"
+placeholder="Example: AI tools for beginners">
+
+<button
+id="socialButton"
+type="button">
+
+📱 Create Social Content
+
+</button>
+
+<div
+id="socialResult"
 class="result">
 
 Ready.
@@ -370,6 +408,61 @@ topic+
 "Make the video engaging and suitable for "+
 "TikTok, Instagram Reels and YouTube Shorts. "+
 "Make the script approximately 30 to 60 seconds long.";
+
+
+callAI(
+prompt,
+box
+);
+
+}
+);
+
+
+/* =========================
+   SOCIAL MEDIA ENGINE
+========================= */
+
+document
+.getElementById("socialButton")
+.addEventListener(
+"click",
+function(){
+
+const topic=
+document
+.getElementById("socialTopic")
+.value
+.trim();
+
+const box=
+document
+.getElementById("socialResult");
+
+
+if(!topic){
+
+box.textContent=
+"⚠️ Enter a topic first.";
+
+return;
+
+}
+
+
+const prompt=
+
+"Create a complete social media content "+
+"package about "+
+topic+
+". Use plain text only. "+
+"Do not use markdown symbols such as # or **. "+
+"Create separate sections for: "+
+"INSTAGRAM, YOUTUBE SHORTS, TIKTOK, X, FACEBOOK. "+
+"For each platform provide a strong hook, "+
+"caption, call to action and suitable hashtags. "+
+"Keep the content engaging, practical and "+
+"appropriate for the platform.";
 
 
 callAI(
