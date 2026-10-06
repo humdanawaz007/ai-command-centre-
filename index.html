@@ -729,5 +729,193 @@ item.content
 );
 
 </script>
+<!-- AUTOMATION CENTRE -->
+
+<div class="card">
+
+<h2>⚙️ Automation Centre</h2>
+
+<p>
+Manage your content workflow from one place.
+</p>
+
+<button id="generateAuto" type="button">
+🚀 Generate New Content
+</button>
+
+<button id="saveAuto" type="button">
+💾 Save to Library
+</button>
+
+<button id="readyAuto" type="button">
+📋 Mark Ready
+</button>
+
+<button id="postedAuto" type="button">
+📤 Mark Posted
+</button>
+
+<div id="autoStatus" class="result">
+Status: Waiting
+</div>
+
+</div>
+
+
+<script>
+
+let automationContent = "";
+
+
+document
+.getElementById("generateAuto")
+.addEventListener("click", async function(){
+
+const box =
+document.getElementById("autoStatus");
+
+box.innerText =
+"🤖 Generating content...";
+
+const prompt =
+"Create a complete social media content package. " +
+"Include a strong topic, video title, hook, " +
+"30-60 second script, scene ideas, Instagram caption, " +
+"YouTube Shorts title and description, call to action " +
+"and hashtags. Use plain text only.";
+
+try{
+
+const response =
+await fetch("/api/chat",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+message:prompt
+})
+
+});
+
+const data =
+await response.json();
+
+if(!response.ok){
+
+throw new Error(
+data.error || "Generation failed"
+);
+
+}
+
+automationContent =
+data.reply || "";
+
+box.innerText =
+"✅ Content generated and ready.";
+
+}
+catch(error){
+
+box.innerText =
+"❌ " + error.message;
+
+}
+
+});
+
+
+document
+.getElementById("saveAuto")
+.addEventListener("click",function(){
+
+const box =
+document.getElementById("autoStatus");
+
+if(!automationContent){
+
+box.innerText =
+"⚠️ Generate content first.";
+
+return;
+
+}
+
+let saved =
+JSON.parse(
+localStorage.getItem(
+"aiContentLibrary"
+) || "[]"
+);
+
+saved.push({
+
+date:new Date().toLocaleString(),
+
+content:automationContent,
+
+status:"Saved"
+
+});
+
+localStorage.setItem(
+"aiContentLibrary",
+JSON.stringify(saved)
+);
+
+box.innerText =
+"💾 Content saved to Library.";
+
+});
+
+
+document
+.getElementById("readyAuto")
+.addEventListener("click",function(){
+
+const box =
+document.getElementById("autoStatus");
+
+if(!automationContent){
+
+box.innerText =
+"⚠️ Generate content first.";
+
+return;
+
+}
+
+box.innerText =
+"📋 Status: READY TO POST";
+
+});
+
+
+document
+.getElementById("postedAuto")
+.addEventListener("click",function(){
+
+const box =
+document.getElementById("autoStatus");
+
+if(!automationContent){
+
+box.innerText =
+"⚠️ Generate content first.";
+
+return;
+
+}
+
+box.innerText =
+"📤 Status: POSTED";
+
+});
+
+</script>
 </body>
 </html>
