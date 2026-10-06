@@ -3,74 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>AI Command Centre</title>
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
             font-family: Arial, sans-serif;
             background: #06101f;
             color: white;
-            text-align: center;
         }
 
         header {
-            padding: 35px 20px 20px;
+            padding: 25px 15px;
+            text-align: center;
         }
 
         header h1 {
-            font-size: 42px;
-            margin: 0;
+            font-size: 36px;
+            margin: 0 0 10px;
         }
 
         header p {
-            font-size: 20px;
-            color: #ddd;
+            font-size: 18px;
+            color: #ccc;
         }
 
         .container {
-            max-width: 700px;
+            width: 100%;
+            max-width: 650px;
             margin: auto;
-            padding: 20px;
+            padding: 10px 15px 40px;
         }
 
         .card {
             background: #132c45;
-            border-radius: 28px;
-            padding: 35px 25px;
-            margin: 30px 0;
-        }
-
-        .card h2 {
-            font-size: 32px;
+            border-radius: 22px;
+            padding: 25px 18px;
             margin-bottom: 20px;
         }
 
+        .card h2 {
+            font-size: 28px;
+            margin: 0 0 12px;
+            text-align: center;
+        }
+
         .card p {
-            font-size: 20px;
-            color: #eee;
+            font-size: 17px;
             line-height: 1.5;
+            color: #eee;
+            text-align: center;
         }
 
         input {
-            width: 90%;
-            padding: 18px;
-            border-radius: 15px;
+            display: block;
+            width: 100%;
+            padding: 16px;
+            border-radius: 13px;
             border: none;
-            font-size: 18px;
+            font-size: 17px;
             margin: 15px 0;
-            box-sizing: border-box;
+            outline: none;
         }
 
         button {
+            display: block;
+            width: 100%;
             background: #2867e8;
             color: white;
             border: none;
-            padding: 17px 30px;
-            border-radius: 15px;
-            font-size: 20px;
-            cursor: pointer;
-            margin: 8px;
+            padding: 16px;
+            border-radius: 13px;
+            font-size: 18px;
+            margin-top: 10px;
         }
 
         .trading-button {
@@ -86,25 +96,29 @@
         }
 
         #status {
-            margin-top: 25px;
-            font-size: 20px;
-            line-height: 1.6;
-            white-space: pre-wrap;
-            text-align: left;
-        }
-
-        .result {
+            margin-top: 18px;
+            padding: 15px;
             background: #0b1c2f;
-            padding: 20px;
-            border-radius: 18px;
-            margin-top: 20px;
-            text-align: left;
+            border-radius: 13px;
+            font-size: 17px;
+            line-height: 1.5;
             white-space: pre-wrap;
         }
 
-        .small {
-            font-size: 14px !important;
+        #tradingResult {
+            margin-top: 15px;
+            padding: 15px;
+            background: #0b1c2f;
+            border-radius: 13px;
+            font-size: 16px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        .warning {
+            font-size: 13px !important;
             color: #aaa !important;
+            margin-top: 12px;
         }
     </style>
 </head>
@@ -118,23 +132,46 @@
 
 <div class="container">
 
-    <!-- AI ASSISTANT -->
+    <!-- TRADING CENTRE FIRST -->
 
     <div class="card">
-        <h2>🤖 AI Assistant</h2>
-        <p>Ask your AI to perform tasks.</p>
 
-        <button onclick="focusAssistant()">
-            Open
+        <h2>📈 Trading Centre</h2>
+
+        <p>
+            Enter a stock, index or market for AI analysis.
+        </p>
+
+        <input
+            type="text"
+            id="tradingMarket"
+            placeholder="Example: NIFTY 50"
+        >
+
+        <button
+            class="trading-button"
+            onclick="analyseTrading()">
+            📊 Analyse Market
         </button>
+
+        <div id="tradingResult"></div>
+
+        <p class="warning">
+            Analysis only. No guaranteed profits.
+        </p>
+
     </div>
 
 
+    <!-- AI ASSISTANT -->
+
     <div class="card">
 
-        <h2>🧠 AI Assistant</h2>
+        <h2>🤖 AI Assistant</h2>
 
-        <p>What would you like me to do?</p>
+        <p>
+            Ask your AI to perform tasks.
+        </p>
 
         <input
             type="text"
@@ -142,8 +179,6 @@
             placeholder="Type your command..."
             onkeydown="handleEnter(event)"
         >
-
-        <br>
 
         <button onclick="sendCommand()">
             Send
@@ -156,15 +191,87 @@
     </div>
 
 
-    <!-- TRADING CENTRE -->
+    <!-- VIDEO AI -->
 
     <div class="card">
 
-        <h2>📈 Trading Centre</h2>
+        <h2>🎬 Video AI</h2>
 
         <p>
-            Enter a stock, index or market for AI analysis.
+            Create video ideas, hooks and scripts.
         </p>
 
         <input
             type="text"
+            id="videoIdea"
+            placeholder="Example: AI money ideas"
+        >
+
+        <button
+            class="video-button"
+            onclick="createVideoIdea()">
+            🎬 Create Video Plan
+        </button>
+
+    </div>
+
+
+    <!-- SOCIAL MEDIA -->
+
+    <div class="card">
+
+        <h2>📱 Social Media</h2>
+
+        <p>
+            Create posts, captions and hashtags.
+        </p>
+
+        <input
+            type="text"
+            id="socialTopic"
+            placeholder="Example: AI tools"
+        >
+
+        <button
+            class="social-button"
+            onclick="createSocialContent()">
+            📱 Create Content
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+let conversation = [];
+
+
+/* AI ASSISTANT */
+
+function handleEnter(event) {
+
+    if (event.key === "Enter") {
+        sendCommand();
+    }
+
+}
+
+
+async function sendCommand() {
+
+    const input =
+        document.getElementById("command");
+
+    const command =
+        input.value.trim();
+
+    if (command === "") {
+
+        alert("Please enter a command.");
+
+        return;
+    }
+
+    document
