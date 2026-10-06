@@ -496,6 +496,99 @@ document
 );
 
 </script>
+<!-- CONTENT PIPELINE -->
 
+<div class="card">
+
+<h2>🚀 Content Pipeline</h2>
+
+<p>
+Enter one topic and generate a complete content package.
+</p>
+
+<input
+id="pipelineTopic"
+placeholder="Example: AI tools for students">
+
+<button
+id="pipelineButton"
+type="button">
+
+🚀 Generate Content Package
+
+</button>
+
+<div
+id="pipelineResult"
+class="result">
+
+Ready.
+
+</div>
+
+</div>
+
+
+<script>
+
+document
+.getElementById("pipelineButton")
+.addEventListener(
+"click",
+function(){
+
+const topic =
+document
+.getElementById("pipelineTopic")
+.value
+.trim();
+
+const box =
+document
+.getElementById("pipelineResult");
+
+
+if(!topic){
+
+box.textContent =
+"⚠️ Enter a topic first.";
+
+return;
+
+}
+
+
+box.textContent =
+"🚀 Building your content package...";
+
+
+const prompt =
+
+"Create a complete content package about " +
+topic +
+". Use plain text only and do not use markdown symbols. " +
+
+"SECTION 1: VIDEO. " +
+"Give a video title, powerful hook, 30-60 second script, " +
+"scene ideas, call to action and caption. " +
+
+"SECTION 2: INSTAGRAM. " +
+"Give an Instagram caption, hook, call to action and hashtags. " +
+
+"SECTION 3: YOUTUBE SHORTS. " +
+"Give a title, description, hook, call to action and hashtags. " +
+
+"Make everything engaging, practical and ready to use.";
+
+
+callAI(
+prompt,
+box
+);
+
+}
+);
+
+</script>
 </body>
 </html>
