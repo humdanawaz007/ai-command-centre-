@@ -289,4 +289,243 @@ No content generated yet.
 <button onclick="showConnectionInfo()">
 🔗 Connect Platforms
 </button>
-</div>
+</div><script>
+
+let currentContent = "";
+
+function logActivity(message){
+
+  const log = document.getElementById("activityLog");
+
+  const item = document.createElement("div");
+
+  item.className = "log";
+
+  item.textContent =
+    new Date().toLocaleTimeString() + " — " + message;
+
+  log.prepend(item);
+}
+
+
+function generateContent(){
+
+  const topic =
+    document.getElementById("topic").value.trim();
+
+  const type =
+    document.getElementById("contentType").value;
+
+  if(!topic){
+    alert("Please enter a topic first.");
+    return;
+  }
+
+  let platform = "YouTube Short";
+
+  if(type === "instagram"){
+    platform = "Instagram Reel";
+  }
+
+  if(type === "snapchat"){
+    platform = "Snapchat Short";
+  }
+
+  currentContent =
+`🔥 ${topic}
+
+HOOK:
+Did you know this? You won't believe what happens next!
+
+SCRIPT:
+
+Today we're talking about ${topic}.
+
+Here are the most interesting things you need to know.
+
+Start with the most surprising fact.
+
+Explain why it matters and give the viewer
+one useful takeaway.
+
+Keep the video fast, simple and entertaining.
+
+ENDING:
+
+Follow for more interesting content!
+
+CAPTION:
+
+${topic} — here's something you should know. 🚀
+
+HASHTAGS:
+
+#shorts #reels #viral #facts #trending
+
+PLATFORM:
+
+${platform}`;
+
+  document.getElementById("contentOutput").textContent =
+    currentContent;
+
+  document.getElementById("packageOutput").textContent =
+    "Content package ready for " + platform + ".";
+
+  logActivity("Generated content for: " + topic);
+}
+
+
+function copyContent(){
+
+  if(!currentContent){
+    alert("Generate content first.");
+    return;
+  }
+
+  navigator.clipboard.writeText(currentContent);
+
+  logActivity("Content copied.");
+
+  alert("Content copied!");
+}
+
+
+function saveContent(){
+
+  if(!currentContent){
+    alert("Generate content first.");
+    return;
+  }
+
+  localStorage.setItem(
+    "aiCommandCentreContent",
+    currentContent
+  );
+
+  document.getElementById("savedContent").textContent =
+    currentContent;
+
+  logActivity("Content saved.");
+}
+
+
+function downloadContent(){
+
+  if(!currentContent){
+    alert("Generate content first.");
+    return;
+  }
+
+  const blob = new Blob(
+    [currentContent],
+    {type:"text/plain"}
+  );
+
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+
+  a.href = url;
+  a.download = "ai-command-centre-content.txt";
+
+  a.click();
+
+  URL.revokeObjectURL(url);
+
+  logActivity("Content downloaded.");
+}
+
+
+function clearSaved(){
+
+  localStorage.removeItem(
+    "aiCommandCentreContent"
+  );
+
+  document.getElementById("savedContent").textContent =
+    "No saved content.";
+
+  logActivity("Saved content cleared.");
+}
+
+
+function startAutomation(){
+
+  document.getElementById("automationStatus").textContent =
+    "🟢 Automation is running. API connections are required for real posting.";
+
+  document.getElementById("systemStatus").textContent =
+    "● AUTOMATION RUNNING";
+
+  logActivity("Automation started.");
+}
+
+
+function stopAutomation(){
+
+  document.getElementById("automationStatus").textContent =
+    "Automation is currently stopped.";
+
+  document.getElementById("systemStatus").textContent =
+    "● SYSTEM READY";
+
+  logActivity("Automation stopped.");
+}
+
+
+function showConnectionInfo(){
+
+  alert(
+`Platform connections will be added next.
+
+YouTube → YouTube Data API
+Instagram → Meta Graph API
+Snapchat → supported Snapchat API
+
+We will connect them one at a time.`
+  );
+
+  logActivity("Platform connection panel opened.");
+}
+
+
+function checkMarket(){
+
+  document.getElementById("marketStatus").textContent =
+    "READY";
+
+  logActivity(
+    "Trading monitor checked. No live broker connection yet."
+  );
+
+  alert(
+    "Trading monitor is ready. Live market/broker API will be connected in the next stage."
+  );
+}
+
+
+function loadSavedContent(){
+
+  const saved =
+    localStorage.getItem(
+      "aiCommandCentreContent"
+    );
+
+  if(saved){
+
+    currentContent = saved;
+
+    document.getElementById("savedContent").textContent =
+      saved;
+  }
+}
+
+
+loadSavedContent();
+
+logActivity("AI Command Centre loaded successfully.");
+
+</script>
+</body>
+</html>
