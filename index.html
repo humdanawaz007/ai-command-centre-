@@ -68,6 +68,82 @@ if(!q){box.textContent="Type a command.";return;}
 callAI(q,box);
 });
 </script>
+<div class="card">
+<h2>🎬 Video Creator</h2>
 
+<p>Create a complete short-form video with AI.</p>
+
+<input
+id="videoTopic"
+type="text"
+placeholder="Example: 5 AI tools that can make money">
+
+<button
+id="videoButton"
+type="button">
+🎬 Create Video
+</button>
+
+<div
+id="videoResult"
+class="result">
+</div>
+</div>
+
+<script>
+document.getElementById("videoButton").addEventListener("click", async function(){
+
+const topic =
+document.getElementById("videoTopic").value.trim();
+
+const result =
+document.getElementById("videoResult");
+
+result.style.display = "block";
+
+if(!topic){
+result.innerText = "⚠️ Enter a video topic first.";
+return;
+}
+
+result.innerText = "🎬 Creating your video...";
+
+try{
+
+const response = await fetch("/api/chat",{
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+message:
+"Create a complete short-form video package about " +
+topic +
+". Give me: a powerful hook, video title, " +
+"30-60 second script, scene-by-scene shot ideas, " +
+"call to action, caption and hashtags."
+})
+});
+
+const data = await response.json();
+
+if(!response.ok){
+throw new Error(data.error || "Request failed");
+}
+
+result.innerText =
+data.reply || "No response received.";
+
+}catch(error){
+
+result.innerText =
+"❌ " + error.message;
+
+}
+
+});
+</script>
 </body>
 </html>
