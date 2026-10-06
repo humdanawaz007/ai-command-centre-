@@ -1,921 +1,292 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>AI Command Centre</title>
 
 <style>
-
-body{
-margin:0;
-padding:20px;
-background:#07111f;
-color:white;
-font-family:Arial,sans-serif;
+*{
+  box-sizing:border-box;
 }
 
-h1{
-text-align:center;
-margin-bottom:30px;
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:#07111f;
+  color:#fff;
+}
+
+.container{
+  max-width:1100px;
+  margin:auto;
+  padding:20px;
+}
+
+.header{
+  background:#102943;
+  border-radius:18px;
+  padding:22px;
+  margin-bottom:20px;
+  text-align:center;
+}
+
+.header h1{
+  margin:0 0 8px;
+  font-size:30px;
+}
+
+.header p{
+  margin:0;
+  color:#a9bfd6;
+}
+
+.status{
+  display:inline-block;
+  margin-top:15px;
+  padding:8px 14px;
+  border-radius:20px;
+  background:#123d2c;
+  color:#5cffaa;
+  font-size:14px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:18px;
 }
 
 .card{
-background:#102943;
-padding:20px;
-margin:20px 0;
-border-radius:18px;
+  background:#102943;
+  border-radius:18px;
+  padding:20px;
+  border:1px solid #1d4264;
 }
 
-h2{
-margin-top:0;
+.card h2{
+  margin-top:0;
+  font-size:21px;
 }
 
-p{
-color:#b7c6d6;
-line-height:1.5;
+.card p{
+  color:#a9bfd6;
+  line-height:1.5;
 }
 
-input{
-width:100%;
-padding:15px;
-box-sizing:border-box;
-border-radius:10px;
-font-size:16px;
-margin:10px 0;
-background:#071a2c;
-color:white;
-border:1px solid #315777;
+textarea,input,select{
+  width:100%;
+  padding:13px;
+  border-radius:10px;
+  border:1px solid #31516d;
+  background:#081a2d;
+  color:white;
+  margin:8px 0 12px;
+  font-size:15px;
+}
+
+textarea{
+  min-height:130px;
+  resize:vertical;
 }
 
 button{
-width:100%;
-padding:15px;
-border:0;
-border-radius:10px;
-font-size:17px;
-font-weight:bold;
-color:white;
-margin-top:5px;
-background:#16a765;
+  width:100%;
+  padding:13px;
+  border:0;
+  border-radius:10px;
+  background:#2878ff;
+  color:white;
+  font-size:15px;
+  font-weight:bold;
+  cursor:pointer;
+  margin-top:7px;
 }
 
-button:active{
-transform:scale(.98);
+button:hover{
+  opacity:.9;
 }
 
-.result{
-background:#071a2c;
-padding:15px;
-margin-top:15px;
-border-radius:10px;
-white-space:pre-wrap;
-line-height:1.6;
+.secondary{
+  background:#183b59;
 }
 
+.danger{
+  background:#762d35;
+}
+
+.output{
+  background:#081a2d;
+  border:1px solid #31516d;
+  border-radius:10px;
+  padding:15px;
+  min-height:100px;
+  white-space:pre-wrap;
+  line-height:1.5;
+  margin-top:12px;
+}
+
+.platform{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:#081a2d;
+  padding:13px;
+  border-radius:10px;
+  margin:9px 0;
+}
+
+.platform button{
+  width:auto;
+  padding:8px 14px;
+  margin:0;
+}
+
+.online{
+  color:#5cffaa;
+}
+
+.offline{
+  color:#ff9c9c;
+}
+
+.full{
+  grid-column:1/-1;
+}
+
+.activity{
+  max-height:220px;
+  overflow:auto;
+}
+
+.log{
+  padding:10px;
+  border-bottom:1px solid #203b55;
+  color:#b9cde0;
+  font-size:14px;
+}
+
+.statgrid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+}
+
+.stat{
+  background:#081a2d;
+  padding:15px;
+  border-radius:12px;
+  text-align:center;
+}
+
+.stat strong{
+  display:block;
+  font-size:25px;
+  margin-bottom:5px;
+}
+
+.footer{
+  text-align:center;
+  color:#7189a1;
+  padding:25px 0;
+  font-size:13px;
+}
+
+@media(max-width:700px){
+  .grid{
+    grid-template-columns:1fr;
+  }
+
+  .full{
+    grid-column:auto;
+  }
+
+  .statgrid{
+    grid-template-columns:1fr 1fr 1fr;
+  }
+
+  .header h1{
+    font-size:25px;
+  }
+}
 </style>
-
 </head>
 
 <body>
 
-<h1>🧠 AI Command Centre</h1>
+<div class="container">
+
+  <div class="header">
+    <h1>🤖 AI Command Centre</h1>
+    <p>Your personal AI automation dashboard</p>
+    <div class="status" id="systemStatus">● SYSTEM READY</div>
+  </div>
 
 
-<!-- TRADING -->
+  <div class="grid">
+
+    <!-- CONTENT GENERATOR -->
+
+    <div class="card">
+      <h2>✍️ AI Content Generator</h2>
+
+      <p>Enter a topic and generate aready-to-use short-form content package.</p>
+
+<input id="topic" placeholder="Example: 5 amazing facts about space">
+
+<select id="contentType">
+<option value="short">YouTube Short</option>
+<option value="instagram">Instagram Reel</option>
+<option value="snapchat">Snapchat Short</option>
+</select>
+
+<button onclick="generateContent()">🚀 Generate Content</button>
+
+<div class="output" id="contentOutput">
+Your generated content will appear here.
+</div>
+
+<button class="secondary" onclick="copyContent()">
+📋 Copy Content
+</button>
+</div>
 
 <div class="card">
+<h2>🎬 Content Package</h2>
 
-<h2>📈 Trading Centre</h2>
+<p>Prepare your generated content for publishing.</p>
 
-<p>Research a stock or index with AI.</p>
+<div class="output" id="packageOutput">
+No content generated yet.
+</div>
 
-<input
-id="market"
-value="NIFTY 50"
-placeholder="Enter stock or index">
+<button onclick="saveContent()">💾 Save Content</button>
 
-<button
-id="trade"
-type="button">
-
-📊 Analyse Market
-
+<button class="secondary" onclick="downloadContent()">
+⬇️ Download
 </button>
-
-<div
-id="tradeResult"
-class="result">
-
-Ready.
-
 </div>
-
-</div>
-
-
-<!-- AI ASSISTANT -->
 
 <div class="card">
+<h2>📱 Platforms</h2>
 
-<h2>🤖 AI Assistant</h2>
+<div class="platform">
+<span>▶️ YouTube</span>
+<span class="offline">Not connected</span>
+</div>
 
-<p>Ask your personal AI assistant anything.</p>
+<div class="platform">
+<span>📸 Instagram</span>
+<span class="offline">Not connected</span>
+</div>
 
-<input
-id="question"
-placeholder="Type your command">
+<div class="platform">
+<span>👻 Snapchat</span>
+<span class="offline">Not connected</span>
+</div>
 
-<button
-id="ask"
-type="button">
-
-🚀 Ask AI
-
+<button onclick="showConnectionInfo()">
+🔗 Connect Platforms
 </button>
-
-<div
-id="answer"
-class="result">
-
-Ready.
-
 </div>
-
-</div>
-
-
-<!-- VIDEO CREATOR -->
-
-<div class="card">
-
-<h2>🎬 Video Creator</h2>
-
-<p>Create professional short-form videos with AI.</p>
-
-<input
-id="videoTopic"
-placeholder="Example: 5 AI tools that can make money">
-
-<button
-id="videoButton"
-type="button">
-
-🎬 Create Video
-
-</button>
-
-<div
-id="videoResult"
-class="result">
-
-Ready.
-
-</div>
-
-</div>
-
-
-<!-- SOCIAL MEDIA ENGINE -->
-
-<div class="card">
-
-<h2>📱 Social Media Engine</h2>
-
-<p>
-Turn one topic into content for multiple platforms.
-</p>
-
-<input
-id="socialTopic"
-placeholder="Example: AI tools for beginners">
-
-<button
-id="socialButton"
-type="button">
-
-📱 Create Social Content
-
-</button>
-
-<div
-id="socialResult"
-class="result">
-
-Ready.
-
-</div>
-
-</div>
-
-
-<script>
-
-
-/* =========================
-   AI FUNCTION
-========================= */
-
-async function callAI(message,box){
-
-box.textContent="🤖 AI is working...";
-
-try{
-
-const response=await fetch(
-"/api/chat",
-{
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-message:message
-})
-
-}
-);
-
-
-const data=await response.json();
-
-
-if(!response.ok){
-
-throw new Error(
-data.error ||
-"Request failed"
-);
-
-}
-
-
-box.textContent=
-data.reply ||
-"No response received.";
-
-
-}catch(error){
-
-box.textContent=
-"❌ "+error.message;
-
-}
-
-}
-
-
-/* =========================
-   TRADING
-========================= */
-
-document
-.getElementById("trade")
-.addEventListener(
-"click",
-function(){
-
-const market=
-document
-.getElementById("market")
-.value
-.trim();
-
-const box=
-document
-.getElementById("tradeResult");
-
-
-if(!market){
-
-box.textContent=
-"Enter a stock or index.";
-
-return;
-
-}
-
-
-box.textContent=
-"📊 Analysing "+
-market+"...";
-
-
-const prompt=
-
-"Analyse "+
-market+
-" as a trading research assistant. "+
-"Give me trend, support, resistance, "+
-"bullish scenario, bearish scenario, "+
-"key risks and what live market data "+
-"should be checked before considering "+
-"a trade. Do not guarantee profit.";
-
-
-callAI(
-prompt,
-box
-);
-
-}
-);
-
-
-/* =========================
-   AI ASSISTANT
-========================= */
-
-document
-.getElementById("ask")
-.addEventListener(
-"click",
-function(){
-
-const question=
-document
-.getElementById("question")
-.value
-.trim();
-
-const box=
-document
-.getElementById("answer");
-
-
-if(!question){
-
-box.textContent=
-"Type a command.";
-
-return;
-
-}
-
-
-callAI(
-question,
-box
-);
-
-}
-);
-
-
-/* =========================
-   VIDEO CREATOR
-========================= */
-
-document
-.getElementById("videoButton")
-.addEventListener(
-"click",
-function(){
-
-const topic=
-document
-.getElementById("videoTopic")
-.value
-.trim();
-
-const box=
-document
-.getElementById("videoResult");
-
-
-if(!topic){
-
-box.textContent=
-"⚠️ Enter a video topic first.";
-
-return;
-
-}
-
-
-const prompt=
-
-"Create a professional short-form video package about "+
-topic+
-". Use plain text only. "+
-"Do not use markdown symbols such as # or **. "+
-"Use these exact section headings: "+
-"VIDEO TITLE, HOOK, SCRIPT, SCENES, "+
-"CALL TO ACTION, CAPTION, HASHTAGS. "+
-"Make the video engaging and suitable for "+
-"TikTok, Instagram Reels and YouTube Shorts. "+
-"Make the script approximately 30 to 60 seconds long.";
-
-
-callAI(
-prompt,
-box
-);
-
-}
-);
-
-
-/* =========================
-   SOCIAL MEDIA ENGINE
-========================= */
-
-document
-.getElementById("socialButton")
-.addEventListener(
-"click",
-function(){
-
-const topic=
-document
-.getElementById("socialTopic")
-.value
-.trim();
-
-const box=
-document
-.getElementById("socialResult");
-
-
-if(!topic){
-
-box.textContent=
-"⚠️ Enter a topic first.";
-
-return;
-
-}
-
-
-const prompt=
-
-"Create a complete social media content "+
-"package about "+
-topic+
-". Use plain text only. "+
-"Do not use markdown symbols such as # or **. "+
-"Create separate sections for: "+
-"INSTAGRAM, YOUTUBE SHORTS, TIKTOK, X, FACEBOOK. "+
-"For each platform provide a strong hook, "+
-"caption, call to action and suitable hashtags. "+
-"Keep the content engaging, practical and "+
-"appropriate for the platform.";
-
-
-callAI(
-prompt,
-box
-);
-
-}
-);
-
-
-/* =========================
-   ENTER KEY
-========================= */
-
-document
-.getElementById("question")
-.addEventListener(
-"keydown",
-function(event){
-
-if(event.key==="Enter"){
-
-document
-.getElementById("ask")
-.click();
-
-}
-
-}
-);
-
-</script>
-<!-- CONTENT PIPELINE -->
-
-<div class="card">
-
-<h2>🚀 Content Pipeline</h2>
-
-<p>
-Enter one topic and generate a complete content package.
-</p>
-
-<input
-id="pipelineTopic"
-placeholder="Example: AI tools for students">
-
-<button
-id="pipelineButton"
-type="button">
-
-🚀 Generate Content Package
-
-</button>
-
-<div
-id="pipelineResult"
-class="result">
-
-Ready.
-
-</div>
-
-</div>
-
-
-<script>
-
-document
-.getElementById("pipelineButton")
-.addEventListener(
-"click",
-function(){
-
-const topic =
-document
-.getElementById("pipelineTopic")
-.value
-.trim();
-
-const box =
-document
-.getElementById("pipelineResult");
-
-
-if(!topic){
-
-box.textContent =
-"⚠️ Enter a topic first.";
-
-return;
-
-}
-
-
-box.textContent =
-"🚀 Building your content package...";
-
-
-const prompt =
-
-"Create a complete content package about " +
-topic +
-". Use plain text only and do not use markdown symbols. " +
-
-"SECTION 1: VIDEO. " +
-"Give a video title, powerful hook, 30-60 second script, " +
-"scene ideas, call to action and caption. " +
-
-"SECTION 2: INSTAGRAM. " +
-"Give an Instagram caption, hook, call to action and hashtags. " +
-
-"SECTION 3: YOUTUBE SHORTS. " +
-"Give a title, description, hook, call to action and hashtags. " +
-
-"Make everything engaging, practical and ready to use.";
-
-
-callAI(
-prompt,
-box
-);
-
-}
-);
-
-</script>
-<!-- CONTENT LIBRARY -->
-
-<div class="card">
-
-<h2>📚 Content Library</h2>
-
-<p>
-Save your generated content on this device.
-</p>
-
-<button
-id="saveContent"
-type="button">
-
-💾 Save Latest Content
-
-</button>
-
-<button
-id="viewContent"
-type="button">
-
-📚 View Saved Content
-
-</button>
-
-<div
-id="libraryResult"
-class="result">
-
-No saved content yet.
-
-</div>
-
-</div>
-
-
-<script>
-
-document
-.getElementById("saveContent")
-.addEventListener(
-"click",
-function(){
-
-const content =
-document
-.getElementById("pipelineResult")
-.innerText
-.trim();
-
-const box =
-document
-.getElementById("libraryResult");
-
-if(
-!content ||
-content === "Ready."
-){
-
-box.innerText =
-"⚠️ Generate some content first.";
-
-return;
-
-}
-
-let saved =
-JSON.parse(
-localStorage.getItem(
-"aiContentLibrary"
-) || "[]"
-);
-
-saved.push({
-date:new Date().toLocaleString(),
-content:content
-});
-
-localStorage.setItem(
-"aiContentLibrary",
-JSON.stringify(saved)
-);
-
-box.innerText =
-"✅ Content saved successfully.";
-
-}
-);
-
-
-document
-.getElementById("viewContent")
-.addEventListener(
-"click",
-function(){
-
-const box =
-document
-.getElementById("libraryResult");
-
-let saved =
-JSON.parse(
-localStorage.getItem(
-"aiContentLibrary"
-) || "[]"
-);
-
-if(saved.length === 0){
-
-box.innerText =
-"No saved content yet.";
-
-return;
-
-}
-
-box.innerText =
-saved
-.map(function(item,index){
-
-return (
-"CONTENT " +
-(index + 1) +
-" — " +
-item.date +
-"\n\n" +
-item.content
-);
-
-})
-.join(
-"\n\n--------------------\n\n"
-);
-
-}
-);
-
-</script>
-<!-- AUTOMATION CENTRE -->
-
-<div class="card">
-
-<h2>⚙️ Automation Centre</h2>
-
-<p>
-Manage your content workflow from one place.
-</p>
-
-<button id="generateAuto" type="button">
-🚀 Generate New Content
-</button>
-
-<button id="saveAuto" type="button">
-💾 Save to Library
-</button>
-
-<button id="readyAuto" type="button">
-📋 Mark Ready
-</button>
-
-<button id="postedAuto" type="button">
-📤 Mark Posted
-</button>
-
-<div id="autoStatus" class="result">
-Status: Waiting
-</div>
-
-</div>
-
-
-<script>
-
-let automationContent = "";
-
-
-document
-.getElementById("generateAuto")
-.addEventListener("click", async function(){
-
-const box =
-document.getElementById("autoStatus");
-
-box.innerText =
-"🤖 Generating content...";
-
-const prompt =
-"Create a complete social media content package. " +
-"Include a strong topic, video title, hook, " +
-"30-60 second script, scene ideas, Instagram caption, " +
-"YouTube Shorts title and description, call to action " +
-"and hashtags. Use plain text only.";
-
-try{
-
-const response =
-await fetch("/api/chat",{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-message:prompt
-})
-
-});
-
-const data =
-await response.json();
-
-if(!response.ok){
-
-throw new Error(
-data.error || "Generation failed"
-);
-
-}
-
-automationContent =
-data.reply || "";
-
-box.innerText =
-"✅ Content generated and ready.";
-
-}
-catch(error){
-
-box.innerText =
-"❌ " + error.message;
-
-}
-
-});
-
-
-document
-.getElementById("saveAuto")
-.addEventListener("click",function(){
-
-const box =
-document.getElementById("autoStatus");
-
-if(!automationContent){
-
-box.innerText =
-"⚠️ Generate content first.";
-
-return;
-
-}
-
-let saved =
-JSON.parse(
-localStorage.getItem(
-"aiContentLibrary"
-) || "[]"
-);
-
-saved.push({
-
-date:new Date().toLocaleString(),
-
-content:automationContent,
-
-status:"Saved"
-
-});
-
-localStorage.setItem(
-"aiContentLibrary",
-JSON.stringify(saved)
-);
-
-box.innerText =
-"💾 Content saved to Library.";
-
-});
-
-
-document
-.getElementById("readyAuto")
-.addEventListener("click",function(){
-
-const box =
-document.getElementById("autoStatus");
-
-if(!automationContent){
-
-box.innerText =
-"⚠️ Generate content first.";
-
-return;
-
-}
-
-box.innerText =
-"📋 Status: READY TO POST";
-
-});
-
-
-document
-.getElementById("postedAuto")
-.addEventListener("click",function(){
-
-const box =
-document.getElementById("autoStatus");
-
-if(!automationContent){
-
-box.innerText =
-"⚠️ Generate content first.";
-
-return;
-
-}
-
-box.innerText =
-"📤 Status: POSTED";
-
-});
-
-</script>
-</body>
-</html>
