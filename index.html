@@ -590,5 +590,144 @@ box
 );
 
 </script>
+<!-- CONTENT LIBRARY -->
+
+<div class="card">
+
+<h2>📚 Content Library</h2>
+
+<p>
+Save your generated content on this device.
+</p>
+
+<button
+id="saveContent"
+type="button">
+
+💾 Save Latest Content
+
+</button>
+
+<button
+id="viewContent"
+type="button">
+
+📚 View Saved Content
+
+</button>
+
+<div
+id="libraryResult"
+class="result">
+
+No saved content yet.
+
+</div>
+
+</div>
+
+
+<script>
+
+document
+.getElementById("saveContent")
+.addEventListener(
+"click",
+function(){
+
+const content =
+document
+.getElementById("pipelineResult")
+.innerText
+.trim();
+
+const box =
+document
+.getElementById("libraryResult");
+
+if(
+!content ||
+content === "Ready."
+){
+
+box.innerText =
+"⚠️ Generate some content first.";
+
+return;
+
+}
+
+let saved =
+JSON.parse(
+localStorage.getItem(
+"aiContentLibrary"
+) || "[]"
+);
+
+saved.push({
+date:new Date().toLocaleString(),
+content:content
+});
+
+localStorage.setItem(
+"aiContentLibrary",
+JSON.stringify(saved)
+);
+
+box.innerText =
+"✅ Content saved successfully.";
+
+}
+);
+
+
+document
+.getElementById("viewContent")
+.addEventListener(
+"click",
+function(){
+
+const box =
+document
+.getElementById("libraryResult");
+
+let saved =
+JSON.parse(
+localStorage.getItem(
+"aiContentLibrary"
+) || "[]"
+);
+
+if(saved.length === 0){
+
+box.innerText =
+"No saved content yet.";
+
+return;
+
+}
+
+box.innerText =
+saved
+.map(function(item,index){
+
+return (
+"CONTENT " +
+(index + 1) +
+" — " +
+item.date +
+"\n\n" +
+item.content
+);
+
+})
+.join(
+"\n\n--------------------\n\n"
+);
+
+}
+);
+
+</script>
 </body>
 </html>
