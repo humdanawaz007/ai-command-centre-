@@ -70,10 +70,19 @@
             border-radius: 15px;
             font-size: 20px;
             cursor: pointer;
+            margin: 8px;
         }
 
         button:hover {
             background: #1d55c5;
+        }
+
+        .trading-button {
+            background: #168a5b;
+        }
+
+        .trading-button:hover {
+            background: #106d47;
         }
 
         #status {
@@ -90,54 +99,118 @@
             border-radius: 18px;
             margin-top: 20px;
         }
+
+        .small {
+            font-size: 15px !important;
+            color: #aaa !important;
+        }
     </style>
 </head>
 
 <body>
 
-    <header>
-        <h1>🧠 AI Command Centre</h1>
-        <p>Your personal AI automation system</p>
-    </header>
+<header>
+    <h1>🧠 AI Command Centre</h1>
+    <p>Your personal AI automation system</p>
+</header>
 
-    <div class="container">
+<div class="container">
 
-        <div class="card">
-            <h2>AI Assistant</h2>
+    <!-- AI ASSISTANT -->
+    <div class="card">
 
-            <p>Ask your AI to perform tasks.</p>
+        <h2>🤖 AI Assistant</h2>
 
-            <button onclick="openAssistant()">
-                Open
-            </button>
-        </div>
+        <p>Ask your AI to perform tasks.</p>
 
-        <div class="card">
+        <button onclick="openAssistant()">
+            Open
+        </button>
 
-            <h2>🧠 AI Assistant</h2>
+    </div>
 
-            <p>What would you like me to do?</p>
 
-            <input
-                type="text"
-                id="command"
-                placeholder="Type your command..."
-                onkeydown="handleEnter(event)"
-            >
+    <!-- AI CHAT -->
+    <div class="card">
 
-            <br>
+        <h2>🧠 AI Assistant</h2>
 
-            <button onclick="sendCommand()">
-                Send
-            </button>
+        <p>What would you like me to do?</p>
 
-            <div id="status">
-                🤖 System ready.
-            </div>
+        <input
+            type="text"
+            id="command"
+            placeholder="Type your command..."
+            onkeydown="handleEnter(event)"
+        >
 
+        <br>
+
+        <button onclick="sendCommand()">
+            Send
+        </button>
+
+        <div id="status">
+            🤖 System ready.
         </div>
 
     </div>
+
+
+    <!-- TRADING CENTRE -->
+    <div class="card">
+
+        <h2>📈 Trading Centre</h2>
+
+        <p>
+            Use AI to analyse a market, stock or trading idea.
+        </p>
+
+        <button
+            class="trading-button"
+            onclick="openTrading()">
+            Open Trading Centre
+        </button>
+
+        <p class="small">
+            Analysis only. No guaranteed profits or automatic trades.
+        </p>
+
+    </div>
+
+
+    <!-- VIDEO MODULE -->
+    <div class="card">
+
+        <h2>🎬 Video AI</h2>
+
+        <p>
+            Create ideas, scripts and video concepts with AI.
+        </p>
+
+        <button onclick="openVideo()">
+            Open Video AI
+        </button>
+
+    </div>
+
+
+    <!-- SOCIAL MODULE -->
+    <div class="card">
+
+        <h2>📱 Social Media</h2>
+
+        <p>
+            Plan posts, captions and content calendars.
+        </p>
+
+        <button onclick="openSocial()">
+            Open Social Media
+        </button>
+
+    </div>
+
+</div>
 
 
 <script>
@@ -145,12 +218,16 @@
 let conversation = [];
 
 
+/* OPEN AI ASSISTANT */
+
 function openAssistant() {
 
     document.getElementById("command").focus();
 
 }
 
+
+/* ENTER KEY */
 
 function handleEnter(event) {
 
@@ -160,6 +237,8 @@ function handleEnter(event) {
 
 }
 
+
+/* MAIN AI */
 
 async function sendCommand() {
 
@@ -180,8 +259,11 @@ async function sendCommand() {
 
 
     conversation.push({
+
         role: "user",
+
         content: command
+
     });
 
 
@@ -191,25 +273,4 @@ async function sendCommand() {
 
             method: "POST",
 
-            headers: {
-                "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify({
-
-                message: command,
-
-                conversation: conversation
-
-            })
-
-        });
-
-
-        const data = await response.json();
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                data.error || "Something went
+            headers
