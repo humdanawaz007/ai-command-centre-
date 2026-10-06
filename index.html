@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>AI Command Centre</title>
 
     <style>
@@ -19,8 +18,8 @@
         }
 
         header {
-            padding: 25px 15px;
             text-align: center;
+            padding: 25px 15px;
         }
 
         header h1 {
@@ -29,12 +28,11 @@
         }
 
         header p {
-            font-size: 18px;
             color: #ccc;
+            font-size: 18px;
         }
 
         .container {
-            width: 100%;
             max-width: 650px;
             margin: auto;
             padding: 10px 15px 40px;
@@ -47,231 +45,17 @@
             margin-bottom: 20px;
         }
 
-        .card h2 {
-            font-size: 28px;
-            margin: 0 0 12px;
+        h2 {
             text-align: center;
+            font-size: 28px;
+            margin-top: 0;
         }
 
-        .card p {
+        p {
+            text-align: center;
             font-size: 17px;
             line-height: 1.5;
             color: #eee;
-            text-align: center;
         }
 
         input {
-            display: block;
-            width: 100%;
-            padding: 16px;
-            border-radius: 13px;
-            border: none;
-            font-size: 17px;
-            margin: 15px 0;
-            outline: none;
-        }
-
-        button {
-            display: block;
-            width: 100%;
-            background: #2867e8;
-            color: white;
-            border: none;
-            padding: 16px;
-            border-radius: 13px;
-            font-size: 18px;
-            margin-top: 10px;
-        }
-
-        .trading-button {
-            background: #168a5b;
-        }
-
-        .video-button {
-            background: #8b45d9;
-        }
-
-        .social-button {
-            background: #d94b7b;
-        }
-
-        #status {
-            margin-top: 18px;
-            padding: 15px;
-            background: #0b1c2f;
-            border-radius: 13px;
-            font-size: 17px;
-            line-height: 1.5;
-            white-space: pre-wrap;
-        }
-
-        #tradingResult {
-            margin-top: 15px;
-            padding: 15px;
-            background: #0b1c2f;
-            border-radius: 13px;
-            font-size: 16px;
-            line-height: 1.5;
-            white-space: pre-wrap;
-        }
-
-        .warning {
-            font-size: 13px !important;
-            color: #aaa !important;
-            margin-top: 12px;
-        }
-    </style>
-</head>
-
-<body>
-
-<header>
-    <h1>🧠 AI Command Centre</h1>
-    <p>Your personal AI automation system</p>
-</header>
-
-<div class="container">
-
-    <!-- TRADING CENTRE FIRST -->
-
-    <div class="card">
-
-        <h2>📈 Trading Centre</h2>
-
-        <p>
-            Enter a stock, index or market for AI analysis.
-        </p>
-
-        <input
-            type="text"
-            id="tradingMarket"
-            placeholder="Example: NIFTY 50"
-        >
-
-        <button
-            class="trading-button"
-            onclick="analyseTrading()">
-            📊 Analyse Market
-        </button>
-
-        <div id="tradingResult"></div>
-
-        <p class="warning">
-            Analysis only. No guaranteed profits.
-        </p>
-
-    </div>
-
-
-    <!-- AI ASSISTANT -->
-
-    <div class="card">
-
-        <h2>🤖 AI Assistant</h2>
-
-        <p>
-            Ask your AI to perform tasks.
-        </p>
-
-        <input
-            type="text"
-            id="command"
-            placeholder="Type your command..."
-            onkeydown="handleEnter(event)"
-        >
-
-        <button onclick="sendCommand()">
-            Send
-        </button>
-
-        <div id="status">
-            🤖 System ready.
-        </div>
-
-    </div>
-
-
-    <!-- VIDEO AI -->
-
-    <div class="card">
-
-        <h2>🎬 Video AI</h2>
-
-        <p>
-            Create video ideas, hooks and scripts.
-        </p>
-
-        <input
-            type="text"
-            id="videoIdea"
-            placeholder="Example: AI money ideas"
-        >
-
-        <button
-            class="video-button"
-            onclick="createVideoIdea()">
-            🎬 Create Video Plan
-        </button>
-
-    </div>
-
-
-    <!-- SOCIAL MEDIA -->
-
-    <div class="card">
-
-        <h2>📱 Social Media</h2>
-
-        <p>
-            Create posts, captions and hashtags.
-        </p>
-
-        <input
-            type="text"
-            id="socialTopic"
-            placeholder="Example: AI tools"
-        >
-
-        <button
-            class="social-button"
-            onclick="createSocialContent()">
-            📱 Create Content
-        </button>
-
-    </div>
-
-</div>
-
-
-<script>
-
-let conversation = [];
-
-
-/* AI ASSISTANT */
-
-function handleEnter(event) {
-
-    if (event.key === "Enter") {
-        sendCommand();
-    }
-
-}
-
-
-async function sendCommand() {
-
-    const input =
-        document.getElementById("command");
-
-    const command =
-        input.value.trim();
-
-    if (command === "") {
-
-        alert("Please enter a command.");
-
-        return;
-    }
-
-    document
