@@ -1,115 +1,73 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AI Command Centre</title>
-
 <style>
-* {
-    box-sizing: border-box;
+body{margin:0;padding:20px;background:#07111f;color:white;font-family:Arial}
+h1{text-align:center}
+.card{background:#102943;padding:20px;margin:20px 0;border-radius:18px}
+input,button{width:100%;padding:15px;box-sizing:border-box;border-radius:10px;font-size:16px}
+input{margin:10px 0;background:#071a2c;color:white;border:1px solid #315777}
+button{border:0;color:white;font-weight:bold;margin-top:5px;background:#16a765}
+.result{background:#071a2c;padding:15px;margin-top:15px;border-radius:10px;white-space:pre-wrap}
+</style>
+</head>
+
+<body>
+
+<h1>🧠 AI Command Centre</h1>
+
+<div class="card">
+<h2>📈 Trading Centre</h2>
+<input id="market" value="NIFTY 50">
+<button id="trade">📊 Analyse Market</button>
+<div id="tradeResult" class="result">Ready.</div>
+</div>
+
+<div class="card">
+<h2>🤖 AI Assistant</h2>
+<input id="question" placeholder="Type your command">
+<button id="ask">🚀 Ask AI</button>
+<div id="answer" class="result">Ready.</div>
+</div>
+
+<script>
+async function callAI(message,box){
+box.textContent="🤖 AI is working...";
+try{
+const r=await fetch("/api/chat",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({message:message})
+});
+const d=await r.json();
+if(!r.ok)throw new Error(d.error||"Request failed");
+box.textContent=d.reply||"No response received.";
+}catch(e){
+box.textContent="❌ "+e.message;
+}
 }
 
-body {
-    margin: 0;
-    background: #07111f;
-    color: #ffffff;
-    font-family: Arial, sans-serif;
-}
+document.getElementById("trade").addEventListener("click",function(){
+const market=document.getElementById("market").value.trim();
+const box=document.getElementById("tradeResult");
+if(!market){box.textContent="Enter a market.";return;}
+box.textContent="📊 Analysing "+market+"...";
+callAI(
+"Analyse "+market+
+" as a trading research assistant. Give trend, support, resistance, bullish scenario, bearish scenario and risks. Do not guarantee profit.",
+box
+);
+});
 
-.header {
-    text-align: center;
-    padding: 28px 16px 18px;
-}
+document.getElementById("ask").addEventListener("click",function(){
+const q=document.getElementById("question").value.trim();
+const box=document.getElementById("answer");
+if(!q){box.textContent="Type a command.";return;}
+callAI(q,box);
+});
+</script>
 
-.header h1 {
-    margin: 0;
-    font-size: 32px;
-}
-
-.header p {
-    color: #9fb0c5;
-    margin-top: 8px;
-}
-
-.container {
-    width: 100%;
-    max-width: 720px;
-    margin: auto;
-    padding: 10px 16px 50px;
-}
-
-.card {
-    background: #102943;
-    border: 1px solid #1d4264;
-    border-radius: 20px;
-    padding: 20px;
-    margin-bottom: 18px;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-}
-
-.card h2 {
-    margin: 0 0 8px;
-    font-size: 24px;
-}
-
-.card p {
-    color: #aebfd2;
-    line-height: 1.5;
-}
-
-input {
-    width: 100%;
-    padding: 15px;
-    margin: 10px 0;
-    border: 1px solid #315777;
-    border-radius: 12px;
-    background: #071a2c;
-    color: white;
-    font-size: 16px;
-    outline: none;
-}
-
-input:focus {
-    border-color: #4c91ff;
-}
-
-button {
-    width: 100%;
-    padding: 15px;
-    border: 0;
-    border-radius: 12px;
-    color: white;
-    font-size: 17px;
-    font-weight: bold;
-    cursor: pointer;
-    margin-top: 8px;
-}
-
-button:active {
-    transform: scale(0.98);
-}
-
-.trading-btn {
-    background: #13a56b;
-}
-
-.ai-btn {
-    background: #3478f6;
-}
-
-.video-btn {
-    background: #8d4de0;
-}
-
-.social-btn {
-    background: #d34d83;
-}
-
-.result {
-    display: none;
-    margin-top: 14px;
-    padding: 15px;
-    border-radius: 12px;
-    background: #071a
+</body>
+</html>
