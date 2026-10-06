@@ -7,6 +7,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const message = req.body?.message;
+    const conversation = req.body?.conversation || [];
 
     if (!message || !message.trim()) {
       return res.status(400).json({
@@ -20,6 +21,15 @@ module.exports = async function handler(req, res) {
       });
     }
 
+    const input = conversation.length > 0
+      ? conversation
+      : [
+          {
+            role: "user",
+            content: message
+          }
+        ];
+
     const controller = new AbortController();
 
     const timeout = setTimeout(() => {
@@ -30,15 +40,18 @@ module.exports = async function handler(req, res) {
       "https://api.openai.com/v1/responses",
       {
         method: "POST",
+
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
         },
+
         body: JSON.stringify({
           model: "gpt-6-luna",
-          input: message,
-          max_output_tokens: 300
+          input: input,
+          max_output_tokens: 500
         }),
+
         signal: controller.signal
       }
     );
@@ -58,9 +71,13 @@ module.exports = async function handler(req, res) {
     let reply = data?.output_text;
 
     if (!reply && Array.isArray(data?.output)) {
+
       for (const item of data.output) {
+
         if (Array.isArray(item?.content)) {
+
           for (const part of item.content) {
+
             if (
               part?.type === "output_text" &&
               part?.text
@@ -68,6 +85,7 @@ module.exports = async function handler(req, res) {
               reply = part.text;
               break;
             }
+
           }
         }
 
