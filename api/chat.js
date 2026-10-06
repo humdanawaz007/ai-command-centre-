@@ -37,7 +37,7 @@ module.exports = async function handler(req, res) {
         body: JSON.stringify({
           model: "gpt-6-luna",
           input: message,
-          max_output_tokens: 200
+          max_output_tokens: 300
         }),
         signal: controller.signal
       }
@@ -55,10 +55,34 @@ module.exports = async function handler(req, res) {
       });
     }
 
+    let reply = data?.output_text;
+
+    if (!reply && Array.isArray(data?.output)) {
+      for (const item of data.output) {
+        if (Array.isArray(item?.content)) {
+          for (const part of item.content) {
+            if (
+              part?.type === "output_text" &&
+              part?.text
+            ) {
+              reply = part.text;
+              break;
+            }
+          }
+        }
+
+        if (reply) break;
+      }
+    }
+
+    if (!reply) {
+      return res.status(500).json({
+        error: "OpenAI returned no text response."
+      });
+    }
+
     return res.status(200).json({
-      reply:
-        data?.output_text ||
-        "No response received."
+      reply: reply
     });
 
   } catch (error) {
