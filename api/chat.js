@@ -21,20 +21,21 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    const input = conversation.length > 0
-      ? conversation
-      : [
-          {
-            role: "user",
-            content: message
-          }
-        ];
+    const input =
+      conversation.length > 0
+        ? conversation
+        : [
+            {
+              role: "user",
+              content: message
+            }
+          ];
 
     const controller = new AbortController();
 
     const timeout = setTimeout(() => {
       controller.abort();
-    }, 25000);
+    }, 30000);
 
     const response = await fetch(
       "https://api.openai.com/v1/responses",
@@ -49,7 +50,7 @@ module.exports = async function handler(req, res) {
         body: JSON.stringify({
           model: "gpt-6-luna",
           input: input,
-          max_output_tokens: 500
+          max_output_tokens: 1500
         }),
 
         signal: controller.signal
@@ -68,29 +69,31 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    let reply = data?.output_text;
+    let reply = "";
+
+    if (typeof data?.output_text === "string") {
+      reply = data.output_text.trim();
+    }
 
     if (!reply && Array.isArray(data?.output)) {
+      const parts = [];
 
       for (const item of data.output) {
-
-        if (Array.isArray(item?.content)) {
-
-          for (const part of item.content) {
-
-            if (
-              part?.type === "output_text" &&
-              part?.text
-            ) {
-              reply = part.text;
-              break;
-            }
-
-          }
+        if (!Array.isArray(item?.content)) {
+          continue;
         }
 
-        if (reply) break;
+        for (const part of item.content) {
+          if (
+            part?.type === "output_text" &&
+            typeof part?.text === "string"
+          ) {
+            parts.push(part.text);
+          }
+        }
       }
+
+      reply = parts.join("\n").trim();
     }
 
     if (!reply) {
