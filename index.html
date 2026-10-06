@@ -1,116 +1,193 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <meta name="viewport" content="width=device-width,initial-scale=1">
+
 <title>AI Command Centre</title>
+
 <style>
-body{margin:0;padding:20px;background:#07111f;color:white;font-family:Arial}
-h1{text-align:center}
-.card{background:#102943;padding:20px;margin:20px 0;border-radius:18px}
-input,button{width:100%;padding:15px;box-sizing:border-box;border-radius:10px;font-size:16px}
-input{margin:10px 0;background:#071a2c;color:white;border:1px solid #315777}
-button{border:0;color:white;font-weight:bold;margin-top:5px;background:#16a765}
-.result{background:#071a2c;padding:15px;margin-top:15px;border-radius:10px;white-space:pre-wrap}
+
+body{
+margin:0;
+padding:20px;
+background:#07111f;
+color:white;
+font-family:Arial,sans-serif;
+}
+
+h1{
+text-align:center;
+margin-bottom:30px;
+}
+
+.card{
+background:#102943;
+padding:20px;
+margin:20px 0;
+border-radius:18px;
+}
+
+h2{
+margin-top:0;
+}
+
+input{
+width:100%;
+padding:15px;
+box-sizing:border-box;
+border-radius:10px;
+font-size:16px;
+margin:10px 0;
+background:#071a2c;
+color:white;
+border:1px solid #315777;
+}
+
+button{
+width:100%;
+padding:15px;
+border:0;
+border-radius:10px;
+font-size:17px;
+font-weight:bold;
+color:white;
+margin-top:5px;
+background:#16a765;
+}
+
+button:active{
+transform:scale(.98);
+}
+
+.result{
+background:#071a2c;
+padding:15px;
+margin-top:15px;
+border-radius:10px;
+white-space:pre-wrap;
+line-height:1.6;
+}
+
 </style>
+
 </head>
 
 <body>
 
 <h1>🧠 AI Command Centre</h1>
 
+
+<!-- TRADING -->
+
 <div class="card">
+
 <h2>📈 Trading Centre</h2>
-<input id="market" value="NIFTY 50">
-<button id="trade">📊 Analyse Market</button>
-<div id="tradeResult" class="result">Ready.</div>
+
+<p>Research a stock or index with AI.</p>
+
+<input
+id="market"
+value="NIFTY 50"
+placeholder="Enter stock or index">
+
+<button
+id="trade"
+type="button">
+
+📊 Analyse Market
+
+</button>
+
+<div
+id="tradeResult"
+class="result">
+
+Ready.
+
 </div>
 
+</div>
+
+
+<!-- AI ASSISTANT -->
+
 <div class="card">
+
 <h2>🤖 AI Assistant</h2>
-<input id="question" placeholder="Type your command">
-<button id="ask">🚀 Ask AI</button>
-<div id="answer" class="result">Ready.</div>
+
+<p>Ask your personal AI assistant anything.</p>
+
+<input
+id="question"
+placeholder="Type your command">
+
+<button
+id="ask"
+type="button">
+
+🚀 Ask AI
+
+</button>
+
+<div
+id="answer"
+class="result">
+
+Ready.
+
 </div>
 
-<script>
-async function callAI(message,box){
-box.textContent="🤖 AI is working...";
-try{
-const r=await fetch("/api/chat",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({message:message})
-});
-const d=await r.json();
-if(!r.ok)throw new Error(d.error||"Request failed");
-box.textContent=d.reply||"No response received.";
-}catch(e){
-box.textContent="❌ "+e.message;
-}
-}
+</div>
 
-document.getElementById("trade").addEventListener("click",function(){
-const market=document.getElementById("market").value.trim();
-const box=document.getElementById("tradeResult");
-if(!market){box.textContent="Enter a market.";return;}
-box.textContent="📊 Analysing "+market+"...";
-callAI(
-"Analyse "+market+
-" as a trading research assistant. Give trend, support, resistance, bullish scenario, bearish scenario and risks. Do not guarantee profit.",
-box
-);
-});
 
-document.getElementById("ask").addEventListener("click",function(){
-const q=document.getElementById("question").value.trim();
-const box=document.getElementById("answer");
-if(!q){box.textContent="Type a command.";return;}
-callAI(q,box);
-});
-</script>
+<!-- VIDEO CREATOR -->
+
 <div class="card">
+
 <h2>🎬 Video Creator</h2>
 
-<p>Create a complete short-form video with AI.</p>
+<p>Create professional short-form videos with AI.</p>
 
 <input
 id="videoTopic"
-type="text"
 placeholder="Example: 5 AI tools that can make money">
 
 <button
 id="videoButton"
 type="button">
+
 🎬 Create Video
+
 </button>
 
 <div
 id="videoResult"
 class="result">
+
+Ready.
+
 </div>
+
 </div>
+
 
 <script>
-document.getElementById("videoButton").addEventListener("click", async function(){
 
-const topic =
-document.getElementById("videoTopic").value.trim();
 
-const result =
-document.getElementById("videoResult");
+/* =========================
+   AI FUNCTION
+========================= */
 
-result.style.display = "block";
+async function callAI(message,box){
 
-if(!topic){
-result.innerText = "⚠️ Enter a video topic first.";
-return;
-}
-
-result.innerText = "🎬 Creating your video...";
+box.textContent="🤖 AI is working...";
 
 try{
 
-const response = await fetch("/api/chat",{
+const response=await fetch(
+"/api/chat",
+{
 method:"POST",
 
 headers:{
@@ -118,32 +195,214 @@ headers:{
 },
 
 body:JSON.stringify({
-message:
-"Create a complete short-form video package about " +
-topic +
-". Give me: a powerful hook, video title, " +
-"30-60 second script, scene-by-scene shot ideas, " +
-"call to action, caption and hashtags."
+message:message
 })
-});
 
-const data = await response.json();
+}
+);
+
+
+const data=await response.json();
+
 
 if(!response.ok){
-throw new Error(data.error || "Request failed");
+
+throw new Error(
+data.error ||
+"Request failed"
+);
+
 }
 
-result.innerText =
-data.reply || "No response received.";
+
+box.textContent=
+data.reply ||
+"No response received.";
+
 
 }catch(error){
 
-result.innerText =
-"❌ " + error.message;
+box.textContent=
+"❌ "+error.message;
 
 }
 
-});
+}
+
+
+/* =========================
+   TRADING
+========================= */
+
+document
+.getElementById("trade")
+.addEventListener(
+"click",
+function(){
+
+const market=
+document
+.getElementById("market")
+.value
+.trim();
+
+const box=
+document
+.getElementById("tradeResult");
+
+
+if(!market){
+
+box.textContent=
+"Enter a stock or index.";
+
+return;
+
+}
+
+
+box.textContent=
+"📊 Analysing "+
+market+"...";
+
+
+const prompt=
+
+"Analyse "+
+market+
+" as a trading research assistant. "+
+"Give me trend, support, resistance, "+
+"bullish scenario, bearish scenario, "+
+"key risks and what live market data "+
+"should be checked before considering "+
+"a trade. Do not guarantee profit.";
+
+
+callAI(
+prompt,
+box
+);
+
+}
+);
+
+
+/* =========================
+   AI ASSISTANT
+========================= */
+
+document
+.getElementById("ask")
+.addEventListener(
+"click",
+function(){
+
+const question=
+document
+.getElementById("question")
+.value
+.trim();
+
+const box=
+document
+.getElementById("answer");
+
+
+if(!question){
+
+box.textContent=
+"Type a command.";
+
+return;
+
+}
+
+
+callAI(
+question,
+box
+);
+
+}
+);
+
+
+/* =========================
+   VIDEO CREATOR
+========================= */
+
+document
+.getElementById("videoButton")
+.addEventListener(
+"click",
+function(){
+
+const topic=
+document
+.getElementById("videoTopic")
+.value
+.trim();
+
+const box=
+document
+.getElementById("videoResult");
+
+
+if(!topic){
+
+box.textContent=
+"⚠️ Enter a video topic first.";
+
+return;
+
+}
+
+
+const prompt=
+
+"Create a professional short-form video package about "+
+topic+
+". Use plain text only. "+
+"Do not use markdown symbols such as # or **. "+
+"Use these exact section headings: "+
+"VIDEO TITLE, HOOK, SCRIPT, SCENES, "+
+"CALL TO ACTION, CAPTION, HASHTAGS. "+
+"Make the video engaging and suitable for "+
+"TikTok, Instagram Reels and YouTube Shorts. "+
+"Make the script approximately 30 to 60 seconds long.";
+
+
+callAI(
+prompt,
+box
+);
+
+}
+);
+
+
+/* =========================
+   ENTER KEY
+========================= */
+
+document
+.getElementById("question")
+.addEventListener(
+"keydown",
+function(event){
+
+if(event.key==="Enter"){
+
+document
+.getElementById("ask")
+.click();
+
+}
+
+}
+);
+
 </script>
+
 </body>
 </html>
