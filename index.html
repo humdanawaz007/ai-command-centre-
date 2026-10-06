@@ -1,61 +1,115 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Command Centre</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+<title>AI Command Centre</title>
 
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #06101f;
-            color: white;
-        }
+<style>
+* {
+    box-sizing: border-box;
+}
 
-        header {
-            text-align: center;
-            padding: 25px 15px;
-        }
+body {
+    margin: 0;
+    background: #07111f;
+    color: #ffffff;
+    font-family: Arial, sans-serif;
+}
 
-        header h1 {
-            font-size: 36px;
-            margin: 0 0 10px;
-        }
+.header {
+    text-align: center;
+    padding: 28px 16px 18px;
+}
 
-        header p {
-            color: #ccc;
-            font-size: 18px;
-        }
+.header h1 {
+    margin: 0;
+    font-size: 32px;
+}
 
-        .container {
-            max-width: 650px;
-            margin: auto;
-            padding: 10px 15px 40px;
-        }
+.header p {
+    color: #9fb0c5;
+    margin-top: 8px;
+}
 
-        .card {
-            background: #132c45;
-            border-radius: 22px;
-            padding: 25px 18px;
-            margin-bottom: 20px;
-        }
+.container {
+    width: 100%;
+    max-width: 720px;
+    margin: auto;
+    padding: 10px 16px 50px;
+}
 
-        h2 {
-            text-align: center;
-            font-size: 28px;
-            margin-top: 0;
-        }
+.card {
+    background: #102943;
+    border: 1px solid #1d4264;
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 18px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+}
 
-        p {
-            text-align: center;
-            font-size: 17px;
-            line-height: 1.5;
-            color: #eee;
-        }
+.card h2 {
+    margin: 0 0 8px;
+    font-size: 24px;
+}
 
-        input {
+.card p {
+    color: #aebfd2;
+    line-height: 1.5;
+}
+
+input {
+    width: 100%;
+    padding: 15px;
+    margin: 10px 0;
+    border: 1px solid #315777;
+    border-radius: 12px;
+    background: #071a2c;
+    color: white;
+    font-size: 16px;
+    outline: none;
+}
+
+input:focus {
+    border-color: #4c91ff;
+}
+
+button {
+    width: 100%;
+    padding: 15px;
+    border: 0;
+    border-radius: 12px;
+    color: white;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 8px;
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+.trading-btn {
+    background: #13a56b;
+}
+
+.ai-btn {
+    background: #3478f6;
+}
+
+.video-btn {
+    background: #8d4de0;
+}
+
+.social-btn {
+    background: #d34d83;
+}
+
+.result {
+    display: none;
+    margin-top: 14px;
+    padding: 15px;
+    border-radius: 12px;
+    background: #071a
