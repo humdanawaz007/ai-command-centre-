@@ -64,11 +64,6 @@ input,select,textarea{
   font-size:15px;
 }
 
-textarea{
-  min-height:150px;
-  resize:vertical;
-}
-
 button{
   border:0;
   border-radius:10px;
@@ -144,7 +139,7 @@ pre{
 }
 
 .log{
-  max-height:200px;
+  max-height:250px;
   overflow-y:auto;
   background:#0d1324;
   padding:12px;
@@ -155,6 +150,20 @@ pre{
   padding:7px 0;
   border-bottom:1px solid #20283d;
   font-size:13px;
+}
+
+.automation-box{
+  border:1px solid #374151;
+  border-radius:12px;
+  padding:14px;
+  margin-top:12px;
+  background:#0d1324;
+}
+
+.next-run{
+  color:#86efac;
+  font-size:13px;
+  margin-top:8px;
 }
 
 @media(max-width:600px){
@@ -235,9 +244,7 @@ Ready to generate.
 
 <h2>📦 Content Package</h2>
 
-<pre id="contentOutput">
-No content generated yet.
-</pre>
+<pre id="contentOutput">No content generated yet.</pre>
 
 <button
 class="secondary"
@@ -349,11 +356,65 @@ onclick="downloadVideoPackage()"
 
 <div class="card">
 
-<h2>⚙️ Automation</h2>
+<h2>⚙️ Automation Centre</h2>
 
 <p class="small">
-Start or stop your personal content automation system.
+Automatically generate content and video packages using your selected topic.
 </p>
+
+<div class="automation-box">
+
+<label>Automation Topic</label>
+
+<input
+id="automationTopic"
+type="text"
+placeholder="Example: Islamic facts, technology, space, business"
+>
+
+<label>Platform</label>
+
+<select id="automationPlatform">
+
+<option value="YouTube Short">
+YouTube Short
+</option>
+
+<option value="Instagram Reel">
+Instagram Reel
+</option>
+
+<option value="Snapchat Spotlight">
+Snapchat Spotlight
+</option>
+
+<option value="YouTube Video">
+YouTube Video
+</option>
+
+</select>
+
+<label>Automation Frequency</label>
+
+<select id="automationInterval">
+
+<option value="5">
+Every 5 minutes
+</option>
+
+<option value="15">
+Every 15 minutes
+</option>
+
+<option value="30">
+Every 30 minutes
+</option>
+
+<option value="60">
+Every 60 minutes
+</option>
+
+</select>
 
 <button
 class="success"
@@ -373,7 +434,16 @@ onclick="stopAutomation()"
 id="automationStatus"
 class="status"
 >
-Automation stopped.
+🔴 Automation stopped.
+</div>
+
+<div
+id="nextRun"
+class="next-run"
+>
+Automation is not running.
+</div>
+
 </div>
 
 </div>
@@ -448,7 +518,10 @@ class="log"
 
 let currentContent = "";
 let currentVideoPackage = "";
+
 let automationRunning = false;
+let automationTimer = null;
+let automationNextRun = null;
 
 
 /* =========================
@@ -665,6 +738,7 @@ FINAL CALL TO ACTION
 Make the package practical for producing a vertical 9:16 short video.
 
 Do not explain your reasoning.
+
 Return only the finished production package.
 `;
 
@@ -733,6 +807,466 @@ logActivity(
 );
 
 }
+
+}
+
+
+/* =========================
+AUTOMATION GENERATOR
+========================= */
+
+async function runAutomationCycle(){
+
+if(!automationRunning){
+
+return;
+
+}
+
+const topic =
+document.getElementById("automationTopic").value.trim();
+
+const platform =
+document.getElementById("automationPlatform").value;
+
+if(!topic){
+
+stopAutomation();
+
+document.getElementById(
+"automationStatus"
+).textContent =
+"⚠️ Enter an automation topic first.";
+
+return;
+
+}
+
+document.getElementById(
+"automationStatus"
+).textContent =
+"🟡 Automation is generating content...";
+
+logActivity(
+"Automation cycle started: "+topic
+);
+
+try{
+
+const prompt = `
+You are the automated content engine inside my personal AI Command Centre.
+
+Create one original short-form social media content package.
+
+Topic:
+${topic}
+
+Platform:
+${platform}
+
+Create:
+
+1. Catchy title
+2. Strong hook
+3. Complete 30-60 second script
+4. Caption
+5. Call to action
+6. 5 hashtags
+7. Thumbnail text
+8. Video description
+
+Make it engaging, factual and suitable for the selected platform.
+
+Return only the finished content package.
+`;
+
+const response =
+await fetch("/api/chat",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+message:prompt
+})
+
+});
+
+const data =
+await response.json();
+
+if(!response.ok){
+
+throw new Error(
+data?.error ||
+"Automation AI request failed"
+);
+
+}
+
+if(!data.reply){
+
+throw new Error(
+"Automation returned no content"
+);
+
+}
+
+currentContent =
+data.reply;
+
+document.getElementById(
+"contentOutput"
+).textContent =
+currentContent;
+
+document.getElementById(
+"generatorStatus"
+).textContent =
+"✅ Automation generated new content.";
+
+localStorage.setItem(
+"aiCommandCentreContent",
+currentContent
+);
+
+document.getElementById(
+"savedOutput"
+).textContent =
+currentContent;
+
+logActivity(
+"Automation generated new content for "+platform
+);
+
+
+/* Automatically create video package */
+
+await generateAutomationVideoPackage();
+
+document.getElementById(
+"automationStatus"
+).textContent =
+"🟢 Automation running.";
+
+}
+catch(error){
+
+console.error(error);
+
+document.getElementById(
+"automationStatus"
+).textContent =
+"❌ Automation error: "+error.message;
+
+logActivity(
+"Automation error: "+error.message
+);
+
+}
+
+scheduleNextAutomation();
+
+}
+
+
+/* =========================
+AUTOMATION VIDEO PACKAGE
+========================= */
+
+async function generateAutomationVideoPackage(){
+
+if(!currentContent){
+
+return;
+
+}
+
+const platform =
+document.getElementById(
+"automationPlatform"
+).value;
+
+try{
+
+const prompt = `
+You are an AI short-video production director.
+
+Create a production package for this content.
+
+Platform:
+${platform}
+
+CONTENT:
+${currentContent}
+
+Create:
+
+VIDEO TITLE
+TOTAL LENGTH
+5-8 SCENES
+VOICEOVER
+ON-SCREEN CAPTIONS
+VISUAL DESCRIPTION
+AI VISUAL PROMPT
+TRANSITIONS
+BACKGROUND MUSIC
+SOUND EFFECTS
+THUMBNAIL PROMPT
+FINAL CALL TO ACTION
+
+Make it practical for a vertical 9:16 short video.
+
+Return only the finished production package.
+`;
+
+const response =
+await fetch("/api/chat",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+message:prompt
+})
+
+});
+
+const data =
+await response.json();
+
+if(!response.ok){
+
+throw new Error(
+data?.error ||
+"Video automation failed"
+);
+
+}
+
+if(data.reply){
+
+currentVideoPackage =
+data.reply;
+
+document.getElementById(
+"videoOutput"
+).textContent =
+currentVideoPackage;
+
+document.getElementById(
+"videoStatus"
+).textContent =
+"✅ Automated video package ready.";
+
+logActivity(
+"Automation created video package."
+);
+
+}
+
+}
+catch(error){
+
+console.error(error);
+
+logActivity(
+"Automation video error: "+error.message
+);
+
+}
+
+}
+
+
+/* =========================
+START AUTOMATION
+========================= */
+
+function startAutomation(){
+
+const topic =
+document.getElementById(
+"automationTopic"
+).value.trim();
+
+if(!topic){
+
+document.getElementById(
+"automationStatus"
+).textContent =
+"⚠️ Enter an automation topic first.";
+
+return;
+
+}
+
+if(automationRunning){
+
+return;
+
+}
+
+automationRunning = true;
+
+document.getElementById(
+"automationStatus"
+).textContent =
+"🟢 Automation running.";
+
+logActivity(
+"Automation started."
+);
+
+runAutomationCycle();
+
+}
+
+
+/* =========================
+SCHEDULE NEXT RUN
+========================= */
+
+function scheduleNextAutomation(){
+
+if(!automationRunning){
+
+return;
+
+}
+
+if(automationTimer){
+
+clearTimeout(automationTimer);
+
+}
+
+const minutes =
+parseInt(
+document.getElementById(
+"automationInterval"
+).value
+);
+
+automationNextRun =
+Date.now() +
+(minutes * 60 * 1000);
+
+updateNextRunDisplay();
+
+automationTimer =
+setTimeout(
+runAutomationCycle,
+minutes * 60 * 1000
+);
+
+}
+
+
+/* =========================
+NEXT RUN DISPLAY
+========================= */
+
+function updateNextRunDisplay(){
+
+const nextRun =
+document.getElementById(
+"nextRun"
+);
+
+if(!automationRunning ||
+!automationNextRun){
+
+nextRun.textContent =
+"Automation is not running.";
+
+return;
+
+}
+
+const update = () => {
+
+if(!automationRunning){
+
+nextRun.textContent =
+"Automation is not running.";
+
+return;
+
+}
+
+const remaining =
+automationNextRun - Date.now();
+
+if(remaining <= 0){
+
+nextRun.textContent =
+"Starting next automation cycle...";
+
+return;
+
+}
+
+const minutes =
+Math.floor(
+remaining / 60000
+);
+
+const seconds =
+Math.floor(
+(remaining % 60000) / 1000
+);
+
+nextRun.textContent =
+"⏱ Next automation cycle in "+
+minutes+"m "+seconds+"s";
+
+setTimeout(update,1000);
+
+};
+
+update();
+
+}
+
+
+/* =========================
+STOP AUTOMATION
+========================= */
+
+function stopAutomation(){
+
+automationRunning = false;
+
+if(automationTimer){
+
+clearTimeout(automationTimer);
+
+automationTimer = null;
+
+}
+
+automationNextRun = null;
+
+document.getElementById(
+"automationStatus"
+).textContent =
+"🔴 Automation stopped.";
+
+document.getElementById(
+"nextRun"
+).textContent =
+"Automation is not running.";
+
+logActivity(
+"Automation stopped."
+);
 
 }
 
@@ -928,42 +1462,6 @@ URL.revokeObjectURL(url);
 
 
 /* =========================
-AUTOMATION
-========================= */
-
-function startAutomation(){
-
-automationRunning=true;
-
-document.getElementById(
-"automationStatus"
-).textContent =
-"🟢 Automation running.";
-
-logActivity(
-"Automation started."
-);
-
-}
-
-
-function stopAutomation(){
-
-automationRunning=false;
-
-document.getElementById(
-"automationStatus"
-).textContent =
-"🔴 Automation stopped.";
-
-logActivity(
-"Automation stopped."
-);
-
-}
-
-
-/* =========================
 MARKET
 ========================= */
 
@@ -997,6 +1495,9 @@ if(saved){
 document.getElementById(
 "savedOutput"
 ).textContent =
+saved;
+
+currentContent =
 saved;
 
 }
