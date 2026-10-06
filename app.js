@@ -1,5 +1,7 @@
 function openAssistant() {
-    const command = prompt("🧠 AI Assistant\n\nWhat do you want me to do?");
+    const command = prompt(
+        "🧠 AI Assistant\n\nWhat do you want me to do?"
+    );
 
     if (command !== null && command.trim() !== "") {
         alert("AI Assistant received:\n\n" + command);
@@ -16,12 +18,4 @@ function openVideo() {
 
 function openSocial() {
     alert("📱 Social Media module coming next.");
-}
-
-function openIncome() {
-    alert("💰 Income module coming next.");
-}
-
-function openAutomations() {
-    alert("⚙️ Automations module coming next.");
 }
