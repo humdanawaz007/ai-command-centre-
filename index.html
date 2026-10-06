@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>AI Command Centre</title>
 
     <style>
@@ -43,13 +42,14 @@
         }
 
         .card h2 {
-            font-size: 34px;
+            font-size: 32px;
             margin-bottom: 20px;
         }
 
         .card p {
             font-size: 20px;
             color: #eee;
+            line-height: 1.5;
         }
 
         input {
@@ -58,7 +58,7 @@
             border-radius: 15px;
             border: none;
             font-size: 18px;
-            margin: 20px 0;
+            margin: 15px 0;
             box-sizing: border-box;
         }
 
@@ -66,23 +66,23 @@
             background: #2867e8;
             color: white;
             border: none;
-            padding: 17px 35px;
+            padding: 17px 30px;
             border-radius: 15px;
             font-size: 20px;
             cursor: pointer;
             margin: 8px;
         }
 
-        button:hover {
-            background: #1d55c5;
-        }
-
         .trading-button {
             background: #168a5b;
         }
 
-        .trading-button:hover {
-            background: #106d47;
+        .video-button {
+            background: #8b45d9;
+        }
+
+        .social-button {
+            background: #d94b7b;
         }
 
         #status {
@@ -93,15 +93,17 @@
             text-align: left;
         }
 
-        .response-box {
+        .result {
             background: #0b1c2f;
             padding: 20px;
             border-radius: 18px;
             margin-top: 20px;
+            text-align: left;
+            white-space: pre-wrap;
         }
 
         .small {
-            font-size: 15px !important;
+            font-size: 14px !important;
             color: #aaa !important;
         }
     </style>
@@ -117,20 +119,17 @@
 <div class="container">
 
     <!-- AI ASSISTANT -->
+
     <div class="card">
-
         <h2>🤖 AI Assistant</h2>
-
         <p>Ask your AI to perform tasks.</p>
 
-        <button onclick="openAssistant()">
+        <button onclick="focusAssistant()">
             Open
         </button>
-
     </div>
 
 
-    <!-- AI CHAT -->
     <div class="card">
 
         <h2>🧠 AI Assistant</h2>
@@ -158,119 +157,14 @@
 
 
     <!-- TRADING CENTRE -->
+
     <div class="card">
 
         <h2>📈 Trading Centre</h2>
 
         <p>
-            Use AI to analyse a market, stock or trading idea.
+            Enter a stock, index or market for AI analysis.
         </p>
 
-        <button
-            class="trading-button"
-            onclick="openTrading()">
-            Open Trading Centre
-        </button>
-
-        <p class="small">
-            Analysis only. No guaranteed profits or automatic trades.
-        </p>
-
-    </div>
-
-
-    <!-- VIDEO MODULE -->
-    <div class="card">
-
-        <h2>🎬 Video AI</h2>
-
-        <p>
-            Create ideas, scripts and video concepts with AI.
-        </p>
-
-        <button onclick="openVideo()">
-            Open Video AI
-        </button>
-
-    </div>
-
-
-    <!-- SOCIAL MODULE -->
-    <div class="card">
-
-        <h2>📱 Social Media</h2>
-
-        <p>
-            Plan posts, captions and content calendars.
-        </p>
-
-        <button onclick="openSocial()">
-            Open Social Media
-        </button>
-
-    </div>
-
-</div>
-
-
-<script>
-
-let conversation = [];
-
-
-/* OPEN AI ASSISTANT */
-
-function openAssistant() {
-
-    document.getElementById("command").focus();
-
-}
-
-
-/* ENTER KEY */
-
-function handleEnter(event) {
-
-    if (event.key === "Enter") {
-        sendCommand();
-    }
-
-}
-
-
-/* MAIN AI */
-
-async function sendCommand() {
-
-    const input = document.getElementById("command");
-
-    const command = input.value.trim();
-
-    if (command === "") {
-
-        alert("Please enter a command.");
-
-        return;
-    }
-
-
-    document.getElementById("status").innerText =
-        "🤖 AI is thinking...";
-
-
-    conversation.push({
-
-        role: "user",
-
-        content: command
-
-    });
-
-
-    try {
-
-        const response = await fetch("/api/chat", {
-
-            method: "POST",
-
-            headers
+        <input
+            type="text"
