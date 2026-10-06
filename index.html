@@ -3,211 +3,167 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>AI Command Centre</title>
 
 <style>
-*{
-  box-sizing:border-box;
+* {
+  box-sizing: border-box;
 }
 
-body{
-  margin:0;
-  font-family:Arial,Helvetica,sans-serif;
-  background:#07111f;
-  color:#fff;
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #0b1020;
+  color: #fff;
 }
 
-.container{
-  max-width:1100px;
-  margin:auto;
-  padding:20px;
+.container {
+  width: 100%;
+  max-width: 900px;
+  margin: auto;
+  padding: 16px;
 }
 
-.header{
-  background:#102943;
-  border-radius:18px;
-  padding:22px;
-  margin-bottom:20px;
-  text-align:center;
+header {
+  padding: 20px 0;
+  text-align: center;
 }
 
-.header h1{
-  margin:0 0 8px;
-  font-size:30px;
+header h1 {
+  margin: 0;
+  font-size: 28px;
 }
 
-.header p{
-  margin:0;
-  color:#a9bfd6;
+header p {
+  color: #9ca3af;
+  margin-top: 8px;
 }
 
-.status{
-  display:inline-block;
-  margin-top:15px;
-  padding:8px 14px;
-  border-radius:20px;
-  background:#123d2c;
-  color:#5cffaa;
-  font-size:14px;
+.card {
+  background: #151b2e;
+  border: 1px solid #28304a;
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 16px;
 }
 
-.grid{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:18px;
+.card h2 {
+  margin-top: 0;
+  font-size: 20px;
 }
 
-.card{
-  background:#102943;
-  border-radius:18px;
-  padding:20px;
-  border:1px solid #1d4264;
+label {
+  display: block;
+  margin: 12px 0 6px;
+  color: #cbd5e1;
 }
 
-.card h2{
-  margin-top:0;
-  font-size:21px;
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 13px;
+  border-radius: 10px;
+  border: 1px solid #374151;
+  background: #0d1324;
+  color: white;
+  font-size: 15px;
 }
 
-.card p{
-  color:#a9bfd6;
-  line-height:1.5;
+textarea {
+  min-height: 150px;
+  resize: vertical;
 }
 
-textarea,input,select{
-  width:100%;
-  padding:13px;
-  border-radius:10px;
-  border:1px solid #31516d;
-  background:#081a2d;
-  color:white;
-  margin:8px 0 12px;
-  font-size:15px;
+button {
+  border: 0;
+  border-radius: 10px;
+  padding: 13px 16px;
+  margin-top: 12px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
 }
 
-textarea{
-  min-height:130px;
-  resize:vertical;
+.primary {
+  width: 100%;
+  background: #2563eb;
+  color: white;
 }
 
-button{
-  width:100%;
-  padding:13px;
-  border:0;
-  border-radius:10px;
-  background:#2878ff;
-  color:white;
-  font-size:15px;
-  font-weight:bold;
-  cursor:pointer;
-  margin-top:7px;
+.secondary {
+  background: #374151;
+  color: white;
 }
 
-button:hover{
-  opacity:.9;
+.success {
+  background: #16a34a;
+  color: white;
 }
 
-.secondary{
-  background:#183b59;
+.danger {
+  background: #dc2626;
+  color: white;
 }
 
-.danger{
-  background:#762d35;
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
 }
 
-.output{
-  background:#081a2d;
-  border:1px solid #31516d;
-  border-radius:10px;
-  padding:15px;
-  min-height:100px;
-  white-space:pre-wrap;
-  line-height:1.5;
-  margin-top:12px;
+.platform {
+  background: #0d1324;
+  border: 1px solid #374151;
+  padding: 15px;
+  border-radius: 10px;
+  text-align: center;
 }
 
-.platform{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  background:#081a2d;
-  padding:13px;
-  border-radius:10px;
-  margin:9px 0;
+.status {
+  padding: 12px;
+  background: #0d1324;
+  border-radius: 10px;
+  color: #93c5fd;
+  margin-top: 12px;
 }
 
-.platform button{
-  width:auto;
-  padding:8px 14px;
-  margin:0;
+pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  background: #0d1324;
+  padding: 14px;
+  border-radius: 10px;
+  line-height: 1.5;
+  min-height: 120px;
 }
 
-.online{
-  color:#5cffaa;
+.small {
+  color: #9ca3af;
+  font-size: 13px;
 }
 
-.offline{
-  color:#ff9c9c;
+.log {
+  max-height: 200px;
+  overflow-y: auto;
+  background: #0d1324;
+  padding: 12px;
+  border-radius: 10px;
 }
 
-.full{
-  grid-column:1/-1;
+.log div {
+  padding: 7px 0;
+  border-bottom: 1px solid #20283d;
+  font-size: 13px;
 }
 
-.activity{
-  max-height:220px;
-  overflow:auto;
-}
-
-.log{
-  padding:10px;
-  border-bottom:1px solid #203b55;
-  color:#b9cde0;
-  font-size:14px;
-}
-
-.statgrid{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:10px;
-}
-
-.stat{
-  background:#081a2d;
-  padding:15px;
-  border-radius:12px;
-  text-align:center;
-}
-
-.stat strong{
-  display:block;
-  font-size:25px;
-  margin-bottom:5px;
-}
-
-.footer{
-  text-align:center;
-  color:#7189a1;
-  padding:25px 0;
-  font-size:13px;
-}
-
-@media(max-width:700px){
-  .grid{
-    grid-template-columns:1fr;
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: 1fr;
   }
 
-  .full{
-    grid-column:auto;
-  }
-
-  .statgrid{
-    grid-template-columns:1fr 1fr 1fr;
-  }
-
-  .header h1{
-    font-size:25px;
+  header h1 {
+    font-size: 24px;
   }
 }
 </style>
@@ -217,184 +173,342 @@ button:hover{
 
 <div class="container">
 
-  <div class="header">
-    <h1>🤖 AI Command Centre</h1>
-    <p>Your personal AI automation dashboard</p>
-    <div class="status" id="systemStatus">● SYSTEM READY</div>
-  </div>
+<header>
+  <h1>🤖 AI Command Centre</h1>
+  <p>Your personal AI automation dashboard</p>
+</header>
 
+<!-- AI CONTENT GENERATOR -->
+
+<div class="card">
+  <h2>🧠 AI Content Generator</h2>
+
+  <label for="topic">Topic</label>
+
+  <input
+    id="topic"
+    type="text"
+    placeholder="Example: 5 amazing facts about space"
+  >
+
+  <label for="platform">Platform</label>
+
+  <select id="platform">
+    <option value="YouTube Short">YouTube Short</option>
+    <option value="Instagram Reel">Instagram Reel</option>
+    <option value="Snapchat Spotlight">Snapchat Spotlight</option>
+    <option value="YouTube Video">YouTube Video</option>
+  </select>
+
+  <button class="primary" onclick="generateContent()">
+    🚀 Generate AI Content
+  </button>
+
+  <div id="generatorStatus" class="status">
+    Ready to generate.
+  </div>
+</div>
+
+
+<!-- CONTENT PACKAGE -->
+
+<div class="card">
+  <h2>📦 Content Package</h2>
+
+  <pre id="contentOutput">No content generated yet.</pre>
+
+  <button class="secondary" onclick="copyContent()">
+    📋 Copy
+  </button>
+
+  <button class="success" onclick="saveContent()">
+    💾 Save
+  </button>
+
+  <button class="secondary" onclick="downloadContent()">
+    ⬇️ Download
+  </button>
+</div>
+
+
+<!-- PLATFORMS -->
+
+<div class="card">
+  <h2>📱 Platforms</h2>
 
   <div class="grid">
 
-    <!-- CONTENT GENERATOR -->
+    <div class="platform">
+      ▶️<br>
+      <strong>YouTube</strong>
+      <div class="small">Ready</div>
+    </div>
 
-    <div class="card">
-      <h2>✍️ AI Content Generator</h2>
+    <div class="platform">
+      📸<br>
+      <strong>Instagram</strong>
+      <div class="small">Ready</div>
+    </div>
 
-      <p>Enter a topic and generate aready-to-use short-form content package.</p>
+    <div class="platform">
+      👻<br>
+      <strong>Snapchat</strong>
+      <div class="small">Ready</div>
+    </div>
 
-<input id="topic" placeholder="Example: 5 amazing facts about space">
-
-<select id="contentType">
-<option value="short">YouTube Short</option>
-<option value="instagram">Instagram Reel</option>
-<option value="snapchat">Snapchat Short</option>
-</select>
-
-<button onclick="generateContent()">🚀 Generate Content</button>
-
-<div class="output" id="contentOutput">
-Your generated content will appear here.
+  </div>
 </div>
 
-<button class="secondary" onclick="copyContent()">
-📋 Copy Content
-</button>
-</div>
+
+<!-- AUTOMATION -->
 
 <div class="card">
-<h2>🎬 Content Package</h2>
+  <h2>⚙️ Automation</h2>
 
-<p>Prepare your generated content for publishing.</p>
+  <p class="small">
+    Start or stop your personal content automation system.
+  </p>
 
-<div class="output" id="packageOutput">
-No content generated yet.
+  <button class="success" onclick="startAutomation()">
+    ▶️ Start Automation
+  </button>
+
+  <button class="danger" onclick="stopAutomation()">
+    ⏹ Stop Automation
+  </button>
+
+  <div id="automationStatus" class="status">
+    Automation stopped.
+  </div>
 </div>
 
-<button onclick="saveContent()">💾 Save Content</button>
 
-<button class="secondary" onclick="downloadContent()">
-⬇️ Download
-</button>
-</div>
+<!-- TRADING -->
 
 <div class="card">
-<h2>📱 Platforms</h2>
+  <h2>📈 Trading Monitor</h2>
 
-<div class="platform">
-<span>▶️ YouTube</span>
-<span class="offline">Not connected</span>
+  <p class="small">
+    Market monitoring module.
+  </p>
+
+  <button class="secondary" onclick="checkMarket()">
+    🔍 Check Market
+  </button>
+
+  <div id="marketStatus" class="status">
+    Waiting for market check.
+  </div>
 </div>
 
-<div class="platform">
-<span>📸 Instagram</span>
-<span class="offline">Not connected</span>
+
+<!-- SAVED CONTENT -->
+
+<div class="card">
+  <h2>💾 Saved Content</h2>
+
+  <pre id="savedOutput">No saved content.</pre>
+
+  <button class="danger" onclick="clearSaved()">
+    🗑 Clear Saved Content
+  </button>
 </div>
 
-<div class="platform">
-<span>👻 Snapchat</span>
-<span class="offline">Not connected</span>
+
+<!-- ACTIVITY -->
+
+<div class="card">
+  <h2>📋 Activity Log</h2>
+
+  <div id="activityLog" class="log">
+    <div>System ready.</div>
+  </div>
 </div>
 
-<button onclick="showConnectionInfo()">
-🔗 Connect Platforms
-</button>
-</div><script>
+</div>
+
+
+<script>
 
 let currentContent = "";
-
-function logActivity(message){
-
-  const log = document.getElementById("activityLog");
-
-  const item = document.createElement("div");
-
-  item.className = "log";
-
-  item.textContent =
-    new Date().toLocaleTimeString() + " — " + message;
-
-  log.prepend(item);
-}
+let automationRunning = false;
 
 
-function generateContent(){
+/* =========================
+   AI CONTENT GENERATOR
+========================= */
+
+async function generateContent() {
 
   const topic =
     document.getElementById("topic").value.trim();
 
-  const type =
-    document.getElementById("contentType").value;
+  const platform =
+    document.getElementById("platform").value;
 
-  if(!topic){
-    alert("Please enter a topic first.");
+  const output =
+    document.getElementById("contentOutput");
+
+  const status =
+    document.getElementById("generatorStatus");
+
+  if (!topic) {
+    status.textContent =
+      "⚠️ Please enter a topic first.";
+
     return;
   }
 
-  let platform = "YouTube Short";
+  status.textContent =
+    "🤖 AI is generating your content...";
 
-  if(type === "instagram"){
-    platform = "Instagram Reel";
+  output.textContent =
+    "Please wait...";
+
+  logActivity(
+    "AI generation started: " + topic
+  );
+
+  try {
+
+    const prompt = `
+You are the AI content engine inside a personal AI Command Centre.
+
+Create a high-quality short-form content package.
+
+Topic:
+${topic}
+
+Platform:
+${platform}
+
+Create:
+
+1. Catchy title
+2. Strong hook
+3. Complete script
+4. Caption
+5. Call to action
+6. 5 relevant hashtags
+7. Suggested thumbnail text
+8. Suggested video description
+
+Make it engaging, factual, concise and suitable for the selected platform.
+
+Do not explain your process.
+Return the finished content package directly.
+`;
+
+    const response = await fetch("/api/chat", {
+
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json"
+      },
+
+      body: JSON.stringify({
+        message: prompt
+      })
+
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+
+      throw new Error(
+        data?.error ||
+        "AI request failed"
+      );
+
+    }
+
+    if (!data.reply) {
+
+      throw new Error(
+        "AI returned no content"
+      );
+
+    }
+
+    currentContent = data.reply;
+
+    output.textContent =
+      currentContent;
+
+    status.textContent =
+      "✅ AI content generated successfully.";
+
+    logActivity(
+      "AI content generated for " + platform
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    output.textContent =
+      "Unable to generate content.\n\n" +
+      error.message;
+
+    status.textContent =
+      "❌ " + error.message;
+
+    logActivity(
+      "AI generation error: " +
+      error.message
+    );
+
   }
-
-  if(type === "snapchat"){
-    platform = "Snapchat Short";
-  }
-
-  currentContent =
-`🔥 ${topic}
-
-HOOK:
-Did you know this? You won't believe what happens next!
-
-SCRIPT:
-
-Today we're talking about ${topic}.
-
-Here are the most interesting things you need to know.
-
-Start with the most surprising fact.
-
-Explain why it matters and give the viewer
-one useful takeaway.
-
-Keep the video fast, simple and entertaining.
-
-ENDING:
-
-Follow for more interesting content!
-
-CAPTION:
-
-${topic} — here's something you should know. 🚀
-
-HASHTAGS:
-
-#shorts #reels #viral #facts #trending
-
-PLATFORM:
-
-${platform}`;
-
-  document.getElementById("contentOutput").textContent =
-    currentContent;
-
-  document.getElementById("packageOutput").textContent =
-    "Content package ready for " + platform + ".";
-
-  logActivity("Generated content for: " + topic);
 }
 
 
-function copyContent(){
+/* =========================
+   COPY
+========================= */
 
-  if(!currentContent){
+async function copyContent() {
+
+  if (!currentContent) {
+
     alert("Generate content first.");
+
     return;
   }
 
-  navigator.clipboard.writeText(currentContent);
+  try {
 
-  logActivity("Content copied.");
+    await navigator.clipboard.writeText(
+      currentContent
+    );
 
-  alert("Content copied!");
+    logActivity(
+      "Content copied to clipboard."
+    );
+
+    alert("Content copied.");
+
+  } catch (error) {
+
+    alert(
+      "Copy failed. Please select and copy the text manually."
+    );
+
+  }
 }
 
 
-function saveContent(){
+/* =========================
+   SAVE
+========================= */
 
-  if(!currentContent){
+function saveContent() {
+
+  if (!currentContent) {
+
     alert("Generate content first.");
+
     return;
   }
 
@@ -403,129 +517,186 @@ function saveContent(){
     currentContent
   );
 
-  document.getElementById("savedContent").textContent =
-    currentContent;
+  document.getElementById(
+    "savedOutput"
+  ).textContent = currentContent;
 
-  logActivity("Content saved.");
+  logActivity(
+    "Content saved locally."
+  );
+
+  alert("Content saved.");
 }
 
 
-function downloadContent(){
+/* =========================
+   DOWNLOAD
+========================= */
 
-  if(!currentContent){
+function downloadContent() {
+
+  if (!currentContent) {
+
     alert("Generate content first.");
+
     return;
   }
 
   const blob = new Blob(
     [currentContent],
-    {type:"text/plain"}
+    { type: "text/plain" }
   );
 
-  const url = URL.createObjectURL(blob);
+  const url =
+    URL.createObjectURL(blob);
 
-  const a = document.createElement("a");
+  const a =
+    document.createElement("a");
 
   a.href = url;
-  a.download = "ai-command-centre-content.txt";
+
+  a.download =
+    "ai-content.txt";
+
+  document.body.appendChild(a);
 
   a.click();
 
+  document.body.removeChild(a);
+
   URL.revokeObjectURL(url);
 
-  logActivity("Content downloaded.");
-}
-
-
-function clearSaved(){
-
-  localStorage.removeItem(
-    "aiCommandCentreContent"
+  logActivity(
+    "Content downloaded."
   );
-
-  document.getElementById("savedContent").textContent =
-    "No saved content.";
-
-  logActivity("Saved content cleared.");
 }
 
 
-function startAutomation(){
+/* =========================
+   AUTOMATION
+========================= */
 
-  document.getElementById("automationStatus").textContent =
-    "🟢 Automation is running. API connections are required for real posting.";
+function startAutomation() {
 
-  document.getElementById("systemStatus").textContent =
-    "● AUTOMATION RUNNING";
+  automationRunning = true;
 
-  logActivity("Automation started.");
-}
-
-
-function stopAutomation(){
-
-  document.getElementById("automationStatus").textContent =
-    "Automation is currently stopped.";
-
-  document.getElementById("systemStatus").textContent =
-    "● SYSTEM READY";
-
-  logActivity("Automation stopped.");
-}
-
-
-function showConnectionInfo(){
-
-  alert(
-`Platform connections will be added next.
-
-YouTube → YouTube Data API
-Instagram → Meta Graph API
-Snapchat → supported Snapchat API
-
-We will connect them one at a time.`
-  );
-
-  logActivity("Platform connection panel opened.");
-}
-
-
-function checkMarket(){
-
-  document.getElementById("marketStatus").textContent =
-    "READY";
+  document.getElementById(
+    "automationStatus"
+  ).textContent =
+    "🟢 Automation running.";
 
   logActivity(
-    "Trading monitor checked. No live broker connection yet."
-  );
-
-  alert(
-    "Trading monitor is ready. Live market/broker API will be connected in the next stage."
+    "Automation started."
   );
 }
 
 
-function loadSavedContent(){
+function stopAutomation() {
+
+  automationRunning = false;
+
+  document.getElementById(
+    "automationStatus"
+  ).textContent =
+    "🔴 Automation stopped.";
+
+  logActivity(
+    "Automation stopped."
+  );
+}
+
+
+/* =========================
+   MARKET
+========================= */
+
+function checkMarket() {
+
+  document.getElementById(
+    "marketStatus"
+  ).textContent =
+    "📊 Market monitor is ready. Live trading connection will be added in a later module.";
+
+  logActivity(
+    "Market monitor checked."
+  );
+}
+
+
+/* =========================
+   SAVED CONTENT
+========================= */
+
+function loadSavedContent() {
 
   const saved =
     localStorage.getItem(
       "aiCommandCentreContent"
     );
 
-  if(saved){
+  if (saved) {
 
-    currentContent = saved;
+    document.getElementById(
+      "savedOutput"
+    ).textContent = saved;
 
-    document.getElementById("savedContent").textContent =
-      saved;
   }
 }
 
 
+function clearSaved() {
+
+  localStorage.removeItem(
+    "aiCommandCentreContent"
+  );
+
+  document.getElementById(
+    "savedOutput"
+  ).textContent =
+    "No saved content.";
+
+  logActivity(
+    "Saved content cleared."
+  );
+}
+
+
+/* =========================
+   ACTIVITY LOG
+========================= */
+
+function logActivity(message) {
+
+  const log =
+    document.getElementById(
+      "activityLog"
+    );
+
+  const entry =
+    document.createElement("div");
+
+  const time =
+    new Date().toLocaleTimeString();
+
+  entry.textContent =
+    time + " — " + message;
+
+  log.prepend(entry);
+
+}
+
+
+/* =========================
+   STARTUP
+========================= */
+
 loadSavedContent();
 
-logActivity("AI Command Centre loaded successfully.");
+logActivity(
+  "AI Command Centre loaded."
+);
 
 </script>
+
 </body>
 </html>
