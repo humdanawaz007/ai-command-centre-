@@ -51,12 +51,18 @@
             border: none;
             margin: 10px 0;
         }
+
+        #status {
+            margin-top: 20px;
+            line-height: 1.5;
+        }
     </style>
 </head>
 
 <body>
 
     <h1>🧠 AI Command Centre</h1>
+
     <p>Your personal AI automation system</p>
 
     <div class="card">
@@ -66,69 +72,95 @@
     </div>
 
     <div id="assistant">
+
         <h2>🧠 AI Assistant</h2>
+
         <p>What would you like me to do?</p>
 
-        <input id="command" placeholder="Type your command...">
+        <input
+            id="command"
+            placeholder="Type your command..."
+        >
 
         <br>
 
         <button onclick="sendCommand()">Send</button>
+
     </div>
 
     <p id="status">System ready.</p>
 
     <script>
+
         function openAssistant() {
+
             document.getElementById("assistant").style.display = "block";
+
             document.getElementById("status").innerText =
                 "🧠 AI Assistant opened. Ready for your command.";
+
         }
+
 
         async function sendCommand() {
-    const command = document.getElementById("command").value;
 
-    if (command.trim() === "") {
-        alert("Please enter a command.");
-        return;
-    }
-
-    document.getElementById("status").innerText = "🤖 AI is thinking...";
-
-    try {
-        const response = await fetch("/api/chat", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                message: command
-            })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error || "Something went wrong");
-        }
-
-        document.getElementById("status").innerText =
-            "🤖 " + data.reply;
-
-    } catch (error) {
-        document.getElementById("status").innerText =
-            "❌ Error: " + error.message;
-    }
-} document.getElementById("command").value;
+            const command =
+                document.getElementById("command").value;
 
             if (command.trim() === "") {
+
                 alert("Please enter a command.");
+
                 return;
             }
 
+
             document.getElementById("status").innerText =
-                "📋 Command received: " + command;
+                "🤖 AI is thinking...";
+
+
+            try {
+
+                const response = await fetch("/api/chat", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        message: command
+                    })
+
+                });
+
+
+                const data = await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data.error || "Something went wrong"
+                    );
+
+                }
+
+
+                document.getElementById("status").innerText =
+                    "🤖 " + data.reply;
+
+
+            } catch (error) {
+
+                document.getElementById("status").innerText =
+                    "❌ Error: " + error.message;
+
+            }
+
         }
+
     </script>
 
 </body>
