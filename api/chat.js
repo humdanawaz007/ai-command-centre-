@@ -1,33 +1,30 @@
-async function handler(req) {
+module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
-    return Response.json(
-      { error: "Method not allowed" },
-      { status: 405 }
-    );
+    return res.status(405).json({
+      error: "Method not allowed"
+    });
   }
 
   try {
-    const { message } = await req.json();
+    const message = req.body?.message;
 
     if (!message || !message.trim()) {
-      return Response.json(
-        { error: "Message is required" },
-        { status: 400 }
-      );
+      return res.status(400).json({
+        error: "Message is required"
+      });
     }
 
     if (!process.env.OPENAI_API_KEY) {
-      return Response.json(
-        { error: "OPENAI_API_KEY is missing in Vercel." },
-        { status: 500 }
-      );
+      return res.status(500).json({
+        error: "OPENAI_API_KEY is missing in Vercel"
+      });
     }
 
     const controller = new AbortController();
 
     const timeout = setTimeout(() => {
       controller.abort();
-    }, 8000);
+    }, 25000);
 
     const response = await fetch(
       "https://api.openai.com/v1/responses",
@@ -51,33 +48,31 @@ async function handler(req) {
     const data = await response.json();
 
     if (!response.ok) {
-      return Response.json(
-        {
-          error:
-            data.error?.message ||
-            "OpenAI request failed"
-        },
-        { status: response.status }
-      );
+      return res.status(response.status).json({
+        error:
+          data?.error?.message ||
+          "OpenAI request failed"
+      });
     }
 
-    return Response.json({
-      reply: data.output_text || "No response received."
+    return res.status(200).json({
+      reply:
+        data?.output_text ||
+        "No response received."
     });
 
   } catch (error) {
 
-    if (error.name === "AbortError") {
-      return Response.json(
-        { error: "OpenAI request timed out." },
-        { status: 504 }
-      );
+    if (error?.name === "AbortError") {
+      return res.status(504).json({
+        error: "OpenAI request timed out"
+      });
     }
 
-    return Response.json(
-      {
-        error:
-          error.message ||
-          "Server error"
-      },
-      { status: module.exports = handler;
+    return res.status(500).json({
+      error:
+        error?.message ||
+        "Server error"
+    });
+  }
+};
