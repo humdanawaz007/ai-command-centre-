@@ -1,167 +1,215 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>AI Command Centre</title>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AI Command Centre</title>
 
     <style>
         body {
+            margin: 0;
             font-family: Arial, sans-serif;
-            background: #07111f;
+            background: #06101f;
             color: white;
             text-align: center;
-            padding: 20px;
         }
 
-        h1 {
-            margin-bottom: 10px;
+        header {
+            padding: 35px 20px 20px;
+        }
+
+        header h1 {
+            font-size: 42px;
+            margin: 0;
+        }
+
+        header p {
+            font-size: 20px;
+            color: #ddd;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: auto;
+            padding: 20px;
         }
 
         .card {
-            background: #10243a;
-            margin: 15px auto;
-            padding: 20px;
-            border-radius: 15px;
-            max-width: 400px;
+            background: #132c45;
+            border-radius: 28px;
+            padding: 35px 25px;
+            margin: 30px 0;
         }
 
-        button {
-            background: #2563eb;
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 10px;
-            font-size: 16px;
-            margin-top: 10px;
+        .card h2 {
+            font-size: 34px;
+            margin-bottom: 20px;
         }
 
-        #assistant {
-            display: none;
-            background: #162b44;
-            padding: 20px;
-            border-radius: 15px;
-            margin: 20px auto;
-            max-width: 400px;
+        .card p {
+            font-size: 20px;
+            color: #eee;
         }
 
         input {
             width: 90%;
-            padding: 12px;
-            border-radius: 8px;
+            padding: 18px;
+            border-radius: 15px;
             border: none;
-            margin: 10px 0;
+            font-size: 18px;
+            margin: 20px 0;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: #2867e8;
+            color: white;
+            border: none;
+            padding: 17px 35px;
+            border-radius: 15px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d55c5;
         }
 
         #status {
+            margin-top: 25px;
+            font-size: 20px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            text-align: left;
+        }
+
+        .response-box {
+            background: #0b1c2f;
+            padding: 20px;
+            border-radius: 18px;
             margin-top: 20px;
-            line-height: 1.5;
         }
     </style>
 </head>
 
 <body>
 
-    <h1>🧠 AI Command Centre</h1>
+    <header>
+        <h1>🧠 AI Command Centre</h1>
+        <p>Your personal AI automation system</p>
+    </header>
 
-    <p>Your personal AI automation system</p>
+    <div class="container">
 
-    <div class="card">
-        <h2>AI Assistant</h2>
-        <p>Ask your AI to perform tasks.</p>
-        <button onclick="openAssistant()">Open</button>
+        <div class="card">
+            <h2>AI Assistant</h2>
+
+            <p>Ask your AI to perform tasks.</p>
+
+            <button onclick="openAssistant()">
+                Open
+            </button>
+        </div>
+
+        <div class="card">
+
+            <h2>🧠 AI Assistant</h2>
+
+            <p>What would you like me to do?</p>
+
+            <input
+                type="text"
+                id="command"
+                placeholder="Type your command..."
+                onkeydown="handleEnter(event)"
+            >
+
+            <br>
+
+            <button onclick="sendCommand()">
+                Send
+            </button>
+
+            <div id="status">
+                🤖 System ready.
+            </div>
+
+        </div>
+
     </div>
 
-    <div id="assistant">
 
-        <h2>🧠 AI Assistant</h2>
+<script>
 
-        <p>What would you like me to do?</p>
-
-        <input
-            id="command"
-            placeholder="Type your command..."
-        >
-
-        <br>
-
-        <button onclick="sendCommand()">Send</button>
-
-    </div>
-
-    <p id="status">System ready.</p>
-
-    <script>
-
-        function openAssistant() {
-
-            document.getElementById("assistant").style.display = "block";
-
-            document.getElementById("status").innerText =
-                "🧠 AI Assistant opened. Ready for your command.";
-
-        }
+let conversation = [];
 
 
-        async function sendCommand() {
+function openAssistant() {
 
-            const command =
-                document.getElementById("command").value;
+    document.getElementById("command").focus();
 
-            if (command.trim() === "") {
-
-                alert("Please enter a command.");
-
-                return;
-            }
+}
 
 
-            document.getElementById("status").innerText =
-                "🤖 AI is thinking...";
+function handleEnter(event) {
+
+    if (event.key === "Enter") {
+        sendCommand();
+    }
+
+}
 
 
-            try {
+async function sendCommand() {
 
-                const response = await fetch("/api/chat", {
+    const input = document.getElementById("command");
 
-                    method: "POST",
+    const command = input.value.trim();
 
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
+    if (command === "") {
 
-                    body: JSON.stringify({
-                        message: command
-                    })
+        alert("Please enter a command.");
 
-                });
+        return;
+    }
 
 
-                const data = await response.json();
+    document.getElementById("status").innerText =
+        "🤖 AI is thinking...";
 
 
-                if (!response.ok) {
-
-                    throw new Error(
-                        data.error || "Something went wrong"
-                    );
-
-                }
+    conversation.push({
+        role: "user",
+        content: command
+    });
 
 
-                document.getElementById("status").innerText =
-                    "🤖 " + data.reply;
+    try {
+
+        const response = await fetch("/api/chat", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+
+                message: command,
+
+                conversation: conversation
+
+            })
+
+        });
 
 
-            } catch (error) {
+        const data = await response.json();
 
-                document.getElementById("status").innerText =
-                    "❌ Error: " + error.message;
 
-            }
+        if (!response.ok) {
 
-        }
-
-    </script>
-
-</body>
-</html>
+            throw new Error(
+                data.error || "Something went
