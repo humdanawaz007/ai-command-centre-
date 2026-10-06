@@ -85,8 +85,41 @@
                 "🧠 AI Assistant opened. Ready for your command.";
         }
 
-        function sendCommand() {
-            const command = document.getElementById("command").value;
+        async function sendCommand() {
+    const command = document.getElementById("command").value;
+
+    if (command.trim() === "") {
+        alert("Please enter a command.");
+        return;
+    }
+
+    document.getElementById("status").innerText = "🤖 AI is thinking...";
+
+    try {
+        const response = await fetch("/api/chat", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                message: command
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "Something went wrong");
+        }
+
+        document.getElementById("status").innerText =
+            "🤖 " + data.reply;
+
+    } catch (error) {
+        document.getElementById("status").innerText =
+            "❌ Error: " + error.message;
+    }
+} document.getElementById("command").value;
 
             if (command.trim() === "") {
                 alert("Please enter a command.");
