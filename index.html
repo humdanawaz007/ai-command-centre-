@@ -6,164 +6,164 @@
 <title>AI Command Centre</title>
 
 <style>
-* {
-  box-sizing: border-box;
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#0b1020;
+  color:#fff;
 }
 
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #0b1020;
-  color: #fff;
+.container{
+  width:100%;
+  max-width:900px;
+  margin:auto;
+  padding:16px;
 }
 
-.container {
-  width: 100%;
-  max-width: 900px;
-  margin: auto;
-  padding: 16px;
+header{
+  text-align:center;
+  padding:20px 0;
 }
 
-header {
-  padding: 20px 0;
-  text-align: center;
+header h1{
+  margin:0;
+  font-size:28px;
 }
 
-header h1 {
-  margin: 0;
-  font-size: 28px;
+header p{
+  color:#9ca3af;
 }
 
-header p {
-  color: #9ca3af;
-  margin-top: 8px;
+.card{
+  background:#151b2e;
+  border:1px solid #28304a;
+  border-radius:16px;
+  padding:18px;
+  margin-bottom:16px;
 }
 
-.card {
-  background: #151b2e;
-  border: 1px solid #28304a;
-  border-radius: 16px;
-  padding: 18px;
-  margin-bottom: 16px;
+.card h2{
+  margin-top:0;
 }
 
-.card h2 {
-  margin-top: 0;
-  font-size: 20px;
+label{
+  display:block;
+  margin:12px 0 6px;
+  color:#cbd5e1;
 }
 
-label {
-  display: block;
-  margin: 12px 0 6px;
-  color: #cbd5e1;
+input,select,textarea{
+  width:100%;
+  padding:13px;
+  border-radius:10px;
+  border:1px solid #374151;
+  background:#0d1324;
+  color:#fff;
+  font-size:15px;
 }
 
-input,
-select,
-textarea {
-  width: 100%;
-  padding: 13px;
-  border-radius: 10px;
-  border: 1px solid #374151;
-  background: #0d1324;
-  color: white;
-  font-size: 15px;
+textarea{
+  min-height:150px;
+  resize:vertical;
 }
 
-textarea {
-  min-height: 150px;
-  resize: vertical;
+button{
+  border:0;
+  border-radius:10px;
+  padding:13px 16px;
+  margin-top:12px;
+  font-size:15px;
+  font-weight:bold;
+  cursor:pointer;
 }
 
-button {
-  border: 0;
-  border-radius: 10px;
-  padding: 13px 16px;
-  margin-top: 12px;
-  font-size: 15px;
-  font-weight: bold;
-  cursor: pointer;
+.primary{
+  width:100%;
+  background:#2563eb;
+  color:#fff;
 }
 
-.primary {
-  width: 100%;
-  background: #2563eb;
-  color: white;
+.secondary{
+  background:#374151;
+  color:#fff;
 }
 
-.secondary {
-  background: #374151;
-  color: white;
+.success{
+  background:#16a34a;
+  color:#fff;
 }
 
-.success {
-  background: #16a34a;
-  color: white;
+.danger{
+  background:#dc2626;
+  color:#fff;
 }
 
-.danger {
-  background: #dc2626;
-  color: white;
+.video{
+  background:#7c3aed;
+  color:#fff;
+  width:100%;
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+.status{
+  padding:12px;
+  background:#0d1324;
+  border-radius:10px;
+  color:#93c5fd;
+  margin-top:12px;
 }
 
-.platform {
-  background: #0d1324;
-  border: 1px solid #374151;
-  padding: 15px;
-  border-radius: 10px;
-  text-align: center;
+pre{
+  white-space:pre-wrap;
+  word-wrap:break-word;
+  background:#0d1324;
+  padding:14px;
+  border-radius:10px;
+  line-height:1.5;
+  min-height:120px;
 }
 
-.status {
-  padding: 12px;
-  background: #0d1324;
-  border-radius: 10px;
-  color: #93c5fd;
-  margin-top: 12px;
+.small{
+  color:#9ca3af;
+  font-size:13px;
 }
 
-pre {
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  background: #0d1324;
-  padding: 14px;
-  border-radius: 10px;
-  line-height: 1.5;
-  min-height: 120px;
+.grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
 }
 
-.small {
-  color: #9ca3af;
-  font-size: 13px;
+.platform{
+  background:#0d1324;
+  border:1px solid #374151;
+  padding:15px;
+  border-radius:10px;
+  text-align:center;
 }
 
-.log {
-  max-height: 200px;
-  overflow-y: auto;
-  background: #0d1324;
-  padding: 12px;
-  border-radius: 10px;
+.log{
+  max-height:200px;
+  overflow-y:auto;
+  background:#0d1324;
+  padding:12px;
+  border-radius:10px;
 }
 
-.log div {
-  padding: 7px 0;
-  border-bottom: 1px solid #20283d;
-  font-size: 13px;
+.log div{
+  padding:7px 0;
+  border-bottom:1px solid #20283d;
+  font-size:13px;
 }
 
-@media (max-width: 600px) {
-  .grid {
-    grid-template-columns: 1fr;
+@media(max-width:600px){
+  .grid{
+    grid-template-columns:1fr;
   }
 
-  header h1 {
-    font-size: 24px;
+  header h1{
+    font-size:24px;
   }
 }
 </style>
@@ -174,155 +174,271 @@ pre {
 <div class="container">
 
 <header>
-  <h1>🤖 AI Command Centre</h1>
-  <p>Your personal AI automation dashboard</p>
+<h1>🤖 AI Command Centre</h1>
+<p>Your personal AI automation dashboard</p>
 </header>
 
-<!-- AI CONTENT GENERATOR -->
+
+<!-- AI GENERATOR -->
 
 <div class="card">
-  <h2>🧠 AI Content Generator</h2>
 
-  <label for="topic">Topic</label>
+<h2>🧠 AI Content Generator</h2>
 
-  <input
-    id="topic"
-    type="text"
-    placeholder="Example: 5 amazing facts about space"
-  >
+<label>Topic</label>
 
-  <label for="platform">Platform</label>
+<input
+id="topic"
+type="text"
+placeholder="Example: 5 amazing facts about space"
+>
 
-  <select id="platform">
-    <option value="YouTube Short">YouTube Short</option>
-    <option value="Instagram Reel">Instagram Reel</option>
-    <option value="Snapchat Spotlight">Snapchat Spotlight</option>
-    <option value="YouTube Video">YouTube Video</option>
-  </select>
+<label>Platform</label>
 
-  <button class="primary" onclick="generateContent()">
-    🚀 Generate AI Content
-  </button>
+<select id="platform">
 
-  <div id="generatorStatus" class="status">
-    Ready to generate.
-  </div>
+<option value="YouTube Short">
+YouTube Short
+</option>
+
+<option value="Instagram Reel">
+Instagram Reel
+</option>
+
+<option value="Snapchat Spotlight">
+Snapchat Spotlight
+</option>
+
+<option value="YouTube Video">
+YouTube Video
+</option>
+
+</select>
+
+<button
+class="primary"
+onclick="generateContent()"
+>
+🚀 Generate AI Content
+</button>
+
+<div id="generatorStatus" class="status">
+Ready to generate.
+</div>
+
 </div>
 
 
-<!-- CONTENT PACKAGE -->
+<!-- CONTENT -->
 
 <div class="card">
-  <h2>📦 Content Package</h2>
 
-  <pre id="contentOutput">No content generated yet.</pre>
+<h2>📦 Content Package</h2>
 
-  <button class="secondary" onclick="copyContent()">
-    📋 Copy
-  </button>
+<pre id="contentOutput">
+No content generated yet.
+</pre>
 
-  <button class="success" onclick="saveContent()">
-    💾 Save
-  </button>
+<button
+class="secondary"
+onclick="copyContent()"
+>
+📋 Copy
+</button>
 
-  <button class="secondary" onclick="downloadContent()">
-    ⬇️ Download
-  </button>
+<button
+class="success"
+onclick="saveContent()"
+>
+💾 Save
+</button>
+
+<button
+class="secondary"
+onclick="downloadContent()"
+>
+⬇️ Download
+</button>
+
+</div>
+
+
+<!-- VIDEO GENERATOR -->
+
+<div class="card">
+
+<h2>🎬 AI Video Generator</h2>
+
+<p class="small">
+Turn your AI script into a complete short-video production plan.
+</p>
+
+<button
+class="video"
+onclick="generateVideoPackage()"
+>
+🎬 Create Video Package
+</button>
+
+<div id="videoStatus" class="status">
+Waiting for content.
+</div>
+
+</div>
+
+
+<!-- VIDEO PACKAGE -->
+
+<div class="card">
+
+<h2>🎥 Video Production Package</h2>
+
+<pre id="videoOutput">
+No video package created yet.
+</pre>
+
+<button
+class="secondary"
+onclick="copyVideoPackage()"
+>
+📋 Copy Video Package
+</button>
+
+<button
+class="secondary"
+onclick="downloadVideoPackage()"
+>
+⬇️ Download Video Package
+</button>
+
 </div>
 
 
 <!-- PLATFORMS -->
 
 <div class="card">
-  <h2>📱 Platforms</h2>
 
-  <div class="grid">
+<h2>📱 Platforms</h2>
 
-    <div class="platform">
-      ▶️<br>
-      <strong>YouTube</strong>
-      <div class="small">Ready</div>
-    </div>
+<div class="grid">
 
-    <div class="platform">
-      📸<br>
-      <strong>Instagram</strong>
-      <div class="small">Ready</div>
-    </div>
+<div class="platform">
+▶️<br>
+<strong>YouTube</strong>
+<div class="small">Ready</div>
+</div>
 
-    <div class="platform">
-      👻<br>
-      <strong>Snapchat</strong>
-      <div class="small">Ready</div>
-    </div>
+<div class="platform">
+📸<br>
+<strong>Instagram</strong>
+<div class="small">Ready</div>
+</div>
 
-  </div>
+<div class="platform">
+👻<br>
+<strong>Snapchat</strong>
+<div class="small">Ready</div>
+</div>
+
+</div>
+
 </div>
 
 
 <!-- AUTOMATION -->
 
 <div class="card">
-  <h2>⚙️ Automation</h2>
 
-  <p class="small">
-    Start or stop your personal content automation system.
-  </p>
+<h2>⚙️ Automation</h2>
 
-  <button class="success" onclick="startAutomation()">
-    ▶️ Start Automation
-  </button>
+<p class="small">
+Start or stop your personal content automation system.
+</p>
 
-  <button class="danger" onclick="stopAutomation()">
-    ⏹ Stop Automation
-  </button>
+<button
+class="success"
+onclick="startAutomation()"
+>
+▶️ Start Automation
+</button>
 
-  <div id="automationStatus" class="status">
-    Automation stopped.
-  </div>
+<button
+class="danger"
+onclick="stopAutomation()"
+>
+⏹ Stop Automation
+</button>
+
+<div
+id="automationStatus"
+class="status"
+>
+Automation stopped.
+</div>
+
 </div>
 
 
 <!-- TRADING -->
 
 <div class="card">
-  <h2>📈 Trading Monitor</h2>
 
-  <p class="small">
-    Market monitoring module.
-  </p>
+<h2>📈 Trading Monitor</h2>
 
-  <button class="secondary" onclick="checkMarket()">
-    🔍 Check Market
-  </button>
+<p class="small">
+Market monitoring module.
+</p>
 
-  <div id="marketStatus" class="status">
-    Waiting for market check.
-  </div>
+<button
+class="secondary"
+onclick="checkMarket()"
+>
+🔍 Check Market
+</button>
+
+<div
+id="marketStatus"
+class="status"
+>
+Waiting for market check.
+</div>
+
 </div>
 
 
-<!-- SAVED CONTENT -->
+<!-- SAVED -->
 
 <div class="card">
-  <h2>💾 Saved Content</h2>
 
-  <pre id="savedOutput">No saved content.</pre>
+<h2>💾 Saved Content</h2>
 
-  <button class="danger" onclick="clearSaved()">
-    🗑 Clear Saved Content
-  </button>
+<pre id="savedOutput">
+No saved content.
+</pre>
+
+<button
+class="danger"
+onclick="clearSaved()"
+>
+🗑 Clear Saved Content
+</button>
+
 </div>
 
 
 <!-- ACTIVITY -->
 
 <div class="card">
-  <h2>📋 Activity Log</h2>
 
-  <div id="activityLog" class="log">
-    <div>System ready.</div>
-  </div>
+<h2>📋 Activity Log</h2>
+
+<div
+id="activityLog"
+class="log"
+>
+<div>System ready.</div>
+</div>
+
 </div>
 
 </div>
@@ -331,47 +447,50 @@ pre {
 <script>
 
 let currentContent = "";
+let currentVideoPackage = "";
 let automationRunning = false;
 
 
 /* =========================
-   AI CONTENT GENERATOR
+AI CONTENT GENERATOR
 ========================= */
 
-async function generateContent() {
+async function generateContent(){
 
-  const topic =
-    document.getElementById("topic").value.trim();
+const topic =
+document.getElementById("topic").value.trim();
 
-  const platform =
-    document.getElementById("platform").value;
+const platform =
+document.getElementById("platform").value;
 
-  const output =
-    document.getElementById("contentOutput");
+const output =
+document.getElementById("contentOutput");
 
-  const status =
-    document.getElementById("generatorStatus");
+const status =
+document.getElementById("generatorStatus");
 
-  if (!topic) {
-    status.textContent =
-      "⚠️ Please enter a topic first.";
+if(!topic){
 
-    return;
-  }
+status.textContent =
+"⚠️ Please enter a topic first.";
 
-  status.textContent =
-    "🤖 AI is generating your content...";
+return;
 
-  output.textContent =
-    "Please wait...";
+}
 
-  logActivity(
-    "AI generation started: " + topic
-  );
+status.textContent =
+"🤖 AI is generating your content...";
 
-  try {
+output.textContent =
+"Please wait...";
 
-    const prompt = `
+logActivity(
+"AI generation started: "+topic
+);
+
+try{
+
+const prompt = `
 You are the AI content engine inside a personal AI Command Centre.
 
 Create a high-quality short-form content package.
@@ -395,305 +514,547 @@ Create:
 
 Make it engaging, factual, concise and suitable for the selected platform.
 
-Do not explain your process.
 Return the finished content package directly.
 `;
 
-    const response = await fetch("/api/chat", {
+const response =
+await fetch("/api/chat",{
 
-      method: "POST",
+method:"POST",
 
-      headers: {
-        "Content-Type": "application/json"
-      },
+headers:{
+"Content-Type":"application/json"
+},
 
-      body: JSON.stringify({
-        message: prompt
-      })
+body:JSON.stringify({
+message:prompt
+})
 
-    });
+});
 
-    const data = await response.json();
+const data =
+await response.json();
 
-    if (!response.ok) {
+if(!response.ok){
 
-      throw new Error(
-        data?.error ||
-        "AI request failed"
-      );
+throw new Error(
+data?.error ||
+"AI request failed"
+);
 
-    }
+}
 
-    if (!data.reply) {
+if(!data.reply){
 
-      throw new Error(
-        "AI returned no content"
-      );
+throw new Error(
+"AI returned no content"
+);
 
-    }
+}
 
-    currentContent = data.reply;
+currentContent =
+data.reply;
 
-    output.textContent =
-      currentContent;
+output.textContent =
+currentContent;
 
-    status.textContent =
-      "✅ AI content generated successfully.";
+status.textContent =
+"✅ AI content generated successfully.";
 
-    logActivity(
-      "AI content generated for " + platform
-    );
+logActivity(
+"AI content generated for "+platform
+);
 
-  } catch (error) {
+}
+catch(error){
 
-    console.error(error);
+console.error(error);
 
-    output.textContent =
-      "Unable to generate content.\n\n" +
-      error.message;
+output.textContent =
+"Unable to generate content.\n\n"+
+error.message;
 
-    status.textContent =
-      "❌ " + error.message;
+status.textContent =
+"❌ "+error.message;
 
-    logActivity(
-      "AI generation error: " +
-      error.message
-    );
+logActivity(
+"AI generation error: "+error.message
+);
 
-  }
+}
+
 }
 
 
 /* =========================
-   COPY
+VIDEO PACKAGE GENERATOR
 ========================= */
 
-async function copyContent() {
+async function generateVideoPackage(){
 
-  if (!currentContent) {
+const videoOutput =
+document.getElementById("videoOutput");
 
-    alert("Generate content first.");
+const videoStatus =
+document.getElementById("videoStatus");
 
-    return;
-  }
+if(!currentContent){
 
-  try {
+videoStatus.textContent =
+"⚠️ Generate AI content first.";
 
-    await navigator.clipboard.writeText(
-      currentContent
-    );
+return;
 
-    logActivity(
-      "Content copied to clipboard."
-    );
+}
 
-    alert("Content copied.");
+videoStatus.textContent =
+"🎬 AI is creating your video package...";
 
-  } catch (error) {
+videoOutput.textContent =
+"Please wait...";
 
-    alert(
-      "Copy failed. Please select and copy the text manually."
-    );
+logActivity(
+"Video package generation started."
+);
 
-  }
+try{
+
+const platform =
+document.getElementById("platform").value;
+
+const prompt = `
+You are an AI short-video production director.
+
+Convert the following content into a complete production package.
+
+Platform:
+${platform}
+
+CONTENT:
+${currentContent}
+
+Create:
+
+VIDEO TITLE
+
+TOTAL LENGTH:
+Aim for approximately 30-60 seconds unless the content requires otherwise.
+
+SCENE PLAN:
+Create 5-8 scenes.
+
+For every scene provide:
+
+Scene number
+Approximate duration
+Voiceover
+On-screen caption
+Visual / footage description
+AI image or video generation prompt
+Transition suggestion
+
+Then provide:
+
+VOICEOVER SCRIPT
+ON-SCREEN CAPTIONS
+BACKGROUND MUSIC DIRECTION
+SOUND EFFECTS
+THUMBNAIL PROMPT
+FINAL CALL TO ACTION
+
+Make the package practical for producing a vertical 9:16 short video.
+
+Do not explain your reasoning.
+Return only the finished production package.
+`;
+
+const response =
+await fetch("/api/chat",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+message:prompt
+})
+
+});
+
+const data =
+await response.json();
+
+if(!response.ok){
+
+throw new Error(
+data?.error ||
+"Video package request failed"
+);
+
+}
+
+if(!data.reply){
+
+throw new Error(
+"AI returned no video package"
+);
+
+}
+
+currentVideoPackage =
+data.reply;
+
+videoOutput.textContent =
+currentVideoPackage;
+
+videoStatus.textContent =
+"✅ Video production package ready.";
+
+logActivity(
+"AI video package created."
+);
+
+}
+catch(error){
+
+console.error(error);
+
+videoOutput.textContent =
+"Unable to create video package.\n\n"+
+error.message;
+
+videoStatus.textContent =
+"❌ "+error.message;
+
+logActivity(
+"Video package error: "+error.message
+);
+
+}
+
 }
 
 
 /* =========================
-   SAVE
+COPY CONTENT
 ========================= */
 
-function saveContent() {
+async function copyContent(){
 
-  if (!currentContent) {
+if(!currentContent){
 
-    alert("Generate content first.");
+alert("Generate content first.");
 
-    return;
-  }
+return;
 
-  localStorage.setItem(
-    "aiCommandCentreContent",
-    currentContent
-  );
+}
 
-  document.getElementById(
-    "savedOutput"
-  ).textContent = currentContent;
+try{
 
-  logActivity(
-    "Content saved locally."
-  );
+await navigator.clipboard.writeText(
+currentContent
+);
 
-  alert("Content saved.");
+logActivity(
+"Content copied."
+);
+
+alert("Content copied.");
+
+}
+catch(error){
+
+alert("Copy failed.");
+
+}
+
 }
 
 
 /* =========================
-   DOWNLOAD
+COPY VIDEO PACKAGE
 ========================= */
 
-function downloadContent() {
+async function copyVideoPackage(){
 
-  if (!currentContent) {
+if(!currentVideoPackage){
 
-    alert("Generate content first.");
+alert("Create a video package first.");
 
-    return;
-  }
+return;
 
-  const blob = new Blob(
-    [currentContent],
-    { type: "text/plain" }
-  );
+}
 
-  const url =
-    URL.createObjectURL(blob);
+try{
 
-  const a =
-    document.createElement("a");
+await navigator.clipboard.writeText(
+currentVideoPackage
+);
 
-  a.href = url;
+logActivity(
+"Video package copied."
+);
 
-  a.download =
-    "ai-content.txt";
+alert("Video package copied.");
 
-  document.body.appendChild(a);
+}
+catch(error){
 
-  a.click();
+alert("Copy failed.");
 
-  document.body.removeChild(a);
+}
 
-  URL.revokeObjectURL(url);
-
-  logActivity(
-    "Content downloaded."
-  );
 }
 
 
 /* =========================
-   AUTOMATION
+SAVE
 ========================= */
 
-function startAutomation() {
+function saveContent(){
 
-  automationRunning = true;
+if(!currentContent){
 
-  document.getElementById(
-    "automationStatus"
-  ).textContent =
-    "🟢 Automation running.";
+alert("Generate content first.");
 
-  logActivity(
-    "Automation started."
-  );
+return;
+
 }
 
+localStorage.setItem(
+"aiCommandCentreContent",
+currentContent
+);
 
-function stopAutomation() {
+document.getElementById(
+"savedOutput"
+).textContent =
+currentContent;
 
-  automationRunning = false;
+logActivity(
+"Content saved locally."
+);
 
-  document.getElementById(
-    "automationStatus"
-  ).textContent =
-    "🔴 Automation stopped.";
+alert("Content saved.");
 
-  logActivity(
-    "Automation stopped."
-  );
 }
 
 
 /* =========================
-   MARKET
+DOWNLOAD CONTENT
 ========================= */
 
-function checkMarket() {
+function downloadContent(){
 
-  document.getElementById(
-    "marketStatus"
-  ).textContent =
-    "📊 Market monitor is ready. Live trading connection will be added in a later module.";
+if(!currentContent){
 
-  logActivity(
-    "Market monitor checked."
-  );
+alert("Generate content first.");
+
+return;
+
+}
+
+downloadText(
+currentContent,
+"ai-content.txt"
+);
+
+logActivity(
+"Content downloaded."
+);
+
 }
 
 
 /* =========================
-   SAVED CONTENT
+DOWNLOAD VIDEO PACKAGE
 ========================= */
 
-function loadSavedContent() {
+function downloadVideoPackage(){
 
-  const saved =
-    localStorage.getItem(
-      "aiCommandCentreContent"
-    );
+if(!currentVideoPackage){
 
-  if (saved) {
+alert("Create a video package first.");
 
-    document.getElementById(
-      "savedOutput"
-    ).textContent = saved;
+return;
 
-  }
 }
 
+downloadText(
+currentVideoPackage,
+"video-production-package.txt"
+);
 
-function clearSaved() {
+logActivity(
+"Video package downloaded."
+);
 
-  localStorage.removeItem(
-    "aiCommandCentreContent"
-  );
-
-  document.getElementById(
-    "savedOutput"
-  ).textContent =
-    "No saved content.";
-
-  logActivity(
-    "Saved content cleared."
-  );
 }
 
 
 /* =========================
-   ACTIVITY LOG
+DOWNLOAD HELPER
 ========================= */
 
-function logActivity(message) {
+function downloadText(text,filename){
 
-  const log =
-    document.getElementById(
-      "activityLog"
-    );
+const blob =
+new Blob(
+[text],
+{type:"text/plain"}
+);
 
-  const entry =
-    document.createElement("div");
+const url =
+URL.createObjectURL(blob);
 
-  const time =
-    new Date().toLocaleTimeString();
+const a =
+document.createElement("a");
 
-  entry.textContent =
-    time + " — " + message;
+a.href=url;
 
-  log.prepend(entry);
+a.download=filename;
+
+document.body.appendChild(a);
+
+a.click();
+
+document.body.removeChild(a);
+
+URL.revokeObjectURL(url);
 
 }
 
 
 /* =========================
-   STARTUP
+AUTOMATION
+========================= */
+
+function startAutomation(){
+
+automationRunning=true;
+
+document.getElementById(
+"automationStatus"
+).textContent =
+"🟢 Automation running.";
+
+logActivity(
+"Automation started."
+);
+
+}
+
+
+function stopAutomation(){
+
+automationRunning=false;
+
+document.getElementById(
+"automationStatus"
+).textContent =
+"🔴 Automation stopped.";
+
+logActivity(
+"Automation stopped."
+);
+
+}
+
+
+/* =========================
+MARKET
+========================= */
+
+function checkMarket(){
+
+document.getElementById(
+"marketStatus"
+).textContent =
+"📊 Market monitor is ready. Live trading connection will be added later.";
+
+logActivity(
+"Market monitor checked."
+);
+
+}
+
+
+/* =========================
+SAVED CONTENT
+========================= */
+
+function loadSavedContent(){
+
+const saved =
+localStorage.getItem(
+"aiCommandCentreContent"
+);
+
+if(saved){
+
+document.getElementById(
+"savedOutput"
+).textContent =
+saved;
+
+}
+
+}
+
+
+function clearSaved(){
+
+localStorage.removeItem(
+"aiCommandCentreContent"
+);
+
+document.getElementById(
+"savedOutput"
+).textContent =
+"No saved content.";
+
+logActivity(
+"Saved content cleared."
+);
+
+}
+
+
+/* =========================
+ACTIVITY LOG
+========================= */
+
+function logActivity(message){
+
+const log =
+document.getElementById(
+"activityLog"
+);
+
+const entry =
+document.createElement("div");
+
+const time =
+new Date().toLocaleTimeString();
+
+entry.textContent =
+time+" — "+message;
+
+log.prepend(entry);
+
+}
+
+
+/* =========================
+STARTUP
 ========================= */
 
 loadSavedContent();
 
 logActivity(
-  "AI Command Centre loaded."
+"AI Command Centre loaded."
 );
 
 </script>
