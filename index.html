@@ -144,6 +144,33 @@ pre{
   text-align:center;
 }
 
+.platform-click{
+  cursor:pointer;
+  transition:transform .15s,border-color .15s;
+}
+
+.platform-click:hover{
+  transform:translateY(-2px);
+  border-color:#60a5fa;
+}
+
+.platform-icon{
+  font-size:30px;
+  margin-bottom:8px;
+}
+
+.platform-button{
+  width:100%;
+  background:#2563eb;
+  color:#fff;
+  margin-top:10px;
+  padding:10px;
+}
+
+.platform-button:active{
+  transform:scale(.98);
+}
+
 .log{
   max-height:250px;
   overflow-y:auto;
@@ -193,6 +220,9 @@ pre{
 <p>Your personal AI automation dashboard</p>
 </header>
 
+
+<!-- AI CONTENT GENERATOR -->
+
 <div class="card">
 
 <h2>🧠 AI Content Generator</h2>
@@ -241,6 +271,8 @@ Ready to generate.
 </div>
 
 
+<!-- CONTENT PACKAGE -->
+
 <div class="card">
 
 <h2>📦 Content Package</h2>
@@ -273,6 +305,8 @@ onclick="downloadContent()"
 </div>
 
 
+<!-- AI VIDEO GENERATOR -->
+
 <div class="card">
 
 <h2>🎬 AI Video Generator</h2>
@@ -294,6 +328,8 @@ Waiting for content.
 
 </div>
 
+
+<!-- VIDEO PRODUCTION PACKAGE -->
 
 <div class="card">
 
@@ -347,34 +383,105 @@ Video renderer ready.
 </div>
 
 
+<!-- PLATFORMS -->
+
 <div class="card">
 
 <h2>📱 Platforms</h2>
 
+<p class="small">
+Prepare your generated content for each platform.
+</p>
+
 <div class="grid">
 
-<div class="platform">
-▶️<br>
+<div
+class="platform platform-click"
+onclick="preparePlatform('YouTube')"
+>
+
+<div class="platform-icon">
+▶️
+</div>
+
 <strong>YouTube</strong>
-<div class="small">Ready</div>
+
+<div class="small">
+Ready
 </div>
 
-<div class="platform">
-📸<br>
+<button
+class="platform-button"
+onclick="event.stopPropagation();preparePlatform('YouTube')"
+>
+Prepare Short
+</button>
+
+</div>
+
+
+<div
+class="platform platform-click"
+onclick="preparePlatform('Instagram')"
+>
+
+<div class="platform-icon">
+📸
+</div>
+
 <strong>Instagram</strong>
-<div class="small">Ready</div>
+
+<div class="small">
+Ready
 </div>
 
-<div class="platform">
-👻<br>
+<button
+class="platform-button"
+onclick="event.stopPropagation();preparePlatform('Instagram')"
+>
+Prepare Reel
+</button>
+
+</div>
+
+
+<div
+class="platform platform-click"
+onclick="preparePlatform('Snapchat')"
+>
+
+<div class="platform-icon">
+👻
+</div>
+
 <strong>Snapchat</strong>
-<div class="small">Ready</div>
+
+<div class="small">
+Ready
 </div>
+
+<button
+class="platform-button"
+onclick="event.stopPropagation();preparePlatform('Snapchat')"
+>
+Prepare Spotlight
+</button>
 
 </div>
 
 </div>
 
+<div
+id="platformStatus"
+class="status"
+>
+Select a platform to prepare your content.
+</div>
+
+</div>
+
+
+<!-- AUTOMATION CENTRE -->
 
 <div class="card">
 
@@ -471,6 +578,8 @@ Automation is not running.
 </div>
 
 
+<!-- TRADING MONITOR -->
+
 <div class="card">
 
 <h2>📈 Trading Monitor</h2>
@@ -496,6 +605,8 @@ Waiting for market check.
 </div>
 
 
+<!-- SAVED CONTENT -->
+
 <div class="card">
 
 <h2>💾 Saved Content</h2>
@@ -513,6 +624,8 @@ onclick="clearSaved()"
 
 </div>
 
+
+<!-- ACTIVITY LOG -->
 
 <div class="card">
 
@@ -544,25 +657,37 @@ let automationNextRun=null;
 
 async function generateContent(){
 
-const topic=document.getElementById("topic").value.trim();
-const platform=document.getElementById("platform").value;
+const topic=
+document.getElementById("topic").value.trim();
 
-const output=document.getElementById("contentOutput");
-const status=document.getElementById("generatorStatus");
+const platform=
+document.getElementById("platform").value;
+
+const output=
+document.getElementById("contentOutput");
+
+const status=
+document.getElementById("generatorStatus");
 
 if(!topic){
 
-status.textContent="⚠️ Please enter a topic first.";
+status.textContent=
+"⚠️ Please enter a topic first.";
+
 return;
 
 }
 
-status.textContent="🤖 AI is generating your content...";
-output.textContent="Please wait...";
+status.textContent=
+"🤖 AI is generating your content...";
+
+output.textContent=
+"Please wait...";
 
 try{
 
 const prompt=`
+
 You are the AI content engine inside a personal AI Command Centre.
 
 Create a high-quality short-form content package.
@@ -587,10 +712,12 @@ Create:
 Make it engaging, factual, concise and suitable for the selected platform.
 
 Return the finished content package directly.
+
 `;
 
-const response=await fetch("/api/chat",{
-
+const response=await fetch(
+"/api/chat",
+{
 method:"POST",
 
 headers:{
@@ -600,15 +727,17 @@ headers:{
 body:JSON.stringify({
 message:prompt
 })
+}
+);
 
-});
-
-const data=await response.json();
+const data=
+await response.json();
 
 if(!response.ok){
 
 throw new Error(
-data?.error||"AI request failed"
+data?.error||
+"AI request failed"
 );
 
 }
@@ -621,9 +750,11 @@ throw new Error(
 
 }
 
-currentContent=data.reply;
+currentContent=
+data.reply;
 
-output.textContent=currentContent;
+output.textContent=
+currentContent;
 
 status.textContent=
 "✅ AI content generated successfully.";
@@ -682,6 +813,7 @@ const platform=
 document.getElementById("platform").value;
 
 const prompt=`
+
 You are an AI short-video production director.
 
 Convert the following content into a complete production package.
@@ -724,10 +856,13 @@ FINAL CALL TO ACTION
 Make it practical for a vertical 9:16 short video.
 
 Return only the finished production package.
+
 `;
 
-const response=await fetch("/api/chat",{
-
+const response=
+await fetch(
+"/api/chat",
+{
 method:"POST",
 
 headers:{
@@ -737,15 +872,17 @@ headers:{
 body:JSON.stringify({
 message:prompt
 })
+}
+);
 
-});
-
-const data=await response.json();
+const data=
+await response.json();
 
 if(!response.ok){
 
 throw new Error(
-data?.error||"Video package request failed"
+data?.error||
+"Video package request failed"
 );
 
 }
@@ -758,7 +895,8 @@ throw new Error(
 
 }
 
-currentVideoPackage=data.reply;
+currentVideoPackage=
+data.reply;
 
 videoOutput.textContent=
 currentVideoPackage;
@@ -795,7 +933,9 @@ function renderVideo(){
 
 if(!currentContent){
 
-document.getElementById("renderStatus").textContent=
+document.getElementById(
+"renderStatus"
+).textContent=
 "⚠️ Generate AI content first.";
 
 return;
@@ -804,16 +944,20 @@ return;
 
 try{
 
-const canvas=document.createElement("canvas");
+const canvas=
+document.createElement("canvas");
 
 canvas.width=1080;
 canvas.height=1920;
 
-const ctx=canvas.getContext("2d");
+const ctx=
+canvas.getContext("2d");
 
 if(!canvas.captureStream){
 
-document.getElementById("renderStatus").textContent=
+document.getElementById(
+"renderStatus"
+).textContent=
 "⚠️ Your browser does not support video rendering.";
 
 return;
@@ -822,20 +966,25 @@ return;
 
 if(!window.MediaRecorder){
 
-document.getElementById("renderStatus").textContent=
+document.getElementById(
+"renderStatus"
+).textContent=
 "⚠️ Video recording is not supported on this browser.";
 
 return;
 
 }
 
-const stream=canvas.captureStream(30);
+const stream=
+canvas.captureStream(30);
 
-const recorder=new MediaRecorder(stream);
+const recorder=
+new MediaRecorder(stream);
 
 const chunks=[];
 
-recorder.ondataavailable=function(event){
+recorder.ondataavailable=
+function(event){
 
 if(event.data.size>0){
 
@@ -845,19 +994,25 @@ chunks.push(event.data);
 
 };
 
-recorder.onstop=function(){
+recorder.onstop=
+function(){
 
-const blob=new Blob(
+const blob=
+new Blob(
 chunks,
 {type:"video/webm"}
 );
 
-const url=URL.createObjectURL(blob);
+const url=
+URL.createObjectURL(blob);
 
-const link=document.createElement("a");
+const link=
+document.createElement("a");
 
 link.href=url;
-link.download="money-maker-ai-short.webm";
+
+link.download=
+"money-maker-ai-short.webm";
 
 document.body.appendChild(link);
 
@@ -865,13 +1020,18 @@ link.click();
 
 link.remove();
 
-setTimeout(function(){
+setTimeout(
+function(){
 
 URL.revokeObjectURL(url);
 
-},5000);
+},
+5000
+);
 
-document.getElementById("renderStatus").textContent=
+document.getElementById(
+"renderStatus"
+).textContent=
 "✅ Video created. Download started.";
 
 logActivity(
@@ -880,12 +1040,15 @@ logActivity(
 
 };
 
-document.getElementById("renderStatus").textContent=
+document.getElementById(
+"renderStatus"
+).textContent=
 "🎥 Rendering video...";
 
 recorder.start();
 
-const words=currentContent
+const words=
+currentContent
 .replace(/\s+/g," ")
 .trim()
 .split(" ");
@@ -903,6 +1066,7 @@ words[i];
 if(page.length>90){
 
 pages.push(page);
+
 page="";
 
 }
@@ -915,7 +1079,8 @@ pages.push(page);
 
 }
 
-const total=Math.min(
+const total=
+Math.min(
 pages.length,
 8
 );
@@ -924,7 +1089,8 @@ let pageIndex=0;
 
 function draw(){
 
-ctx.fillStyle="#0b1020";
+ctx.fillStyle=
+"#0b1020";
 
 ctx.fillRect(
 0,
@@ -933,7 +1099,8 @@ ctx.fillRect(
 1920
 );
 
-ctx.fillStyle="#2563eb";
+ctx.fillStyle=
+"#2563eb";
 
 ctx.fillRect(
 0,
@@ -942,11 +1109,14 @@ ctx.fillRect(
 14
 );
 
-ctx.fillStyle="#ffffff";
+ctx.fillStyle=
+"#ffffff";
 
-ctx.textAlign="center";
+ctx.textAlign=
+"center";
 
-ctx.font="bold 58px Arial";
+ctx.font=
+"bold 58px Arial";
 
 ctx.fillText(
 "5 AMAZING FACTS",
@@ -954,9 +1124,12 @@ ctx.fillText(
 230
 );
 
-ctx.font="bold 52px Arial";
+ctx.font=
+"bold 52px Arial";
 
-const text=pages[pageIndex]||currentContent;
+const text=
+pages[pageIndex]||
+currentContent;
 
 drawText(
 ctx,
@@ -967,9 +1140,11 @@ text,
 70
 );
 
-ctx.fillStyle="#93c5fd";
+ctx.fillStyle=
+"#93c5fd";
 
-ctx.font="32px Arial";
+ctx.font=
+"32px Arial";
 
 ctx.fillText(
 "Money maker Ai",
@@ -978,7 +1153,9 @@ ctx.fillText(
 );
 
 ctx.fillText(
-(pageIndex+1)+" / "+total,
+(pageIndex+1)+
+" / "+
+total,
 540,
 1810
 );
@@ -1013,8 +1190,11 @@ draw();
 }
 catch(error){
 
-document.getElementById("renderStatus").textContent=
-"❌ Video error: "+error.message;
+document.getElementById(
+"renderStatus"
+).textContent=
+"❌ Video error: "+
+error.message;
 
 }
 
@@ -1030,7 +1210,8 @@ maxWidth,
 lineHeight
 ){
 
-const words=text.split(" ");
+const words=
+text.split(" ");
 
 let line="";
 const lines=[];
@@ -1043,11 +1224,13 @@ line+
 words[i];
 
 if(
-ctx.measureText(test).width>maxWidth &&
+ctx.measureText(test).width>
+maxWidth &&
 line
 ){
 
 lines.push(line);
+
 line=words[i];
 
 }
@@ -1066,9 +1249,14 @@ lines.push(line);
 }
 
 const start=
-y-(lines.length*lineHeight)/2;
+y-
+(lines.length*lineHeight)/2;
 
-for(let i=0;i<lines.length;i++){
+for(
+let i=0;
+i<lines.length;
+i++
+){
 
 ctx.fillText(
 lines[i],
@@ -1077,6 +1265,96 @@ start+(i*lineHeight)
 );
 
 }
+
+}
+
+
+/* PLATFORM PREPARATION */
+
+function preparePlatform(platform){
+
+const status=
+document.getElementById(
+"platformStatus"
+);
+
+if(!currentContent){
+
+status.textContent=
+"⚠️ Generate AI content first.";
+
+logActivity(
+"Platform preparation attempted without content."
+);
+
+return;
+
+}
+
+let platformName="";
+let filename="";
+
+if(platform==="YouTube"){
+
+platformName=
+"YouTube Short";
+
+filename=
+"youtube-short-package.txt";
+
+}
+else if(platform==="Instagram"){
+
+platformName=
+"Instagram Reel";
+
+filename=
+"instagram-reel-package.txt";
+
+}
+else if(platform==="Snapchat"){
+
+platformName=
+"Snapchat Spotlight";
+
+filename=
+"snapchat-spotlight-package.txt";
+
+}
+
+const packageText=
+
+"AI COMMAND CENTRE\n"+
+"=================\n\n"+
+"PLATFORM: "+
+platformName+
+"\n\n"+
+"CONTENT PACKAGE\n"+
+"-----------------\n\n"+
+currentContent+
+"\n\n"+
+"VIDEO PRODUCTION PACKAGE\n"+
+"-------------------------\n\n"+
+(
+currentVideoPackage||
+"Video package not generated yet."
+)+
+"\n";
+
+downloadText(
+packageText,
+filename
+);
+
+status.textContent=
+"✅ "+
+platformName+
+" package prepared and download started.";
+
+logActivity(
+platformName+
+" package prepared."
+);
 
 }
 
@@ -1092,10 +1370,14 @@ return;
 }
 
 const topic=
-document.getElementById("automationTopic").value.trim();
+document.getElementById(
+"automationTopic"
+).value.trim();
 
 const platform=
-document.getElementById("automationPlatform").value;
+document.getElementById(
+"automationPlatform"
+).value;
 
 if(!topic){
 
@@ -1105,12 +1387,15 @@ return;
 
 }
 
-document.getElementById("automationStatus").textContent=
+document.getElementById(
+"automationStatus"
+).textContent=
 "🟡 Automation is generating content...";
 
 try{
 
 const prompt=`
+
 Create one original short-form social media content package.
 
 Topic:
@@ -1131,10 +1416,13 @@ Create:
 8. Video description
 
 Return only the finished content package.
+
 `;
 
-const response=await fetch("/api/chat",{
-
+const response=
+await fetch(
+"/api/chat",
+{
 method:"POST",
 
 headers:{
@@ -1144,15 +1432,17 @@ headers:{
 body:JSON.stringify({
 message:prompt
 })
+}
+);
 
-});
-
-const data=await response.json();
+const data=
+await response.json();
 
 if(!response.ok){
 
 throw new Error(
-data?.error||"Automation failed"
+data?.error||
+"Automation failed"
 );
 
 }
@@ -1165,9 +1455,12 @@ throw new Error(
 
 }
 
-currentContent=data.reply;
+currentContent=
+data.reply;
 
-document.getElementById("contentOutput").textContent=
+document.getElementById(
+"contentOutput"
+).textContent=
 currentContent;
 
 localStorage.setItem(
@@ -1175,12 +1468,16 @@ localStorage.setItem(
 currentContent
 );
 
-document.getElementById("savedOutput").textContent=
+document.getElementById(
+"savedOutput"
+).textContent=
 currentContent;
 
 await generateAutomationVideoPackage();
 
-document.getElementById("automationStatus").textContent=
+document.getElementById(
+"automationStatus"
+).textContent=
 "🟢 Automation running.";
 
 logActivity(
@@ -1190,8 +1487,16 @@ logActivity(
 }
 catch(error){
 
-document.getElementById("automationStatus").textContent=
-"❌ Automation error: "+error.message;
+document.getElementById(
+"automationStatus"
+).textContent=
+"❌ Automation error: "+
+error.message;
+
+logActivity(
+"Automation error: "+
+error.message
+);
 
 }
 
@@ -1211,9 +1516,12 @@ return;
 try{
 
 const platform=
-document.getElementById("automationPlatform").value;
+document.getElementById(
+"automationPlatform"
+).value;
 
 const prompt=`
+
 Create a practical vertical 9:16 video production package.
 
 Platform:
@@ -1238,10 +1546,13 @@ THUMBNAIL PROMPT
 FINAL CALL TO ACTION
 
 Return only the finished package.
+
 `;
 
-const response=await fetch("/api/chat",{
-
+const response=
+await fetch(
+"/api/chat",
+{
 method:"POST",
 
 headers:{
@@ -1251,19 +1562,25 @@ headers:{
 body:JSON.stringify({
 message:prompt
 })
+}
+);
 
-});
-
-const data=await response.json();
+const data=
+await response.json();
 
 if(response.ok&&data.reply){
 
-currentVideoPackage=data.reply;
+currentVideoPackage=
+data.reply;
 
-document.getElementById("videoOutput").textContent=
+document.getElementById(
+"videoOutput"
+).textContent=
 currentVideoPackage;
 
-document.getElementById("videoStatus").textContent=
+document.getElementById(
+"videoStatus"
+).textContent=
 "✅ Automated video package ready.";
 
 }
@@ -1278,16 +1595,20 @@ console.error(error);
 }
 
 
-/* START */
+/* START AUTOMATION */
 
 function startAutomation(){
 
 const topic=
-document.getElementById("automationTopic").value.trim();
+document.getElementById(
+"automationTopic"
+).value.trim();
 
 if(!topic){
 
-document.getElementById("automationStatus").textContent=
+document.getElementById(
+"automationStatus"
+).textContent=
 "⚠️ Enter an automation topic first.";
 
 return;
@@ -1302,7 +1623,9 @@ return;
 
 automationRunning=true;
 
-document.getElementById("automationStatus").textContent=
+document.getElementById(
+"automationStatus"
+).textContent=
 "🟢 Automation running.";
 
 runAutomationCycle();
@@ -1322,12 +1645,17 @@ return;
 
 if(automationTimer){
 
-clearTimeout(automationTimer);
+clearTimeout(
+automationTimer
+);
 
 }
 
-const minutes=parseInt(
-document.getElementById("automationInterval").value
+const minutes=
+parseInt(
+document.getElementById(
+"automationInterval"
+).value
 );
 
 automationNextRun=
@@ -1336,7 +1664,8 @@ minutes*60000;
 
 updateNextRunDisplay();
 
-automationTimer=setTimeout(
+automationTimer=
+setTimeout(
 runAutomationCycle,
 minutes*60000
 );
@@ -1349,10 +1678,14 @@ minutes*60000
 function updateNextRunDisplay(){
 
 const nextRun=
-document.getElementById("nextRun");
+document.getElementById(
+"nextRun"
+);
 
-if(!automationRunning||
-!automationNextRun){
+if(
+!automationRunning||
+!automationNextRun
+){
 
 nextRun.textContent=
 "Automation is not running.";
@@ -1361,7 +1694,8 @@ return;
 
 }
 
-const update=function(){
+const update=
+function(){
 
 if(!automationRunning){
 
@@ -1373,7 +1707,8 @@ return;
 }
 
 const remaining=
-automationNextRun-Date.now();
+automationNextRun-
+Date.now();
 
 if(remaining<=0){
 
@@ -1385,7 +1720,9 @@ return;
 }
 
 const minutes=
-Math.floor(remaining/60000);
+Math.floor(
+remaining/60000
+);
 
 const seconds=
 Math.floor(
@@ -1394,7 +1731,10 @@ Math.floor(
 
 nextRun.textContent=
 "⏱ Next automation cycle in "+
-minutes+"m "+seconds+"s";
+minutes+
+"m "+
+seconds+
+"s";
 
 setTimeout(
 update,
@@ -1412,236 +1752,4 @@ update();
 
 function stopAutomation(){
 
-automationRunning=false;
-
-if(automationTimer){
-
-clearTimeout(automationTimer);
-
-automationTimer=null;
-
-}
-
-automationNextRun=null;
-
-document.getElementById("automationStatus").textContent=
-"🔴 Automation stopped.";
-
-document.getElementById("nextRun").textContent=
-"Automation is not running.";
-
-}
-
-
-/* COPY */
-
-async function copyContent(){
-
-if(!currentContent){
-
-alert("Generate content first.");
-
-return;
-
-}
-
-await navigator.clipboard.writeText(
-currentContent
-);
-
-alert("Content copied.");
-
-}
-
-
-async function copyVideoPackage(){
-
-if(!currentVideoPackage){
-
-alert("Create a video package first.");
-
-return;
-
-}
-
-await navigator.clipboard.writeText(
-currentVideoPackage
-);
-
-alert("Video package copied.");
-
-}
-
-
-/* SAVE */
-
-function saveContent(){
-
-if(!currentContent){
-
-alert("Generate content first.");
-
-return;
-
-}
-
-localStorage.setItem(
-"aiCommandCentreContent",
-currentContent
-);
-
-document.getElementById("savedOutput").textContent=
-currentContent;
-
-alert("Content saved.");
-
-}
-
-
-/* DOWNLOAD */
-
-function downloadContent(){
-
-if(!currentContent){
-
-alert("Generate content first.");
-
-return;
-
-}
-
-downloadText(
-currentContent,
-"ai-content.txt"
-);
-
-}
-
-
-function downloadVideoPackage(){
-
-if(!currentVideoPackage){
-
-alert("Create video package first.");
-
-return;
-
-}
-
-downloadText(
-currentVideoPackage,
-"video-production-package.txt"
-);
-
-}
-
-
-function downloadText(
-text,
-filename
-){
-
-const blob=new Blob(
-[text],
-{type:"text/plain"}
-);
-
-const url=URL.createObjectURL(blob);
-
-const a=document.createElement("a");
-
-a.href=url;
-a.download=filename;
-
-document.body.appendChild(a);
-
-a.click();
-
-a.remove();
-
-URL.revokeObjectURL(url);
-
-}
-
-
-/* MARKET */
-
-function checkMarket(){
-
-document.getElementById("marketStatus").textContent=
-"📊 Market monitor is ready. Live trading connection will be added later.";
-
-}
-
-
-/* SAVED */
-
-function loadSavedContent(){
-
-const saved=
-localStorage.getItem(
-"aiCommandCentreContent"
-);
-
-if(saved){
-
-currentContent=saved;
-
-document.getElementById("savedOutput").textContent=
-saved;
-
-}
-
-}
-
-
-function clearSaved(){
-
-localStorage.removeItem(
-"aiCommandCentreContent"
-);
-
-document.getElementById("savedOutput").textContent=
-"No saved content.";
-
-}
-
-
-/* LOG */
-
-function logActivity(message){
-
-const log=
-document.getElementById("activityLog");
-
-if(!log){
-
-return;
-
-}
-
-const entry=
-document.createElement("div");
-
-entry.textContent=
-new Date().toLocaleTimeString()+
-" — "+
-message;
-
-log.prepend(entry);
-
-}
-
-
-/* STARTUP */
-
-loadSavedContent();
-
-logActivity(
-"AI Command Centre loaded."
-);
-
-</script>
-
-</body>
-</html>
+automationRunning
