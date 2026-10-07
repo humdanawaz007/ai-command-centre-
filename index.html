@@ -1774,7 +1774,39 @@ logActivity(
   "AI Command Centre loaded."
 );
 
+function playVoiceover(){
+
+  if(!currentContent){
+    alert("Generate AI content first.");
+    return;
+  }
+
+  if(!("speechSynthesis" in window)){
+    alert("Voiceover is not supported by this browser.");
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+
+  const voice =
+    new SpeechSynthesisUtterance(currentContent);
+
+  voice.rate = 0.95;
+  voice.pitch = 1;
+  voice.volume = 1;
+
+  window.speechSynthesis.speak(voice);
+
+  logActivity(
+    "Voiceover playback started."
+  );
+
+}
+
 </script>
+
+</body>
+</html>
 
 </body>
 </html>
