@@ -1362,4 +1362,420 @@ function startAutomation(){
 
   const topic =
     document.getElementById(
+      "automationTopic"
+    ).value.trim();
+
+  if(!topic){
+
+    document.getElementById(
+      "automationStatus"
+    ).textContent =
+      "⚠️ Enter an automation topic first.";
+
+    return;
+  }
+
+  if(automationRunning){
+
+    return;
+  }
+
+  automationRunning = true;
+
+  document.getElementById(
+    "automationStatus"
+  ).textContent =
+    "🟢 Automation running.";
+
+  runAutomationCycle();
+
+}
+
+
+function scheduleNextAutomation(){
+
+  if(!automationRunning){
+
+    return;
+  }
+
+  if(automationTimer){
+
+    clearTimeout(
+      automationTimer
+    );
+
+  }
+
+  const minutes =
+    parseInt(
+      document.getElementById(
+        "automationInterval"
+      ).value
+    );
+
+  automationNextRun =
+    Date.now() +
+    minutes * 60000;
+
+  updateNextRunDisplay();
+
+  automationTimer =
+    setTimeout(
+      runAutomationCycle,
+      minutes * 60000
+    );
+
+}
+
+
+function updateNextRunDisplay(){
+
+  const nextRun =
+    document.getElementById(
+      "nextRun"
+    );
+
+  if(
+    !automationRunning ||
+    !automationNextRun
+  ){
+
+    nextRun.textContent =
+      "Automation is not running.";
+
+    return;
+  }
+
+  const update =
+    function(){
+
+      if(!automationRunning){
+
+        nextRun.textContent =
+          "Automation is not running.";
+
+        return;
+      }
+
+      const remaining =
+        automationNextRun -
+        Date.now();
+
+      if(remaining <= 0){
+
+        nextRun.textContent =
+          "Starting next automation cycle...";
+
+        return;
+      }
+
+      const minutes =
+        Math.floor(
+          remaining / 60000
+        );
+
+      const seconds =
+        Math.floor(
+          (remaining % 60000) / 1000
+        );
+
+      nextRun.textContent =
+        "⏱ Next automation cycle in " +
+        minutes +
+        "m " +
+        seconds +
+        "s";
+
+      setTimeout(
+        update,
+        1000
+      );
+
+    };
+
+  update();
+
+}
+
+
+function stopAutomation(){
+
+  automationRunning = false;
+
+  if(automationTimer){
+
+    clearTimeout(
+      automationTimer
+    );
+
+    automationTimer = null;
+
+  }
+
+  automationNextRun = null;
+
+  document.getElementById(
+    "automationStatus"
+  ).textContent =
+    "🔴 Automation stopped.";
+
+  document.getElementById(
+    "nextRun"
+  ).textContent =
+    "Automation is not running.";
+
+}
+
+
+/* COPY */
+
+async function copyContent(){
+
+  if(!currentContent){
+
+    alert(
+      "Generate content first."
+    );
+
+    return;
+  }
+
+  await navigator.clipboard.writeText(
+    currentContent
+  );
+
+  alert(
+    "Content copied."
+  );
+
+}
+
+
+async function copyVideoPackage(){
+
+  if(!currentVideoPackage){
+
+    alert(
+      "Create a video package first."
+    );
+
+    return;
+  }
+
+  await navigator.clipboard.writeText(
+    currentVideoPackage
+  );
+
+  alert(
+    "Video package copied."
+  );
+
+}
+
+
+/* SAVE */
+
+function saveContent(){
+
+  if(!currentContent){
+
+    alert(
+      "Generate content first."
+    );
+
+    return;
+  }
+
+  localStorage.setItem(
+    "aiCommandCentreContent",
+    currentContent
+  );
+
+  document.getElementById(
+    "savedOutput"
+  ).textContent =
+    currentContent;
+
+  alert(
+    "Content saved."
+  );
+
+}
+
+
+/* DOWNLOAD */
+
+function downloadContent(){
+
+  if(!currentContent){
+
+    alert(
+      "Generate content first."
+    );
+
+    return;
+  }
+
+  downloadText(
+    currentContent,
+    "ai-content.txt"
+  );
+
+}
+
+
+function downloadVideoPackage(){
+
+  if(!currentVideoPackage){
+
+    alert(
+      "Create a video package first."
+    );
+
+    return;
+  }
+
+  downloadText(
+    currentVideoPackage,
+    "video-production-package.txt"
+  );
+
+}
+
+
+function downloadText(
+  text,
+  filename
+){
+
+  const blob =
+    new Blob(
+      [text],
+      {type:"text/plain"}
+    );
+
+  const url =
+    URL.createObjectURL(blob);
+
+  const link =
+    document.createElement("a");
+
+  link.href = url;
+
+  link.download =
+    filename;
+
+  document.body.appendChild(link);
+
+  link.click();
+
+  link.remove();
+
+  setTimeout(
+    function(){
+
+      URL.revokeObjectURL(url);
+
+    },
+    1000
+  );
+
+}
+
+
+/* MARKET */
+
+function checkMarket(){
+
+  document.getElementById(
+    "marketStatus"
+  ).textContent =
+    "📊 Market monitor is ready. Live trading connection will be added later.";
+
+}
+
+
+/* SAVED */
+
+function loadSavedContent(){
+
+  const saved =
+    localStorage.getItem(
+      "aiCommandCentreContent"
+    );
+
+  if(saved){
+
+    currentContent =
+      saved;
+
+    document.getElementById(
+      "savedOutput"
+    ).textContent =
+      saved;
+
+    document.getElementById(
+      "contentOutput"
+    ).textContent =
+      saved;
+
+  }
+
+}
+
+
+function clearSaved(){
+
+  localStorage.removeItem(
+    "aiCommandCentreContent"
+  );
+
+  document.getElementById(
+    "savedOutput"
+  ).textContent =
+    "No saved content.";
+
+}
+
+
+/* LOG */
+
+function logActivity(message){
+
+  const log =
+    document.getElementById(
+      "activityLog"
+    );
+
+  if(!log){
+
+    return;
+  }
+
+  const entry =
+    document.createElement("div");
+
+  entry.textContent =
+    new Date().toLocaleTimeString() +
+    " — " +
+    message;
+
+  log.prepend(entry);
+
+}
+
+
+/* STARTUP */
+
+loadSavedContent();
+
+logActivity(
+  "AI Command Centre loaded."
+);
+
+</script>
+
+</body>
+</html>
    
