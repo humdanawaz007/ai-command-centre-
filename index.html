@@ -1395,4 +1395,619 @@ async function renderVideo(){
         );
 
         status.textContent =
-          "✅ Video created 
+          "✅ Video created with AI voice. Download started.";
+
+        logActivity(
+          "Video with AI voice created."
+        );
+
+        audioContext.close();
+
+      };
+
+
+    const words =
+      currentContent
+        .replace(/\s+/g," ")
+        .trim()
+        .split(" ");
+
+    const pages = [];
+
+    let page = "";
+
+    for(
+      let i=0;
+      i<words.length;
+      i++
+    ){
+
+      page +=
+        (page ? " " : "") +
+        words[i];
+
+      if(
+        page.length > 100
+      ){
+
+        pages.push(page);
+        page = "";
+
+      }
+
+    }
+
+    if(page){
+
+      pages.push(page);
+
+    }
+
+    const totalPages =
+      Math.max(
+        1,
+        Math.min(
+          pages.length,
+          12
+        )
+      );
+
+    let pageIndex = 0;
+
+
+    function drawPage(){
+
+      ctx.fillStyle =
+        "#0b1020";
+
+      ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      ctx.fillStyle =
+        "#2563eb";
+
+      ctx.fillRect(
+        0,
+        0,
+        1080,
+        18
+      );
+
+      ctx.fillStyle =
+        "#ffffff";
+
+      ctx.textAlign =
+        "center";
+
+      ctx.font =
+        "bold 62px Arial";
+
+      ctx.fillText(
+        "AI SHORT",
+        540,
+        230
+      );
+
+      ctx.font =
+        "bold 48px Arial";
+
+      const pageText =
+        pages[pageIndex] ||
+        currentContent;
+
+      drawWrappedText(
+        ctx,
+        pageText,
+        540,
+        700,
+        850,
+        72
+      );
+
+      ctx.fillStyle =
+        "#93c5fd";
+
+      ctx.font =
+        "32px Arial";
+
+      ctx.fillText(
+        "AI Command Centre",
+        540,
+        1750
+      );
+
+      ctx.fillText(
+        (pageIndex + 1) +
+        " / " +
+        totalPages,
+        540,
+        1810
+      );
+
+      pageIndex++;
+
+      if(
+        pageIndex < totalPages
+      ){
+
+        setTimeout(
+          drawPage,
+          2500
+        );
+
+      }
+
+    }
+
+    recorder.start();
+
+    source.start(0);
+
+    status.textContent =
+      "🎥 Rendering video with AI voice...";
+
+    drawPage();
+
+    setTimeout(
+      function(){
+
+        if(
+          recorder.state !== "inactive"
+        ){
+
+          recorder.stop();
+
+        }
+
+      },
+      Math.max(
+        5000,
+        combined.duration * 1000 + 1500
+      )
+    );
+
+  }catch(error){
+
+    status.textContent =
+      "❌ Video error: " +
+      error.message;
+
+    logActivity(
+      "Video rendering error: " +
+      error.message
+    );
+
+  }
+
+}
+
+
+/* =========================
+   COPY
+========================= */
+
+async function copyContent(){
+
+  if(!currentContent){
+
+    alert(
+      "Generate content first."
+    );
+
+    return;
+  }
+
+  try{
+
+    await navigator.clipboard.writeText(
+      currentContent
+    );
+
+    alert(
+      "Content copied."
+    );
+
+    logActivity(
+      "Content copied."
+    );
+
+  }catch(error){
+
+    alert(
+      "Could not copy content."
+    );
+
+  }
+
+}
+
+
+/* =========================
+   SAVE CONTENT
+========================= */
+
+function saveContent(){
+
+  if(!currentContent){
+
+    alert(
+      "Generate content first."
+    );
+
+    return;
+  }
+
+  localStorage.setItem(
+    "aiCommandCentreContent",
+    currentContent
+  );
+
+  document.getElementById(
+    "savedOutput"
+  ).textContent =
+    currentContent;
+
+  logActivity(
+    "Content saved locally."
+  );
+
+  alert(
+    "Content saved."
+  );
+
+}
+
+
+/* =========================
+   LOAD SAVED CONTENT
+========================= */
+
+function loadSavedContent(){
+
+  const saved =
+    localStorage.getItem(
+      "aiCommandCentreContent"
+    );
+
+  if(saved){
+
+    document.getElementById(
+      "savedOutput"
+    ).textContent =
+      saved;
+
+  }
+
+}
+
+
+/* =========================
+   CLEAR SAVED CONTENT
+========================= */
+
+function clearSavedContent(){
+
+  localStorage.removeItem(
+    "aiCommandCentreContent"
+  );
+
+  document.getElementById(
+    "savedOutput"
+  ).textContent =
+    "No saved content yet.";
+
+  logActivity(
+    "Saved content cleared."
+  );
+
+}
+
+
+/* =========================
+   PLATFORM PREPARATION
+========================= */
+
+function preparePlatform(
+  platform
+){
+
+  if(!currentContent){
+
+    document.getElementById(
+      "platformStatus"
+    ).textContent =
+      "⚠️ Generate AI content first.";
+
+    return;
+
+  }
+
+  const packageText =
+    currentContent +
+    "\n\nPrepared for: " +
+    platform;
+
+  const blob =
+    new Blob(
+      [packageText],
+      {
+        type:"text/plain"
+      }
+    );
+
+  const url =
+    URL.createObjectURL(
+      blob
+    );
+
+  const link =
+    document.createElement("a");
+
+  link.href =
+    url;
+
+  link.download =
+    platform
+      .toLowerCase()
+      .replace(/\s+/g,"-") +
+    "-content-package.txt";
+
+  document.body.appendChild(
+    link
+  );
+
+  link.click();
+
+  link.remove();
+
+  setTimeout(
+    function(){
+
+      URL.revokeObjectURL(
+        url
+      );
+
+    },
+    3000
+  );
+
+  document.getElementById(
+    "platformStatus"
+  ).textContent =
+    "✅ " +
+    platform +
+    " package prepared and downloaded.";
+
+  logActivity(
+    platform +
+    " package prepared."
+  );
+
+}
+
+
+/* =========================
+   AUTOMATION
+========================= */
+
+function startAutomation(){
+
+  const topic =
+    document.getElementById(
+      "automationTopic"
+    ).value.trim();
+
+  const status =
+    document.getElementById(
+      "automationStatus"
+    );
+
+  if(!topic){
+
+    status.textContent =
+      "⚠️ Enter an automation topic.";
+
+    return;
+
+  }
+
+  if(automationRunning){
+
+    status.textContent =
+      "Automation is already running.";
+
+    return;
+
+  }
+
+  automationRunning = true;
+
+  status.textContent =
+    "🟢 Automation is running.";
+
+  logActivity(
+    "Automation started."
+  );
+
+  runAutomation(topic);
+
+  automationTimer =
+    setInterval(
+      function(){
+
+        runAutomation(topic);
+
+      },
+      60000
+    );
+
+}
+
+
+async function runAutomation(topic){
+
+  if(!automationRunning){
+
+    return;
+
+  }
+
+  try{
+
+    const response =
+      await fetch(
+        "/api/chat",
+        {
+          method:"POST",
+          headers:{
+            "Content-Type":"application/json"
+          },
+          body:JSON.stringify({
+            message:
+              "Create one high-quality short-form social media content idea about: " +
+              topic +
+              ". Include a hook, short script, caption and hashtags."
+          })
+        }
+      );
+
+    const data =
+      await response.json();
+
+    if(
+      response.ok &&
+      data.reply
+    ){
+
+      currentContent =
+        data.reply;
+
+      document.getElementById(
+        "contentOutput"
+      ).textContent =
+        currentContent;
+
+      document.getElementById(
+        "automationStatus"
+      ).textContent =
+        "🟢 Automation generated new content.";
+
+      logActivity(
+        "Automation generated content."
+      );
+
+    }else{
+
+      throw new Error(
+        data.error ||
+        "Automation request failed."
+      );
+
+    }
+
+  }catch(error){
+
+    document.getElementById(
+      "automationStatus"
+    ).textContent =
+      "❌ Automation error: " +
+      error.message;
+
+    logActivity(
+      "Automation error: " +
+      error.message
+    );
+
+  }
+
+}
+
+
+function stopAutomation(){
+
+  automationRunning =
+    false;
+
+  if(automationTimer){
+
+    clearInterval(
+      automationTimer
+    );
+
+    automationTimer =
+      null;
+
+  }
+
+  document.getElementById(
+    "automationStatus"
+  ).textContent =
+    "⏹ Automation is stopped.";
+
+  logActivity(
+    "Automation stopped."
+  );
+
+}
+
+
+/* =========================
+   TRADING
+========================= */
+
+function updateTradingStatus(){
+
+  document.getElementById(
+    "tradingStatus"
+  ).textContent =
+    "📊 Trading monitor is ready. No trades are being placed.";
+
+  logActivity(
+    "Trading monitor checked."
+  );
+
+}
+
+
+/* =========================
+   CLEAR LOG
+========================= */
+
+function clearActivityLog(){
+
+  const log =
+    document.getElementById(
+      "activityLog"
+    );
+
+  log.innerHTML =
+    "<div>Activity log cleared.</div>";
+
+}
+
+
+/* =========================
+   STARTUP
+========================= */
+
+document.addEventListener(
+  "DOMContentLoaded",
+  function(){
+
+    loadSavedContent();
+
+    logActivity(
+      "Command Centre loaded successfully."
+    );
+
+  }
+);
+
+</script>
+
+</body>
+</html>
