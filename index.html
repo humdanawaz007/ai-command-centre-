@@ -6,196 +6,181 @@
 <title>AI Command Centre</title>
 
 <style>
-*{
-  box-sizing:border-box;
-}
+*{box-sizing:border-box}
 
 body{
-  margin:0;
-  font-family:Arial,sans-serif;
-  background:#0b1020;
-  color:#fff;
+margin:0;
+font-family:Arial,sans-serif;
+background:#0b1020;
+color:#fff;
 }
 
 .container{
-  width:100%;
-  max-width:900px;
-  margin:auto;
-  padding:16px;
+width:100%;
+max-width:900px;
+margin:auto;
+padding:16px;
 }
 
 header{
-  text-align:center;
-  padding:20px 0;
+text-align:center;
+padding:20px 0;
 }
 
 header h1{
-  margin:0;
-  font-size:28px;
+margin:0;
+font-size:28px;
 }
 
 header p{
-  color:#9ca3af;
+color:#9ca3af;
 }
 
 .card{
-  background:#151b2e;
-  border:1px solid #28304a;
-  border-radius:16px;
-  padding:18px;
-  margin-bottom:16px;
+background:#151b2e;
+border:1px solid #28304a;
+border-radius:16px;
+padding:18px;
+margin-bottom:16px;
 }
 
 .card h2{
-  margin-top:0;
+margin-top:0;
 }
 
 label{
-  display:block;
-  margin:12px 0 6px;
-  color:#cbd5e1;
+display:block;
+margin:12px 0 6px;
+color:#cbd5e1;
 }
 
-input,
-select{
-  width:100%;
-  padding:13px;
-  border-radius:10px;
-  border:1px solid #374151;
-  background:#0d1324;
-  color:#fff;
-  font-size:15px;
+input,select,textarea{
+width:100%;
+padding:13px;
+border-radius:10px;
+border:1px solid #374151;
+background:#0d1324;
+color:#fff;
+font-size:15px;
+}
+
+textarea{
+min-height:150px;
 }
 
 button{
-  border:0;
-  border-radius:10px;
-  padding:13px 16px;
-  margin-top:12px;
-  font-size:15px;
-  font-weight:bold;
-  cursor:pointer;
+border:0;
+border-radius:10px;
+padding:13px 16px;
+margin-top:12px;
+font-size:15px;
+font-weight:bold;
+cursor:pointer;
 }
 
 .primary{
-  width:100%;
-  background:#2563eb;
-  color:#fff;
+width:100%;
+background:#2563eb;
+color:#fff;
 }
 
 .secondary{
-  background:#374151;
-  color:#fff;
+background:#374151;
+color:#fff;
 }
 
 .success{
-  background:#16a34a;
-  color:#fff;
+background:#16a34a;
+color:#fff;
 }
 
 .danger{
-  background:#dc2626;
-  color:#fff;
+background:#dc2626;
+color:#fff;
 }
 
 .video{
-  background:#7c3aed;
-  color:#fff;
-  width:100%;
+background:#7c3aed;
+color:#fff;
+width:100%;
 }
 
 .render{
-  background:#0891b2;
-  color:#fff;
-  width:100%;
+background:#0891b2;
+color:#fff;
+width:100%;
 }
 
 .status{
-  padding:12px;
-  background:#0d1324;
-  border-radius:10px;
-  color:#93c5fd;
-  margin-top:12px;
+padding:12px;
+background:#0d1324;
+border-radius:10px;
+color:#93c5fd;
+margin-top:12px;
 }
 
 pre{
-  white-space:pre-wrap;
-  word-wrap:break-word;
-  background:#0d1324;
-  padding:14px;
-  border-radius:10px;
-  line-height:1.5;
-  min-height:120px;
+white-space:pre-wrap;
+word-wrap:break-word;
+background:#0d1324;
+padding:14px;
+border-radius:10px;
+line-height:1.5;
+min-height:120px;
 }
 
 .small{
-  color:#9ca3af;
-  font-size:13px;
+color:#9ca3af;
+font-size:13px;
 }
 
 .grid{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:10px;
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:10px;
 }
 
 .platform{
-  background:#0d1324;
-  border:1px solid #374151;
-  padding:15px;
-  border-radius:10px;
-  text-align:center;
+background:#0d1324;
+border:1px solid #374151;
+padding:15px;
+border-radius:10px;
+text-align:center;
 }
 
 .platform-icon{
-  font-size:32px;
-  margin-bottom:8px;
+font-size:32px;
+margin-bottom:8px;
 }
 
 .platform button{
-  width:100%;
-  background:#2563eb;
-  color:#fff;
+width:100%;
+background:#2563eb;
+color:#fff;
 }
 
 .log{
-  max-height:250px;
-  overflow-y:auto;
-  background:#0d1324;
-  padding:12px;
-  border-radius:10px;
+max-height:250px;
+overflow-y:auto;
+background:#0d1324;
+padding:12px;
+border-radius:10px;
 }
 
 .log div{
-  padding:7px 0;
-  border-bottom:1px solid #20283d;
-  font-size:13px;
-}
-
-.automation-box{
-  border:1px solid #374151;
-  border-radius:12px;
-  padding:14px;
-  margin-top:12px;
-  background:#0d1324;
-}
-
-.next-run{
-  color:#86efac;
-  font-size:13px;
-  margin-top:8px;
+padding:7px 0;
+border-bottom:1px solid #20283d;
+font-size:13px;
 }
 
 @media(max-width:600px){
+.grid{
+grid-template-columns:1fr;
+}
 
-  .grid{
-    grid-template-columns:1fr;
-  }
-
-  header h1{
-    font-size:24px;
-  }
-
+header h1{
+font-size:24px;
+}
 }
 </style>
 </head>
@@ -228,13 +213,21 @@ placeholder="Example: 5 amazing facts about space"
 
 <select id="platform">
 
-<option value="YouTube Short">YouTube Short</option>
+<option value="YouTube Short">
+YouTube Short
+</option>
 
-<option value="Instagram Reel">Instagram Reel</option>
+<option value="Instagram Reel">
+Instagram Reel
+</option>
 
-<option value="Snapchat Spotlight">Snapchat Spotlight</option>
+<option value="Snapchat Spotlight">
+Snapchat Spotlight
+</option>
 
-<option value="YouTube Video">YouTube Video</option>
+<option value="YouTube Video">
+YouTube Video
+</option>
 
 </select>
 
@@ -261,7 +254,9 @@ Ready to generate.
 
 <h2>📦 Content Package</h2>
 
-<pre id="contentOutput">No content generated yet.</pre>
+<pre id="contentOutput">
+No content generated yet.
+</pre>
 
 <button
 class="secondary"
@@ -320,7 +315,9 @@ Waiting for content.
 
 <h2>🎥 Video Production Package</h2>
 
-<pre id="videoOutput">No video package created yet.</pre>
+<pre id="videoOutput">
+No video package created yet.
+</pre>
 
 <button
 class="secondary"
@@ -346,14 +343,16 @@ onclick="downloadVideoPackage()"
 <h2>🎞️ Video Renderer</h2>
 
 <p class="small">
-Create a simple vertical video from your generated script.
+Create a vertical video with AI-generated voice audio embedded directly in the downloaded video.
 </p>
 
 <button
 class="render"
 onclick="renderVideo()"
 >
-🎥 Render Video
+🎥 Render Video With AI Voice
+</button>
+
 <button
 class="success"
 onclick="playVoiceover()"
@@ -390,7 +389,7 @@ Prepare your generated content for each platform.
 <strong>YouTube</strong>
 
 <div class="small">
-Ready
+Short
 </div>
 
 <button
@@ -409,7 +408,7 @@ Prepare Short
 <strong>Instagram</strong>
 
 <div class="small">
-Ready
+Reel
 </div>
 
 <button
@@ -428,7 +427,7 @@ Prepare Reel
 <strong>Snapchat</strong>
 
 <div class="small">
-Ready
+Spotlight
 </div>
 
 <button
@@ -445,7 +444,7 @@ Prepare Spotlight
 id="platformStatus"
 class="status"
 >
-Select a platform to prepare your content.
+Platform preparation ready.
 </div>
 
 </div>
@@ -458,46 +457,16 @@ Select a platform to prepare your content.
 <h2>⚙️ Automation Centre</h2>
 
 <p class="small">
-Automatically generate content and video packages using your selected topic.
+Automatically generate fresh AI content.
 </p>
-
-<div class="automation-box">
 
 <label>Automation Topic</label>
 
 <input
 id="automationTopic"
 type="text"
-placeholder="Example: Islamic facts, technology, space, business"
+placeholder="Example: Daily AI facts"
 >
-
-<label>Platform</label>
-
-<select id="automationPlatform">
-
-<option value="YouTube Short">YouTube Short</option>
-
-<option value="Instagram Reel">Instagram Reel</option>
-
-<option value="Snapchat Spotlight">Snapchat Spotlight</option>
-
-<option value="YouTube Video">YouTube Video</option>
-
-</select>
-
-<label>Automation Frequency</label>
-
-<select id="automationInterval">
-
-<option value="5">Every 5 minutes</option>
-
-<option value="15">Every 15 minutes</option>
-
-<option value="30">Every 30 minutes</option>
-
-<option value="60">Every 60 minutes</option>
-
-</select>
 
 <button
 class="success"
@@ -517,16 +486,7 @@ onclick="stopAutomation()"
 id="automationStatus"
 class="status"
 >
-🔴 Automation stopped.
-</div>
-
-<div
-id="nextRun"
-class="next-run"
->
-Automation is not running.
-</div>
-
+Automation stopped.
 </div>
 
 </div>
@@ -565,7 +525,9 @@ Waiting for market check.
 
 <h2>💾 Saved Content</h2>
 
-<pre id="savedOutput">No saved content.</pre>
+<pre id="savedOutput">
+No saved content.
+</pre>
 
 <button
 class="danger"
@@ -577,7 +539,7 @@ onclick="clearSaved()"
 </div>
 
 
-<!-- ACTIVITY LOG -->
+<!-- ACTIVITY -->
 
 <div class="card">
 
@@ -597,1220 +559,1196 @@ class="log"
 
 <script>
 
-let currentContent = "";
-let currentVideoPackage = "";
-
-let automationRunning = false;
-let automationTimer = null;
-let automationNextRun = null;
+let currentContent="";
+let currentVideoPackage="";
+let automationRunning=false;
+let automationTimer=null;
 
 
-/* AI CONTENT */
+/* ============================================
+   AI CONTENT GENERATOR
+============================================ */
 
 async function generateContent(){
 
-  const topic =
-    document.getElementById("topic").value.trim();
+const topic=
+document.getElementById("topic").value.trim();
 
-  const platform =
-    document.getElementById("platform").value;
+const platform=
+document.getElementById("platform").value;
 
-  const output =
-    document.getElementById("contentOutput");
+const output=
+document.getElementById("contentOutput");
 
-  const status =
-    document.getElementById("generatorStatus");
+const status=
+document.getElementById("generatorStatus");
 
-  if(!topic){
+if(!topic){
 
-    status.textContent =
-      "⚠️ Please enter a topic first.";
+status.textContent=
+"⚠️ Please enter a topic first.";
 
-    return;
-  }
+return;
 
-  status.textContent =
-    "🤖 AI is generating your content...";
+}
 
-  output.textContent =
-    "Please wait...";
+status.textContent=
+"🤖 AI is generating your content...";
 
-  try{
+output.textContent=
+"Please wait...";
 
-    const prompt =
-      "You are the AI content engine inside a personal AI Command Centre.\n\n" +
-      "Create a high-quality short-form content package.\n\n" +
-      "Topic:\n" + topic + "\n\n" +
-      "Platform:\n" + platform + "\n\n" +
-      "Create:\n\n" +
-      "1. Catchy title\n" +
-      "2. Strong hook\n" +
-      "3. Complete script\n" +
-      "4. Caption\n" +
-      "5. Call to action\n" +
-      "6. 5 relevant hashtags\n" +
-      "7. Suggested thumbnail text\n" +
-      "8. Suggested video description\n\n" +
-      "Make it engaging, factual, concise and suitable for the selected platform.\n\n" +
-      "Return the finished content package directly.";
+try{
 
-    const response =
-      await fetch("/api/chat",{
+const prompt=
+"You are the AI content engine inside a personal AI Command Centre.\n\n"+
+"Create a high-quality short-form content package.\n\n"+
+"Topic:\n"+topic+"\n\n"+
+"Platform:\n"+platform+"\n\n"+
+"Create:\n\n"+
+"1. Catchy title\n"+
+"2. Strong hook\n"+
+"3. Complete script\n"+
+"4. Caption\n"+
+"5. Call to action\n"+
+"6. 5 relevant hashtags\n"+
+"7. Suggested thumbnail text\n"+
+"8. Suggested video description\n\n"+
+"Make it engaging, factual, concise and suitable for the selected platform.\n\n"+
+"Return the finished content package directly.";
 
-        method:"POST",
+const response=
+await fetch("/api/chat",{
 
-        headers:{
-          "Content-Type":"application/json"
-        },
+method:"POST",
 
-        body:JSON.stringify({
-          message:prompt
-        })
+headers:{
+"Content-Type":"application/json"
+},
 
-      });
+body:JSON.stringify({
+message:prompt
+})
 
-    const data =
-      await response.json();
+});
 
-    if(!response.ok){
+const data=
+await response.json();
 
-      throw new Error(
-        data && data.error
-          ? data.error
-          : "AI request failed"
-      );
-    }
+if(!response.ok){
 
-    if(!data.reply){
+throw new Error(
+data?.error ||
+"AI request failed"
+);
 
-      throw new Error(
-        "AI returned no content"
-      );
-    }
+}
 
-    currentContent =
-      data.reply;
+if(!data.reply){
 
-    output.textContent =
-      currentContent;
+throw new Error(
+"AI returned no content"
+);
 
-    status.textContent =
-      "✅ AI content generated successfully.";
+}
 
-    logActivity(
-      "AI content generated for " + platform
-    );
+currentContent=
+data.reply;
 
-  }
-  catch(error){
+output.textContent=
+currentContent;
 
-    output.textContent =
-      "Unable to generate content.\n\n" +
-      error.message;
+status.textContent=
+"✅ AI content generated successfully.";
 
-    status.textContent =
-      "❌ " + error.message;
+logActivity(
+"AI content generated for "+platform
+);
 
-    logActivity(
-      "AI generation error: " + error.message
-    );
+}
 
-  }
+catch(error){
+
+output.textContent=
+"Unable to generate content.\n\n"+
+error.message;
+
+status.textContent=
+"❌ "+error.message;
+
+logActivity(
+"AI generation error: "+
+error.message
+);
+
+}
 
 }
 
 
-/* VIDEO PACKAGE */
+/* ============================================
+   VIDEO PACKAGE GENERATOR
+============================================ */
 
 async function generateVideoPackage(){
 
-  const output =
-    document.getElementById("videoOutput");
+const videoOutput=
+document.getElementById("videoOutput");
 
-  const status =
-    document.getElementById("videoStatus");
+const videoStatus=
+document.getElementById("videoStatus");
 
-  if(!currentContent){
+if(!currentContent){
 
-    status.textContent =
-      "⚠️ Generate AI content first.";
+videoStatus.textContent=
+"⚠️ Generate AI content first.";
 
-    return;
-  }
-
-  status.textContent =
-    "🎬 AI is creating your video package...";
-
-  output.textContent =
-    "Please wait...";
-
-  try{
-
-    const platform =
-      document.getElementById("platform").value;
-
-    const prompt =
-      "You are an AI short-video production director.\n\n" +
-      "Convert the following content into a complete production package.\n\n" +
-      "Platform:\n" + platform + "\n\n" +
-      "CONTENT:\n" + currentContent + "\n\n" +
-      "Create:\n\n" +
-      "VIDEO TITLE\n\n" +
-      "TOTAL LENGTH:\n30-60 seconds.\n\n" +
-      "SCENE PLAN:\nCreate 5-8 scenes.\n\n" +
-      "For every scene provide:\n" +
-      "Scene number\n" +
-      "Approximate duration\n" +
-      "Voiceover\n" +
-      "On-screen caption\n" +
-      "Visual description\n" +
-      "AI visual prompt\n" +
-      "Transition suggestion\n\n" +
-      "Then provide:\n" +
-      "VOICEOVER SCRIPT\n" +
-      "ON-SCREEN CAPTIONS\n" +
-      "BACKGROUND MUSIC DIRECTION\n" +
-      "SOUND EFFECTS\n" +
-      "THUMBNAIL PROMPT\n" +
-      "FINAL CALL TO ACTION\n\n" +
-      "Make it practical for a vertical 9:16 short video.\n\n" +
-      "Return only the finished production package.";
-
-    const response =
-      await fetch("/api/chat",{
-
-        method:"POST",
-
-        headers:{
-          "Content-Type":"application/json"
-        },
-
-        body:JSON.stringify({
-          message:prompt
-        })
-
-      });
-
-    const data =
-      await response.json();
-
-    if(!response.ok){
-
-      throw new Error(
-        data && data.error
-          ? data.error
-          : "Video package request failed"
-      );
-    }
-
-    if(!data.reply){
-
-      throw new Error(
-        "AI returned no video package"
-      );
-    }
-
-    currentVideoPackage =
-      data.reply;
-
-    output.textContent =
-      currentVideoPackage;
-
-    status.textContent =
-      "✅ Video production package ready.";
-
-    logActivity(
-      "AI video package created."
-    );
-
-  }
-  catch(error){
-
-    output.textContent =
-      "Unable to create video package.\n\n" +
-      error.message;
-
-    status.textContent =
-      "❌ " + error.message;
-
-    logActivity(
-      "Video package error: " + error.message
-    );
-
-  }
+return;
 
 }
 
-
-/* VIDEO RENDERER */
-
-function renderVideo(){
-
-  if(!currentContent){
-
-    document.getElementById("renderStatus").textContent =
-      "⚠️ Generate AI content first.";
-
-    return;
-  }
-
-  try{
-
-    const canvas =
-      document.createElement("canvas");
-
-    canvas.width = 1080;
-    canvas.height = 1920;
-
-    const ctx =
-      canvas.getContext("2d");
-
-    if(!canvas.captureStream){
-
-      document.getElementById("renderStatus").textContent =
-        "⚠️ Your browser does not support video rendering.";
-
-      return;
-    }
-
-    if(!window.MediaRecorder){
-
-      document.getElementById("renderStatus").textContent =
-        "⚠️ Video recording is not supported on this browser.";
-
-      return;
-    }
-
-    const stream =
-      canvas.captureStream(30);
-
-    const recorder =
-      new MediaRecorder(stream);
-
-    const chunks = [];
-
-    recorder.ondataavailable =
-      function(event){
-
-        if(event.data.size > 0){
-
-          chunks.push(event.data);
-
-        }
-
-      };
-
-    recorder.onstop =
-      function(){
-
-        const blob =
-          new Blob(
-            chunks,
-            {type:"video/webm"}
-          );
-
-        const url =
-          URL.createObjectURL(blob);
-
-        const link =
-          document.createElement("a");
-
-        link.href = url;
-
-        link.download =
-          "money-maker-ai-short.webm";
-
-        document.body.appendChild(link);
-
-        link.click();
-
-        link.remove();
-
-        setTimeout(function(){
-
-          URL.revokeObjectURL(url);
-
-        },5000);
-
-        document.getElementById("renderStatus").textContent =
-          "✅ Video created. Download started.";
-
-        logActivity(
-          "Video file created."
-        );
-
-      };
-
-    document.getElementById("renderStatus").textContent =
-      "🎥 Rendering video...";
-
-    recorder.start();
-
-    const words =
-      currentContent
-        .replace(/\s+/g," ")
-        .trim()
-        .split(" ");
-
-    const pages = [];
-
-    let page = "";
-
-    for(let i=0;i<words.length;i++){
-
-      page +=
-        (page ? " " : "") +
-        words[i];
-
-      if(page.length > 90){
-
-        pages.push(page);
-
-        page = "";
-
-      }
-
-    }
-
-    if(page){
-
-      pages.push(page);
-
-    }
-
-    const total =
-      Math.min(pages.length,8);
-
-    let pageIndex = 0;
-
-    function draw(){
-
-      ctx.fillStyle =
-        "#0b1020";
-
-      ctx.fillRect(
-        0,
-        0,
-        1080,
-        1920
-      );
-
-      ctx.fillStyle =
-        "#2563eb";
-
-      ctx.fillRect(
-        0,
-        0,
-        1080,
-        14
-      );
-
-      ctx.fillStyle =
-        "#ffffff";
-
-      ctx.textAlign =
-        "center";
-
-      ctx.font =
-        "bold 58px Arial";
-
-      ctx.fillText(
-        "AI SHORT",
-        540,
-        230
-      );
-
-      ctx.font =
-        "bold 52px Arial";
-
-      const text =
-        pages[pageIndex] ||
-        currentContent;
-
-      drawText(
-        ctx,
-        text,
-        540,
-        800,
-        850,
-        70
-      );
-
-      ctx.fillStyle =
-        "#93c5fd";
-
-      ctx.font =
-        "32px Arial";
-
-      ctx.fillText(
-        "AI Command Centre",
-        540,
-        1750
-      );
-
-      ctx.fillText(
-        (pageIndex + 1) +
-        " / " +
-        total,
-        540,
-        1810
-      );
-
-      pageIndex++;
-
-      if(pageIndex < total){
-
-        setTimeout(
-          draw,
-          3500
-        );
-
-      }
-      else{
-
-        setTimeout(
-          function(){
-
-            recorder.stop();
-
-          },
-          3500
-        );
-
-      }
-
-    }
-
-    draw();
-
-  }
-  catch(error){
-
-    document.getElementById("renderStatus").textContent =
-      "❌ Video error: " + error.message;
-
-  }
+videoStatus.textContent=
+"🎬 AI is creating your video package...";
+
+videoOutput.textContent=
+"Please wait...";
+
+try{
+
+const platform=
+document.getElementById("platform").value;
+
+const prompt=
+"You are an AI short-video production director.\n\n"+
+"Convert the following content into a complete production package.\n\n"+
+"Platform:\n"+platform+"\n\n"+
+"CONTENT:\n"+currentContent+"\n\n"+
+"Create:\n\n"+
+"VIDEO TITLE\n"+
+"TOTAL LENGTH:\n"+
+"Aim for approximately 30-60 seconds.\n\n"+
+"SCENE PLAN:\n"+
+"Create 5-8 scenes.\n"+
+"For every scene provide:\n"+
+"Scene number\n"+
+"Approximate duration\n"+
+"Voiceover\n"+
+"On-screen caption\n"+
+"Visual / footage description\n"+
+"AI image or video generation prompt\n"+
+"Transition suggestion\n\n"+
+"Then provide:\n"+
+"VOICEOVER SCRIPT\n"+
+"ON-SCREEN CAPTIONS\n"+
+"BACKGROUND MUSIC DIRECTION\n"+
+"SOUND EFFECTS\n"+
+"THUMBNAIL PROMPT\n"+
+"FINAL CALL TO ACTION\n\n"+
+"Make the package practical for producing a vertical 9:16 short video.\n"+
+"Return only the finished production package.";
+
+const response=
+await fetch("/api/chat",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+message:prompt
+})
+
+});
+
+const data=
+await response.json();
+
+if(!response.ok){
+
+throw new Error(
+data?.error ||
+"Video package request failed"
+);
 
 }
 
+if(!data.reply){
 
-function drawText(
-  ctx,
-  text,
-  x,
-  y,
-  maxWidth,
-  lineHeight
-){
-
-  const words =
-    text.split(" ");
-
-  let line = "";
-
-  const lines = [];
-
-  for(let i=0;i<words.length;i++){
-
-    const test =
-      line +
-      (line ? " " : "") +
-      words[i];
-
-    if(
-      ctx.measureText(test).width > maxWidth &&
-      line
-    ){
-
-      lines.push(line);
-
-      line = words[i];
-
-    }
-    else{
-
-      line = test;
-
-    }
-
-  }
-
-  if(line){
-
-    lines.push(line);
-
-  }
-
-  const start =
-    y -
-    (lines.length * lineHeight) / 2;
-
-  for(let i=0;i<lines.length;i++){
-
-    ctx.fillText(
-      lines[i],
-      x,
-      start + (i * lineHeight)
-    );
-
-  }
+throw new Error(
+"AI returned no video package"
+);
 
 }
 
+currentVideoPackage=
+data.reply;
 
-/* PLATFORM PREPARATION */
+videoOutput.textContent=
+currentVideoPackage;
 
-function preparePlatform(platform){
-
-  const status =
-    document.getElementById("platformStatus");
-
-  if(!currentContent){
-
-    status.textContent =
-      "⚠️ Generate AI content first.";
-
-    logActivity(
-      "Platform preparation attempted without content."
-    );
-
-    return;
-  }
-
-  let platformName = "";
-  let filename = "";
-
-  if(platform === "YouTube"){
-
-    platformName = "YouTube Short";
-
-    filename = "youtube-short-package.txt";
-
-  }
-
-  if(platform === "Instagram"){
-
-    platformName = "Instagram Reel";
-
-    filename = "instagram-reel-package.txt";
-
-  }
-
-  if(platform === "Snapchat"){
-
-    platformName = "Snapchat Spotlight";
-
-    filename = "snapchat-spotlight-package.txt";
-
-  }
-
-  const packageText =
-    "AI COMMAND CENTRE\n\n" +
-    "PLATFORM: " + platformName + "\n\n" +
-    "CONTENT PACKAGE\n\n" +
-    currentContent + "\n\n" +
-    "VIDEO PRODUCTION PACKAGE\n\n" +
-    (
-      currentVideoPackage ||
-      "No video package created yet."
-    );
-
-  downloadText(
-    packageText,
-    filename
-  );
-
-  status.textContent =
-    "✅ " +
-    platformName +
-    " package prepared. Download started.";
-
-  logActivity(
-    platformName +
-    " package prepared."
-  );
-
-}
-
-
-/* AUTOMATION */
-
-async function runAutomationCycle(){
-
-  if(!automationRunning){
-
-    return;
-  }
-
-  const topic =
-    document.getElementById(
-      "automationTopic"
-    ).value.trim();
-
-  const platform =
-    document.getElementById(
-      "automationPlatform"
-    ).value;
-
-  if(!topic){
-
-    stopAutomation();
-
-    return;
-  }
-
-  document.getElementById(
-    "automationStatus"
-  ).textContent =
-    "🟡 Automation is generating content...";
-
-  try{
-
-    const prompt =
-      "Create one original short-form social media content package.\n\n" +
-      "Topic:\n" + topic + "\n\n" +
-      "Platform:\n" + platform + "\n\n" +
-      "Create:\n" +
-      "1. Catchy title\n" +
-      "2. Strong hook\n" +
-      "3. Complete 30-60 second script\n" +
-      "4. Caption\n" +
-      "5. Call to action\n" +
-      "6. 5 hashtags\n" +
-      "7. Thumbnail text\n" +
-      "8. Video description\n\n" +
-      "Return only the finished content package.";
-
-    const response =
-      await fetch("/api/chat",{
-
-        method:"POST",
-
-        headers:{
-          "Content-Type":"application/json"
-        },
-
-        body:JSON.stringify({
-          message:prompt
-        })
-
-      });
-
-    const data =
-      await response.json();
-
-    if(!response.ok){
-
-      throw new Error(
-        data && data.error
-          ? data.error
-          : "Automation failed"
-      );
-    }
-
-    if(!data.reply){
-
-      throw new Error(
-        "Automation returned no content"
-      );
-    }
-
-    currentContent =
-      data.reply;
-
-    document.getElementById(
-      "contentOutput"
-    ).textContent =
-      currentContent;
-
-    localStorage.setItem(
-      "aiCommandCentreContent",
-      currentContent
-    );
-
-    document.getElementById(
-      "savedOutput"
-    ).textContent =
-      currentContent;
-
-    document.getElementById(
-      "automationStatus"
-    ).textContent =
-      "🟢 Automation running.";
-
-    logActivity(
-      "Automation generated new content."
-    );
-
-  }
-  catch(error){
-
-    document.getElementById(
-      "automationStatus"
-    ).textContent =
-      "❌ Automation error: " +
-      error.message;
-
-    logActivity(
-      "Automation error: " +
-      error.message
-    );
-
-  }
-
-  scheduleNextAutomation();
-
-}
-
-
-function startAutomation(){
-
-  const topic =
-    document.getElementById(
-      "automationTopic"
-    ).value.trim();
-
-  if(!topic){
-
-    document.getElementById(
-      "automationStatus"
-    ).textContent =
-      "⚠️ Enter an automation topic first.";
-
-    return;
-  }
-
-  if(automationRunning){
-
-    return;
-  }
-
-  automationRunning = true;
-
-  document.getElementById(
-    "automationStatus"
-  ).textContent =
-    "🟢 Automation running.";
-
-  runAutomationCycle();
-
-}
-
-
-function scheduleNextAutomation(){
-
-  if(!automationRunning){
-
-    return;
-  }
-
-  if(automationTimer){
-
-    clearTimeout(
-      automationTimer
-    );
-
-  }
-
-  const minutes =
-    parseInt(
-      document.getElementById(
-        "automationInterval"
-      ).value
-    );
-
-  automationNextRun =
-    Date.now() +
-    minutes * 60000;
-
-  updateNextRunDisplay();
-
-  automationTimer =
-    setTimeout(
-      runAutomationCycle,
-      minutes * 60000
-    );
-
-}
-
-
-function updateNextRunDisplay(){
-
-  const nextRun =
-    document.getElementById(
-      "nextRun"
-    );
-
-  if(
-    !automationRunning ||
-    !automationNextRun
-  ){
-
-    nextRun.textContent =
-      "Automation is not running.";
-
-    return;
-  }
-
-  const update =
-    function(){
-
-      if(!automationRunning){
-
-        nextRun.textContent =
-          "Automation is not running.";
-
-        return;
-      }
-
-      const remaining =
-        automationNextRun -
-        Date.now();
-
-      if(remaining <= 0){
-
-        nextRun.textContent =
-          "Starting next automation cycle...";
-
-        return;
-      }
-
-      const minutes =
-        Math.floor(
-          remaining / 60000
-        );
-
-      const seconds =
-        Math.floor(
-          (remaining % 60000) / 1000
-        );
-
-      nextRun.textContent =
-        "⏱ Next automation cycle in " +
-        minutes +
-        "m " +
-        seconds +
-        "s";
-
-      setTimeout(
-        update,
-        1000
-      );
-
-    };
-
-  update();
-
-}
-
-
-function stopAutomation(){
-
-  automationRunning = false;
-
-  if(automationTimer){
-
-    clearTimeout(
-      automationTimer
-    );
-
-    automationTimer = null;
-
-  }
-
-  automationNextRun = null;
-
-  document.getElementById(
-    "automationStatus"
-  ).textContent =
-    "🔴 Automation stopped.";
-
-  document.getElementById(
-    "nextRun"
-  ).textContent =
-    "Automation is not running.";
-
-}
-
-
-/* COPY */
-
-async function copyContent(){
-
-  if(!currentContent){
-
-    alert(
-      "Generate content first."
-    );
-
-    return;
-  }
-
-  await navigator.clipboard.writeText(
-    currentContent
-  );
-
-  alert(
-    "Content copied."
-  );
-
-}
-
-
-async function copyVideoPackage(){
-
-  if(!currentVideoPackage){
-
-    alert(
-      "Create a video package first."
-    );
-
-    return;
-  }
-
-  await navigator.clipboard.writeText(
-    currentVideoPackage
-  );
-
-  alert(
-    "Video package copied."
-  );
-
-}
-
-
-/* SAVE */
-
-function saveContent(){
-
-  if(!currentContent){
-
-    alert(
-      "Generate content first."
-    );
-
-    return;
-  }
-
-  localStorage.setItem(
-    "aiCommandCentreContent",
-    currentContent
-  );
-
-  document.getElementById(
-    "savedOutput"
-  ).textContent =
-    currentContent;
-
-  alert(
-    "Content saved."
-  );
-
-}
-
-
-/* DOWNLOAD */
-
-function downloadContent(){
-
-  if(!currentContent){
-
-    alert(
-      "Generate content first."
-    );
-
-    return;
-  }
-
-  downloadText(
-    currentContent,
-    "ai-content.txt"
-  );
-
-}
-
-
-function downloadVideoPackage(){
-
-  if(!currentVideoPackage){
-
-    alert(
-      "Create a video package first."
-    );
-
-    return;
-  }
-
-  downloadText(
-    currentVideoPackage,
-    "video-production-package.txt"
-  );
-
-}
-
-
-function downloadText(
-  text,
-  filename
-){
-
-  const blob =
-    new Blob(
-      [text],
-      {type:"text/plain"}
-    );
-
-  const url =
-    URL.createObjectURL(blob);
-
-  const link =
-    document.createElement("a");
-
-  link.href = url;
-
-  link.download =
-    filename;
-
-  document.body.appendChild(link);
-
-  link.click();
-
-  link.remove();
-
-  setTimeout(
-    function(){
-
-      URL.revokeObjectURL(url);
-
-    },
-    1000
-  );
-
-}
-
-
-/* MARKET */
-
-function checkMarket(){
-
-  document.getElementById(
-    "marketStatus"
-  ).textContent =
-    "📊 Market monitor is ready. Live trading connection will be added later.";
-
-}
-
-
-/* SAVED */
-
-function loadSavedContent(){
-
-  const saved =
-    localStorage.getItem(
-      "aiCommandCentreContent"
-    );
-
-  if(saved){
-
-    currentContent =
-      saved;
-
-    document.getElementById(
-      "savedOutput"
-    ).textContent =
-      saved;
-
-    document.getElementById(
-      "contentOutput"
-    ).textContent =
-      saved;
-
-  }
-
-}
-
-
-function clearSaved(){
-
-  localStorage.removeItem(
-    "aiCommandCentreContent"
-  );
-
-  document.getElementById(
-    "savedOutput"
-  ).textContent =
-    "No saved content.";
-
-}
-
-
-/* LOG */
-
-function logActivity(message){
-
-  const log =
-    document.getElementById(
-      "activityLog"
-    );
-
-  if(!log){
-
-    return;
-  }
-
-  const entry =
-    document.createElement("div");
-
-  entry.textContent =
-    new Date().toLocaleTimeString() +
-    " — " +
-    message;
-
-  log.prepend(entry);
-
-}
-
-
-/* STARTUP */
-
-loadSavedContent();
+videoStatus.textContent=
+"✅ Video production package ready.";
 
 logActivity(
-  "AI Command Centre loaded."
+"AI video package created."
 );
+
+}
+
+catch(error){
+
+videoOutput.textContent=
+"Unable to create video package.\n\n"+
+error.message;
+
+videoStatus.textContent=
+"❌ "+error.message;
+
+logActivity(
+"Video package error: "+
+error.message
+);
+
+}
+
+}
+
+
+/* ============================================
+   EXTRACT SCRIPT FOR VOICE
+============================================ */
+
+function getVoiceText(){
+
+if(!currentContent){
+return "";
+}
+
+const match=
+currentContent.match(
+/3\.\s*(?:Complete\s+)?script\s*:?\s*([\s\S]*?)(?:\n\s*4\.\s*Caption|\n\s*4\)|$)/i
+);
+
+if(match && match[1]){
+
+return match[1].trim();
+
+}
+
+return currentContent;
+
+}
+
+
+/* ============================================
+   PLAY BROWSER VOICEOVER
+============================================ */
 
 function playVoiceover(){
 
-  if(!currentContent){
-    alert("Generate AI content first.");
-    return;
-  }
+const text=
+getVoiceText();
 
-  if(!("speechSynthesis" in window)){
-    alert("Voiceover is not supported by this browser.");
-    return;
-  }
+if(!text){
 
-  window.speechSynthesis.cancel();
+alert(
+"Generate AI content first."
+);
 
-  const voice =
-    new SpeechSynthesisUtterance(currentContent);
-
-  voice.rate = 0.95;
-  voice.pitch = 1;
-  voice.volume = 1;
-
-  window.speechSynthesis.speak(voice);
-
-  logActivity(
-    "Voiceover playback started."
-  );
+return;
 
 }
 
-</script>
+if(!("speechSynthesis" in window)){
 
-</body>
-</html>
+alert(
+"Voiceover is not supported by this browser."
+);
 
-   
+return;
+
+}
+
+window.speechSynthesis.cancel();
+
+const voice=
+new SpeechSynthesisUtterance(text);
+
+voice.rate=0.95;
+voice.pitch=1;
+voice.volume=1;
+
+window.speechSynthesis.speak(voice);
+
+logActivity(
+"Browser voiceover playback started."
+);
+
+}
+
+
+/* ============================================
+   GET TTS AUDIO
+============================================ */
+
+async function getTTSAudio(text){
+
+const response=
+await fetch("/api/chat",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+action:"tts",
+
+text:text
+
+})
+
+});
+
+const data=
+await response.json();
+
+if(!response.ok){
+
+throw new Error(
+data?.error ||
+"AI voice generation failed"
+);
+
+}
+
+if(!data.audio){
+
+throw new Error(
+"No audio returned by AI."
+);
+
+}
+
+const bytes=
+Uint8Array.from(
+atob(data.audio),
+function(c){
+return c.charCodeAt(0);
+}
+);
+
+return bytes.buffer;
+
+}
+
+
+/* ============================================
+   SPLIT TEXT
+============================================ */
+
+function splitText(text,maxLength){
+
+const words=
+text.replace(/\s+/g," ").trim().split(" ");
+
+const chunks=[];
+
+let current="";
+
+for(
+let i=0;
+i<words.length;
+i++
+){
+
+const word=words[i];
+
+if(
+(current+" "+word).trim().length>
+maxLength
+){
+
+if(current.trim()){
+chunks.push(current.trim());
+}
+
+current=word;
+
+}else{
+
+current=
+(current+" "+word).trim();
+
+}
+
+}
+
+if(current.trim()){
+chunks.push(current.trim());
+}
+
+return chunks;
+
+}
+
+
+/* ============================================
+   CREATE COMBINED AUDIO BUFFER
+============================================ */
+
+async function createCombinedAudio(text,audioContext){
+
+const chunks=
+splitText(text,3500);
+
+const buffers=[];
+
+for(
+let i=0;
+i<chunks.length;
+i++
+){
+
+document.getElementById(
+"renderStatus"
+).textContent=
+"🔊 Creating AI voice "+
+(i+1)+" / "+chunks.length+"...";
+
+const arrayBuffer=
+await getTTSAudio(chunks[i]);
+
+const buffer=
+await audioContext.decodeAudioData(
+arrayBuffer
+);
+
+buffers.push(buffer);
+
+}
+
+if(!buffers.length){
+
+throw new Error(
+"No audio could be generated."
+);
+
+}
+
+const sampleRate=
+buffers[0].sampleRate;
+
+let totalLength=0;
+
+for(
+const buffer of buffers
+){
+
+totalLength+=
+Math.ceil(
+buffer.duration*sampleRate
+);
+
+}
+
+const combined=
+audioContext.createBuffer(
+1,
+totalLength,
+sampleRate
+);
+
+const output=
+combined.getChannelData(0);
+
+let offset=0;
+
+for(
+const buffer of buffers
+){
+
+const input=
+buffer.getChannelData(0);
+
+output.set(
+input,
+offset
+);
+
+offset+=input.length;
+
+}
+
+return combined;
+
+}
+
+
+/* ============================================
+   DRAW TEXT
+============================================ */
+
+function drawText(
+ctx,
+text,
+centerX,
+startY,
+maxWidth,
+lineHeight
+){
+
+const words=
+text.split(/\s+/);
+
+let line="";
+
+let y=startY;
+
+ctx.textAlign="center";
+
+for(
+let i=0;
+i<words.length;
+i++
+){
+
+const test=
+line+
+(words[i] ? " "+words[i] : "");
+
+const width=
+ctx.measureText(test).width;
+
+if(
+width>maxWidth &&
+line
+){
+
+ctx.fillText(
+line.trim(),
+centerX,
+y
+);
+
+line=
+words[i];
+
+y+=lineHeight;
+
+if(y>1450){
+break;
+}
+
+}else{
+
+line=test;
+
+}
+
+}
+
+if(
+line &&
+y<=1450
+){
+
+ctx.fillText(
+line.trim(),
+centerX,
+y
+);
+
+}
+
+}
+
+
+/* ============================================
+   VIDEO RENDERER WITH EMBEDDED AUDIO
+============================================ */
+
+async function renderVideo(){
+
+if(!currentContent){
+
+document.getElementById(
+"renderStatus"
+).textContent=
+"⚠️ Generate AI content first.";
+
+return;
+
+}
+
+const status=
+document.getElementById(
+"renderStatus"
+);
+
+let audioContext=null;
+let audioSource=null;
+let recorder=null;
+
+try{
+
+status.textContent=
+"🔊 Preparing AI voice...";
+
+audioContext=
+new(
+window.AudioContext ||
+window.webkitAudioContext
+)();
+
+await audioContext.resume();
+
+const voiceText=
+getVoiceText();
+
+if(!voiceText){
+
+throw new Error(
+"No script text was found."
+);
+
+}
+
+const audioBuffer=
+await createCombinedAudio(
+voiceText,
+audioContext
+);
+
+
+/* CANVAS */
+
+const canvas=
+document.createElement("canvas");
+
+canvas.width=1080;
+canvas.height=1920;
+
+const ctx=
+canvas.getContext("2d");
+
+if(!canvas.captureStream){
+
+throw new Error(
+"Your browser does not support video rendering."
+);
+
+}
+
+if(!window.MediaRecorder){
+
+throw new Error(
+"Video recording is not supported on this browser."
+);
+
+}
+
+
+/* VIDEO STREAM */
+
+const videoStream=
+canvas.captureStream(30);
+
+
+/* AUDIO STREAM */
+
+const audioDestination=
+audioContext.createMediaStreamDestination();
+
+audioSource=
+audioContext.createBufferSource();
+
+audioSource.buffer=
+audioBuffer;
+
+audioSource.connect(
+audioDestination
+);
+
+
+/* COMBINED STREAM */
+
+const combinedStream=
+new MediaStream();
+
+videoStream
+.getVideoTracks()
+.forEach(function(track){
+
+combinedStream.addTrack(track);
+
+});
+
+audioDestination
+.stream
+.getAudioTracks()
+.forEach(function(track){
+
+combinedStream.addTrack(track);
+
+});
+
+
+/* RECORDING FORMAT */
+
+let mimeType=
+"video/webm;codecs=vp9,opus";
+
+if(
+!MediaRecorder.isTypeSupported(
+mimeType
+)
+){
+
+mimeType=
+"video/webm;codecs=vp8,opus";
+
+}
+
+if(
+!MediaRecorder.isTypeSupported(
+mimeType
+)
+){
+
+mimeType=
+"video/webm";
+
+}
+
+
+recorder=
+new MediaRecorder(
+combinedStream,
+{
+mimeType:mimeType
+}
+);
+
+const chunks=[];
+
+
+recorder.ondataavailable=
+function(event){
+
+if(event.data.size>0){
+
+chunks.push(event.data);
+
+}
+
+};
+
+
+recorder.onstop=
+function(){
+
+const blob=
+new Blob(
+chunks,
+{
+type:mimeType
+}
+);
+
+const url=
+URL.createObjectURL(blob);
+
+const link=
+document.createElement("a");
+
+link.href=url;
+
+link.download=
+"money-maker-ai-short-with-voice.webm";
+
+document.body.appendChild(link);
+
+link.click();
+
+link.remove();
+
+setTimeout(
+function(){
+
+URL.revokeObjectURL(url);
+
+},
+5000
+);
+
+status.textContent=
+"✅ Video created with AI voice. Download started.";
+
+logActivity(
+"Video with embedded AI voice created."
+);
+
+try{
+
+audioSource.disconnect();
+
+}catch(_){}
+
+try{
+
+audioContext.close();
+
+}catch(_){}
+
+};
+
+
+/* SCRIPT PAGES */
+
+const words=
+voiceText
+.replace(/\s+/g," ")
+.trim()
+.split(" ");
+
+const pages=[];
+
+let page="";
+
+for(
+let i=0;
+i<words.length;
+i++
+){
+
+page+=
+(page?" ":"")+
+words[i];
+
+if(page.length>90){
+
+pages.push(page);
+
+page="";
+
+}
+
+}
+
+if(page){
+
+pages.push(page);
+
+}
+
+const total=
+Math.max(
+1,
+Math.min(
+pages.length,
+8
+)
+);
+
+
+/* START */
+
+status.textContent=
+"🎥 Rendering video with embedded AI voice...";
+
+recorder.start();
+
+audioSource.start(0);
+
+const startTime=
+performance.now();
+
+const duration=
+audioBuffer.duration*1000;
+
+function draw(){
+
+const elapsed=
+performance.now()-
+startTime;
+
+const progress=
+Math.min(
+1,
+elapsed/duration
+);
+
+let pageIndex=
+Math.floor(
+progress*total
+);
+
+if(pageIndex>=total){
+
+pageIndex=
+total-1;
+
+}
+
+
+/* BACKGROUND */
+
+ctx.fillStyle="#0b1020";
+
+ctx.fillRect(
+0,
+0,
+1080,
+1920
+);
+
+
+/* TOP BAR */
+
+ctx.fillStyle="#2563eb";
+
+ctx.fillRect(
+0,
+0,
+1080,
+14
+);
+
+
+/* TITLE */
+
+ctx.fillStyle="#ffffff";
+
+ctx.textAlign="center";
+
+ctx.font=
+"bold 58px Arial";
+
+ctx.fillText(
+"AI SHORT",
+540,
+230
+);
+
+
+/* MAIN TEXT */
+
+ctx.font=
+"bold 52px Arial";
+
+drawText(
+ctx,
+pages[pageIndex]||
+voiceText,
+540,
+800,
+850,
+70
+);
+
+
+/* FOOTER */
+
+ctx.fillStyle="#93c5fd";
+
+ctx.font="32px Arial";
+
+ctx.fillText(
+"AI Command Centre",
+540,
+1750
+);
+
+ctx.fillText(
+(pageIndex+1)+
+" / "+
+total,
+540,
+1810
+);
+
+
+/* CONTINUE */
+
+if(elapsed<duration){
+
+requestAnimationFrame(draw);
+
+}else{
+
+setTimeout(
+function(){
+
+recorder.stop();
+
+},
+500
+);
+
+}
+
+}
+
+draw();
+
+}
+
+catch(error){
+
+console.error(error);
+
+status.textContent=
+"❌ Video error: "+
+error.message;
+
+logActivity(
+"Video rendering error: "+
+error.message
+);
+
+try{
+
+if(audioSource){
+audioSource.disconnect();
+}
+
+}catch(_){}
+
+try{
+
+if(audioContext){
+audioContext.close();
+}
+
+}catch(_){}
+
+}
+
+}
+
+
+/* ============================================
+   COPY CONTENT
+============================================ */
+
+async function copyContent(){
+
+if(!currentContent){
+
+alert(
+"Generate content first."
+);
+
+return;
+
+}
+
+try{
+
+await navigator.clipboard.writeText(
+currentContent
+);
+
+logActivity(
+"Content copied."
+);
+
+alert(
+"Content copied."
+);
+
+}catch(error){
+
+alert(
+"Copy failed."
+);
+
+}
+
+}
+
+
+/* ============================================
+   COPY VIDEO PACKAGE
+============================================ */
+
+async function copyVideoPackage(){
+
+if(!currentVideoPackage){
+
+alert(
+"Create a video package first."
+);
+
+return;
+
+}
+
+try{
+
+await navigator.clipboard.writeText(
+currentVideoPackage
+);
+
+logActivity(
+"Video package copied."
+);
+
+alert(
+"Video package copied."
+);
+
+}catch(error){
+
+alert(
+"Copy failed."
+);
+
+}
+
+}
+
+
+/* ============================================
+   SAVE CONTENT
+============================================ */
+
+function saveContent(){
+
+if(!currentContent){
+
+alert(
+"Generate content first."
+);
+
+return;
+
+}
+
+localStorage.setItem(
+"aiCommandCentreContent",
+currentContent
+);
+
+document.getElementById(
+"savedOutput"
+).textContent=
+currentContent;
+
+logActivity(
+"Content saved locally."
+);
+
+alert(
+"Content saved."
+);
+
+}
+
+
+/* ==
