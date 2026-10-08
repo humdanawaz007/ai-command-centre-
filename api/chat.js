@@ -1,37 +1,5 @@
 module.exports = async function handler(req, res) {
-  /*
-   * =========================================================
-   * AI COMMAND CENTRE - API
-   * =========================================================
-   *
-   * Supports:
-   *
-   * 1. Normal AI chat/content generation
-   * 2. Text-to-speech
-   * 3. Market data
-   * 4. Paper-trading simulation
-   *
-   * IMPORTANT:
-   * - No real trades are executed.
-   * - OPENAI_API_KEY must be configured in Vercel.
-   * - This file is designed for a Vercel serverless function.
-   *
-   * =========================================================
-   */
-
-  /*
-   * ---------------------------------------------------------
-   * BASIC RESPONSE HEADERS
-   * ---------------------------------------------------------
-   */
-
   res.setHeader("Content-Type", "application/json; charset=utf-8");
-
-  /*
-   * ---------------------------------------------------------
-   * METHOD CHECK
-   * ---------------------------------------------------------
-   */
 
   if (req.method !== "POST") {
     return res.status(405).json({
@@ -39,58 +7,19 @@ module.exports = async function handler(req, res) {
     });
   }
 
-  /*
-   * ---------------------------------------------------------
-   * MAIN ERROR HANDLER
-   * ---------------------------------------------------------
-   */
-
   try {
-    /*
-     * =======================================================
-     * ENVIRONMENT CHECK
-     * =======================================================
-     */
-
-    const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-
-    /*
-     * We only require the OpenAI key for AI/TTS actions.
-     * Market data can work without it.
-     */
-
     const action = req.body?.action || "chat";
 
     /*
-     * =======================================================
+     * =====================================================
      * MARKET DATA
-     * =======================================================
-     *
-     * PAPER / INFORMATIONAL USE ONLY.
-     *
-     * Data source:
-     * Yahoo Finance chart endpoint.
-     *
-     * Supported symbols:
-     *
-     * NIFTY
-     * SENSEX
-     * RELIANCE
-     * TCS
-     * INFY
-     * HDFCBANK
-     * ICICIBANK
-     * SBIN
-     *
-     * =======================================================
+     * =====================================================
      */
 
     if (action === "market_data") {
       const requestedSymbol = String(
         req.body?.symbol || "NIFTY"
-      )
-        .trim()
-        .toUpperCase();
+      ).trim().toUpperCase();
 
       const symbolMap = {
         NIFTY: "^NSEI",
@@ -129,12 +58,13 @@ module.exports = async function handler(req, res) {
         response = await fetch(yahooUrl, {
           method: "GET",
           headers: {
-            "User-Agent":
-              "Mozilla/5.0 (compatible; AI-Command-Centre/1.0)"
+            "User-Agent": "Mozilla/5.0"
           },
           signal: controller.signal
         });
       } catch (error) {
+        clearTimeout(timeout);
+
         if (error?.name === "AbortError") {
           return res.status(504).json({
             error: "Market data request timed out"
@@ -142,18 +72,15 @@ module.exports = async function handler(req, res) {
         }
 
         return res.status(502).json({
-          error:
-            "Unable to connect to market data provider",
-          details: error?.message || "Network error"
+          error: "Unable to connect to market data provider"
         });
-      } finally {
-        clearTimeout(timeout);
       }
+
+      clearTimeout(timeout);
 
       if (!response.ok) {
         return res.status(502).json({
-          error:
-            "Market data provider returned an error",
+          error: "Market data provider returned an error",
           providerStatus: response.status
         });
       }
@@ -164,8 +91,7 @@ module.exports = async function handler(req, res) {
         data = await response.json();
       } catch (error) {
         return res.status(502).json({
-          error:
-            "Market data provider returned invalid JSON"
+          error: "Market data provider returned invalid JSON"
         });
       }
 
@@ -173,51 +99,19 @@ module.exports = async function handler(req, res) {
 
       if (!result) {
         return res.status(502).json({
-          error:
-            "No market data was returned"
+          error: "No market data was returned"
         });
       }
 
       const meta = result.meta || {};
+      const timestamps = result.timestamp || [];
+      const quote = result.indicators?.quote?.[0] || {};
 
-      const timestamps =
-        Array.isArray(result.timestamp)
-          ? result.timestamp
-          : [];
-
-      const quote =
-        result.indicators?.quote?.[0] || {};
-
-      const closes =
-        Array.isArray(quote.close)
-          ? quote.close
-          : [];
-
-      const opens =
-        Array.isArray(quote.open)
-          ? quote.open
-          : [];
-
-      const highs =
-        Array.isArray(quote.high)
-          ? quote.high
-          : [];
-
-      const lows =
-        Array.isArray(quote.low)
-          ? quote.low
-          : [];
-
-      const volumes =
-        Array.isArray(quote.volume)
-          ? quote.volume
-          : [];
-
-      /*
-       * -------------------------------------------------------
-       * Find latest valid candle
-       * -------------------------------------------------------
-       */
+      const opens = quote.open || [];
+      const highs = quote.high || [];
+      const lows = quote.low || [];
+      const closes = quote.close || [];
+      const volumes = quote.volume || [];
 
       let latestIndex = -1;
 
@@ -233,99 +127,34 @@ module.exports = async function handler(req, res) {
 
       if (latestIndex === -1) {
         return res.status(502).json({
-          error:
-            "Market data did not contain a valid price"
+          error: "No valid market price was returned"
         });
       }
 
-      const latestPrice =
-        Number(closes[latestIndex]);
+      const price = Number(closes[latestIndex]);
 
-      /*
-       * -------------------------------------------------------
-       * Find previous valid price
-       * -------------------------------------------------------
-       */
-
-      let previousIndex = -1;
-
-      for (
-        let i = latestIndex - 1;
-        i >= 0;
-        i--
-      ) {
-        if (
-          typeof closes[i] === "number" &&
-          Number.isFinite(closes[i])
-        ) {
-          previousIndex = i;
-          break;
-        }
-      }
-
-      /*
-       * -------------------------------------------------------
-       * Previous close
-       *
-       * Prefer Yahoo's regularMarketPreviousClose
-       * when available.
-       * -------------------------------------------------------
-       */
-
-      let previousClose =
-        Number(meta.previousClose);
+      let previousClose = Number(meta.previousClose);
 
       if (
         !Number.isFinite(previousClose) ||
         previousClose <= 0
       ) {
-        previousClose =
-          Number(meta.chartPreviousClose);
+        previousClose = Number(meta.chartPreviousClose);
       }
 
       if (
         !Number.isFinite(previousClose) ||
         previousClose <= 0
       ) {
-        if (previousIndex !== -1) {
-          previousClose =
-            Number(closes[previousIndex]);
-        } else {
-          previousClose = latestPrice;
-        }
+        previousClose = price;
       }
 
-      const change =
-        latestPrice - previousClose;
+      const change = price - previousClose;
 
       const changePercent =
         previousClose !== 0
           ? (change / previousClose) * 100
           : 0;
-
-      /*
-       * -------------------------------------------------------
-       * Latest OHLC
-       * -------------------------------------------------------
-       */
-
-      const latestOpen =
-        Number(opens[latestIndex]);
-
-      const latestHigh =
-        Number(highs[latestIndex]);
-
-      const latestLow =
-        Number(lows[latestIndex]);
-
-      const latestVolume =
-        Number(volumes[latestIndex]);
-
-      /*
-       * -------------------------------------------------------
-       * Recent candles
-       * -------------------------------------------------------
-       */
 
       const candles = [];
 
@@ -346,25 +175,19 @@ module.exports = async function handler(req, res) {
             typeof timestamps[i] === "number"
               ? timestamps[i]
               : null,
-
           open:
             typeof opens[i] === "number"
               ? opens[i]
               : null,
-
           high:
             typeof highs[i] === "number"
               ? highs[i]
               : null,
-
           low:
             typeof lows[i] === "number"
               ? lows[i]
               : null,
-
-          close:
-            Number(closes[i]),
-
+          close: Number(closes[i]),
           volume:
             typeof volumes[i] === "number"
               ? volumes[i]
@@ -372,108 +195,65 @@ module.exports = async function handler(req, res) {
         });
       }
 
-      /*
-       * -------------------------------------------------------
-       * Market response
-       * -------------------------------------------------------
-       */
-
       return res.status(200).json({
         success: true,
-
         symbol: requestedSymbol,
-
         yahooSymbol: yahooSymbol,
-
-        currency:
-          meta.currency || "INR",
-
+        currency: meta.currency || "INR",
         exchange:
           meta.exchangeName ||
           meta.fullExchangeName ||
           "N/A",
-
-        marketState:
-          meta.marketState || "UNKNOWN",
-
-        price: latestPrice,
-
-        currentPrice: latestPrice,
-
+        marketState: meta.marketState || "UNKNOWN",
+        price: price,
+        currentPrice: price,
         previousClose: previousClose,
-
         change: change,
-
         changePercent: changePercent,
-
         open:
-          Number.isFinite(latestOpen)
-            ? latestOpen
+          typeof opens[latestIndex] === "number"
+            ? opens[latestIndex]
             : null,
-
         high:
-          Number.isFinite(latestHigh)
-            ? latestHigh
+          typeof highs[latestIndex] === "number"
+            ? highs[latestIndex]
             : null,
-
         low:
-          Number.isFinite(latestLow)
-            ? latestLow
+          typeof lows[latestIndex] === "number"
+            ? lows[latestIndex]
             : null,
-
         volume:
-          Number.isFinite(latestVolume)
-            ? latestVolume
+          typeof volumes[latestIndex] === "number"
+            ? volumes[latestIndex]
             : null,
-
         timestamp:
           typeof timestamps[latestIndex] === "number"
             ? timestamps[latestIndex]
             : Math.floor(Date.now() / 1000),
-
         candles: candles,
-
         dataSource: "Yahoo Finance",
-
         paperTradingOnly: true,
-
-        fetchedAt:
-          new Date().toISOString()
+        fetchedAt: new Date().toISOString()
       });
     }
 
     /*
-     * =======================================================
-     * PAPER TRADE
-     * =======================================================
-     *
-     * THIS DOES NOT PLACE A REAL TRADE.
-     *
-     * It only validates the request and returns a simulated
-     * order object.
-     * =======================================================
+     * =====================================================
+     * PAPER TRADING
+     * =====================================================
      */
 
     if (action === "paper_trade") {
       const symbol = String(
         req.body?.symbol || ""
-      )
-        .trim()
-        .toUpperCase();
+      ).trim().toUpperCase();
 
       const side = String(
         req.body?.side || ""
-      )
-        .trim()
-        .toUpperCase();
+      ).trim().toUpperCase();
 
-      const quantity = Number(
-        req.body?.quantity
-      );
-
-      const price = Number(
-        req.body?.price
-      );
+      const quantity = Number(req.body?.quantity);
+      const price = Number(req.body?.price);
 
       if (!symbol) {
         return res.status(400).json({
@@ -481,38 +261,25 @@ module.exports = async function handler(req, res) {
         });
       }
 
-      if (
-        side !== "BUY" &&
-        side !== "SELL"
-      ) {
+      if (side !== "BUY" && side !== "SELL") {
         return res.status(400).json({
-          error:
-            "Side must be BUY or SELL"
+          error: "Side must be BUY or SELL"
         });
       }
 
-      if (
-        !Number.isFinite(quantity) ||
-        quantity <= 0
-      ) {
+      if (!Number.isFinite(quantity) || quantity <= 0) {
         return res.status(400).json({
-          error:
-            "Quantity must be greater than zero"
+          error: "Quantity must be greater than zero"
         });
       }
 
-      if (
-        !Number.isFinite(price) ||
-        price <= 0
-      ) {
+      if (!Number.isFinite(price) || price <= 0) {
         return res.status(400).json({
-          error:
-            "Price must be greater than zero"
+          error: "Price must be greater than zero"
         });
       }
 
-      const orderValue =
-        quantity * price;
+      const orderValue = quantity * price;
 
       const orderId =
         "PAPER-" +
@@ -525,46 +292,35 @@ module.exports = async function handler(req, res) {
 
       return res.status(200).json({
         success: true,
-
         paperTrade: true,
-
         realTradeExecuted: false,
-
         order: {
           orderId: orderId,
-
           symbol: symbol,
-
           side: side,
-
           quantity: quantity,
-
           price: price,
-
           value: orderValue,
-
           status: "SIMULATED",
-
-          createdAt:
-            new Date().toISOString()
+          createdAt: new Date().toISOString()
         },
-
         message:
           "Paper trade simulated successfully. No real order was placed."
       });
     }
 
     /*
-     * =======================================================
-     * TEXT-TO-SPEECH
-     * =======================================================
+     * =====================================================
+     * TEXT TO SPEECH
+     * =====================================================
      */
 
     if (action === "tts") {
-      if (!OPENAI_API_KEY) {
+      const apiKey = process.env.OPENAI_API_KEY;
+
+      if (!apiKey) {
         return res.status(500).json({
-          error:
-            "OPENAI_API_KEY is missing in Vercel"
+          error: "OPENAI_API_KEY is missing in Vercel"
         });
       }
 
@@ -574,19 +330,14 @@ module.exports = async function handler(req, res) {
 
       if (!text) {
         return res.status(400).json({
-          error:
-            "Text is required for voice generation"
+          error: "Text is required for voice generation"
         });
       }
-
-      /*
-       * Prevent extremely large TTS requests.
-       */
 
       if (text.length > 4096) {
         return res.status(400).json({
           error:
-            "Text is too long for one voice request. Please split the script into smaller sections."
+            "Text is too long for one voice request"
         });
       }
 
@@ -598,13 +349,11 @@ module.exports = async function handler(req, res) {
         process.env.OPENAI_TTS_VOICE ||
         "alloy";
 
-      const controller =
-        new AbortController();
+      const controller = new AbortController();
 
-      const timeout =
-        setTimeout(() => {
-          controller.abort();
-        }, 60000);
+      const timeout = setTimeout(() => {
+        controller.abort();
+      }, 60000);
 
       let response;
 
@@ -613,111 +362,79 @@ module.exports = async function handler(req, res) {
           "https://api.openai.com/v1/audio/speech",
           {
             method: "POST",
-
             headers: {
-              "Content-Type":
-                "application/json",
-
-              "Authorization":
-                `Bearer ${OPENAI_API_KEY}`
+              "Content-Type": "application/json",
+              "Authorization": "Bearer " + apiKey
             },
-
             body: JSON.stringify({
               model: ttsModel,
-
               voice: ttsVoice,
-
               input: text,
-
               instructions:
                 "Speak clearly and naturally for a short-form social media video. Use an engaging, confident and conversational tone. Do not sound robotic.",
-
               response_format: "mp3",
-
               speed: 1.0
             }),
-
             signal: controller.signal
           }
         );
       } catch (error) {
+        clearTimeout(timeout);
+
         if (error?.name === "AbortError") {
           return res.status(504).json({
-            error:
-              "Voice generation timed out"
+            error: "Voice generation timed out"
           });
         }
 
         return res.status(502).json({
           error:
-            "Unable to connect to OpenAI voice service",
-          details:
-            error?.message ||
-            "Network error"
+            "Unable to connect to OpenAI voice service"
         });
-      } finally {
-        clearTimeout(timeout);
       }
+
+      clearTimeout(timeout);
 
       if (!response.ok) {
         let errorData = {};
 
         try {
-          errorData =
-            await response.json();
-        } catch (_) {
+          errorData = await response.json();
+        } catch (error) {
           errorData = {};
         }
 
-        return res.status(
-          response.status
-        ).json({
+        return res.status(response.status).json({
           error:
             errorData?.error?.message ||
             "OpenAI voice generation failed"
         });
       }
 
-      let audioBuffer;
-
-      try {
-        audioBuffer =
-          Buffer.from(
-            await response.arrayBuffer()
-          );
-      } catch (error) {
-        return res.status(500).json({
-          error:
-            "Unable to process generated audio"
-        });
-      }
-
-      const audioBase64 =
-        audioBuffer.toString("base64");
+      const audioBuffer = Buffer.from(
+        await response.arrayBuffer()
+      );
 
       return res.status(200).json({
         success: true,
-
-        audio: audioBase64,
-
+        audio: audioBuffer.toString("base64"),
         mimeType: "audio/mpeg",
-
         model: ttsModel,
-
         voice: ttsVoice
       });
     }
 
     /*
-     * =======================================================
-     * NORMAL AI CHAT / CONTENT GENERATION
-     * =======================================================
+     * =====================================================
+     * NORMAL AI CHAT
+     * =====================================================
      */
 
-    if (!OPENAI_API_KEY) {
+    const apiKey = process.env.OPENAI_API_KEY;
+
+    if (!apiKey) {
       return res.status(500).json({
-        error:
-          "OPENAI_API_KEY is missing in Vercel"
+        error: "OPENAI_API_KEY is missing in Vercel"
       });
     }
 
@@ -733,16 +450,9 @@ module.exports = async function handler(req, res) {
 
     if (!message && conversation.length === 0) {
       return res.status(400).json({
-        error:
-          "Message is required"
+        error: "Message is required"
       });
     }
-
-    /*
-     * -------------------------------------------------------
-     * Clean conversation
-     * -------------------------------------------------------
-     */
 
     let input = [];
 
@@ -762,25 +472,11 @@ module.exports = async function handler(req, res) {
             item.role === "assistant"
               ? "assistant"
               : "user",
-
-          content:
-            item.content.trim()
+          content: item.content.trim()
         }));
+    }
 
-      /*
-       * If the conversation was invalid,
-       * fall back to the current message.
-       */
-
-      if (input.length === 0 && message) {
-        input = [
-          {
-            role: "user",
-            content: message
-          }
-        ];
-      }
-    } else {
+    if (input.length === 0 && message) {
       input = [
         {
           role: "user",
@@ -789,50 +485,19 @@ module.exports = async function handler(req, res) {
       ];
     }
 
-    /*
-     * -------------------------------------------------------
-     * Limit conversation size
-     *
-     * Prevents accidentally sending a huge browser history.
-     * -------------------------------------------------------
-     */
-
     if (input.length > 30) {
       input = input.slice(-30);
     }
 
-    /*
-     * -------------------------------------------------------
-     * OpenAI model
-     * -------------------------------------------------------
-     *
-     * You can override this in Vercel with:
-     *
-     * OPENAI_TEXT_MODEL
-     *
-     * Default:
-     * gpt-6-luna
-     *
-     * -------------------------------------------------------
-     */
-
     const textModel =
       process.env.OPENAI_TEXT_MODEL ||
-      "gpt-6-luna";
+      "gpt-4.1-mini";
 
-    /*
-     * -------------------------------------------------------
-     * AI request
-     * -------------------------------------------------------
-     */
+    const controller = new AbortController();
 
-    const controller =
-      new AbortController();
-
-    const timeout =
-      setTimeout(() => {
-        controller.abort();
-      }, 60000);
+    const timeout = setTimeout(() => {
+      controller.abort();
+    }, 60000);
 
     let response;
 
@@ -841,65 +506,93 @@ module.exports = async function handler(req, res) {
         "https://api.openai.com/v1/responses",
         {
           method: "POST",
-
           headers: {
-            "Content-Type":
-              "application/json",
-
-            "Authorization":
-              `Bearer ${OPENAI_API_KEY}`
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + apiKey
           },
-
           body: JSON.stringify({
             model: textModel,
-
             input: input,
-
             instructions:
-              "You are the AI Command Centre assistant. Help the user create useful, accurate and practical content. When asked to create social media content, provide clear ready-to-use output. When asked about trading or investments, provide educational information and never claim that a simulated trade is a real trade. Do not execute financial transactions.",
-
+              "You are the AI Command Centre assistant. Help the user create useful, accurate and practical content. When asked to create social media content, provide clear ready-to-use output. When discussing trading or investments, provide educational information only and never execute real financial transactions.",
             max_output_tokens: 2000
           }),
-
           signal: controller.signal
         }
       );
     } catch (error) {
+      clearTimeout(timeout);
+
       if (error?.name === "AbortError") {
         return res.status(504).json({
-          error:
-            "OpenAI request timed out"
+          error: "OpenAI request timed out"
         });
       }
 
       return res.status(502).json({
-        error:
-          "Unable to connect to OpenAI",
-        details:
-          error?.message ||
-          "Network error"
+        error: "Unable to connect to OpenAI"
       });
-    } finally {
-      clearTimeout(timeout);
     }
 
-    /*
-     * -------------------------------------------------------
-     * Read OpenAI response
-     * -------------------------------------------------------
-     */
+    clearTimeout(timeout);
 
     let data;
 
     try {
       data = await response.json();
     } catch (error) {
-/*
-     * =======================================================
-     * FINAL SAFETY NET
-     * =======================================================
-     */
+      return res.status(502).json({
+        error: "OpenAI returned invalid JSON"
+      });
+    }
 
+    if (!response.ok) {
+      return res.status(response.status).json({
+        error:
+          data?.error?.message ||
+          "OpenAI request failed"
+      });
+    }
+
+    let reply = "";
+
+    if (typeof data?.output_text === "string") {
+      reply = data.output_text.trim();
+    }
+
+    if (!reply && Array.isArray(data?.output)) {
+      const parts = [];
+
+      for (const item of data.output) {
+        if (!Array.isArray(item?.content)) {
+          continue;
+        }
+
+        for (const part of item.content) {
+          if (
+            part?.type === "output_text" &&
+            typeof part?.text === "string"
+          ) {
+            parts.push(part.text);
+          }
+        }
+      }
+
+      reply = parts.join("\n").trim();
+    }
+
+    if (!reply) {
+      return res.status(500).json({
+        error: "OpenAI returned no text response"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      reply: reply,
+      model: textModel
+    });
+  } catch (error) {
     console.error(
       "AI Command Centre API Error:",
       error
