@@ -221,12 +221,6 @@ pre{
   margin-top:8px;
 }
 
-hr{
-  border:0;
-  border-top:1px solid #28304a;
-  margin:20px 0;
-}
-
 .button-row{
   display:flex;
   gap:10px;
@@ -301,7 +295,6 @@ hr{
   <p>Your personal AI content and automation workspace</p>
   <div class="badge">SYSTEM READY</div>
 </header>
-
 
 <!-- AI CONTENT GENERATOR -->
 
@@ -443,7 +436,6 @@ Play the generated content using your device's built-in voice system.
 
 <p class="small">
 Create a vertical video with the generated script and AI voice audio.
-The finished video will be downloaded to your device.
 </p>
 
 <button
@@ -466,10 +458,17 @@ Video renderer ready.
   class="download-box"
 >
 <strong>✅ Video ready!</strong>
+
 <br><br>
-<a id="videoDownloadLink" href="#" download>
+
+<a
+  id="videoDownloadLink"
+  href="#"
+  download
+>
 ⬇️ Download your video
 </a>
+
 </div>
 
 </div>
@@ -484,34 +483,54 @@ Video renderer ready.
 <div class="grid">
 
 <div class="platform">
+
 <div class="platform-icon">▶️</div>
+
 <strong>YouTube</strong>
-<button onclick="preparePlatform('YouTube Shorts')">
+
+<button
+  onclick="preparePlatform('YouTube Shorts')"
+>
 Prepare
 </button>
+
 </div>
 
+
 <div class="platform">
+
 <div class="platform-icon">📸</div>
+
 <strong>Instagram</strong>
-<button onclick="preparePlatform('Instagram Reels')">
+
+<button
+  onclick="preparePlatform('Instagram Reels')"
+>
 Prepare
 </button>
+
 </div>
 
+
 <div class="platform">
+
 <div class="platform-icon">👻</div>
+
 <strong>Snapchat</strong>
-<button onclick="preparePlatform('Snapchat')">
+
+<button
+  onclick="preparePlatform('Snapchat')"
+>
 Prepare
 </button>
+
 </div>
 
 </div>
 
 <div
-id="platformStatus"
-class="status"
+  id="platformStatus"
+  class="status"
 >
 Select a platform to prepare your content.
 </div>
@@ -534,28 +553,28 @@ Automation Topic
 </label>
 
 <input
-id="automationTopic"
-type="text"
-placeholder="Example: Daily AI tips"
+  id="automationTopic"
+  type="text"
+  placeholder="Example: Daily AI tips"
 >
 
 <button
-class="primary"
-onclick="startAutomation()"
+  class="primary"
+  onclick="startAutomation()"
 >
 ▶️ Start Automation
 </button>
 
 <button
-class="danger"
-onclick="stopAutomation()"
+  class="danger"
+  onclick="stopAutomation()"
 >
 ⏹ Stop Automation
 </button>
 
 <div
-id="automationStatus"
-class="status"
+  id="automationStatus"
+  class="status"
 >
 Automation is stopped.
 </div>
@@ -584,15 +603,15 @@ Trading monitor placeholder. This section does not place trades.
 </p>
 
 <button
-class="secondary"
-onclick="updateTradingStatus()"
+  class="secondary"
+  onclick="updateTradingStatus()"
 >
 📊 Check Trading Monitor
 </button>
 
 <div
-id="tradingStatus"
-class="status"
+  id="tradingStatus"
+  class="status"
 >
 Trading monitor ready.
 </div>
@@ -609,8 +628,8 @@ Trading monitor ready.
 <pre id="savedOutput">No saved content yet.</pre>
 
 <button
-class="danger"
-onclick="clearSavedContent()"
+  class="danger"
+  onclick="clearSavedContent()"
 >
 🗑️ Clear Saved Content
 </button>
@@ -625,15 +644,15 @@ onclick="clearSavedContent()"
 <h2>📋 Activity Log</h2>
 
 <div
-id="activityLog"
-class="log"
+  id="activityLog"
+  class="log"
 >
 <div>Command Centre started.</div>
 </div>
 
 <button
-class="secondary"
-onclick="clearActivityLog()"
+  class="secondary"
+  onclick="clearActivityLog()"
 >
 Clear Log
 </button>
@@ -657,16 +676,24 @@ let currentVideoUrl = null;
 ========================= */
 
 function getElement(id){
+
   return document.getElementById(id);
+
 }
 
 
 function setStatus(id,message){
-  const element = getElement(id);
+
+  const element =
+    getElement(id);
 
   if(element){
-    element.textContent = message;
+
+    element.textContent =
+      message;
+
   }
+
 }
 
 
@@ -676,13 +703,17 @@ function setStatus(id,message){
 
 function logActivity(message){
 
-  const log = getElement("activityLog");
+  const log =
+    getElement("activityLog");
 
   if(!log){
+
     return;
+
   }
 
-  const entry = document.createElement("div");
+  const entry =
+    document.createElement("div");
 
   const time =
     new Date().toLocaleTimeString();
@@ -701,7 +732,9 @@ function clearActivityLog(){
     getElement("activityLog");
 
   if(!log){
+
     return;
+
   }
 
   log.innerHTML =
@@ -745,6 +778,7 @@ async function generateContent(){
     topicElement.focus();
 
     return;
+
   }
 
   status.textContent =
@@ -783,9 +817,12 @@ async function generateContent(){
         "/api/chat",
         {
           method:"POST",
+
           headers:{
-            "Content-Type":"application/json"
+            "Content-Type":
+              "application/json"
           },
+
           body:JSON.stringify({
             message:prompt
           })
@@ -795,11 +832,16 @@ async function generateContent(){
     let data;
 
     try{
-      data = await response.json();
+
+      data =
+        await response.json();
+
     }catch(error){
+
       throw new Error(
         "Server returned an invalid response."
       );
+
     }
 
     if(!response.ok){
@@ -870,6 +912,7 @@ async function copyContent(){
     );
 
     return;
+
   }
 
   try{
@@ -889,7 +932,9 @@ async function copyContent(){
   }catch(error){
 
     const textArea =
-      document.createElement("textarea");
+      document.createElement(
+        "textarea"
+      );
 
     textArea.value =
       currentContent;
@@ -900,7 +945,9 @@ async function copyContent(){
 
     textArea.select();
 
-    document.execCommand("copy");
+    document.execCommand(
+      "copy"
+    );
 
     textArea.remove();
 
@@ -926,6 +973,7 @@ function saveContent(){
     );
 
     return;
+
   }
 
   localStorage.setItem(
@@ -997,28 +1045,40 @@ function clearSavedContent(){
 async function generateVideoPackage(){
 
   const topic =
-    getElement("topic").value.trim();
+    getElement("topic")
+      .value
+      .trim();
 
   const platform =
-    getElement("platform").value;
+    getElement("platform")
+      .value;
 
   const output =
-    getElement("videoPackageOutput");
+    getElement(
+      "videoPackageOutput"
+    );
 
   const status =
-    getElement("videoPackageStatus");
+    getElement(
+      "videoPackageStatus"
+    );
 
   const button =
-    getElement("videoPackageButton");
+    getElement(
+      "videoPackageButton"
+    );
 
   if(!topic){
 
     status.textContent =
       "⚠️ Enter a topic first.";
 
-    getElement("topic").focus();
+    getElement(
+      "topic"
+    ).focus();
 
     return;
+
   }
 
   status.textContent =
@@ -1056,9 +1116,12 @@ async function generateVideoPackage(){
         "/api/chat",
         {
           method:"POST",
+
           headers:{
-            "Content-Type":"application/json"
+            "Content-Type":
+              "application/json"
           },
+
           body:JSON.stringify({
             message:prompt
           })
@@ -1068,12 +1131,16 @@ async function generateVideoPackage(){
     let data;
 
     try{
+
       data =
         await response.json();
+
     }catch(error){
+
       throw new Error(
         "Server returned an invalid response."
       );
+
     }
 
     if(!response.ok){
@@ -1143,15 +1210,19 @@ function playVoiceover(){
     );
 
     return;
+
   }
 
-  if(!("speechSynthesis" in window)){
+  if(
+    !("speechSynthesis" in window)
+  ){
 
     alert(
       "Voiceover is not supported by this browser."
     );
 
     return;
+
   }
 
   window.speechSynthesis.cancel();
@@ -1178,7 +1249,9 @@ function playVoiceover(){
 
 function stopVoiceover(){
 
-  if("speechSynthesis" in window){
+  if(
+    "speechSynthesis" in window
+  ){
 
     window.speechSynthesis.cancel();
 
@@ -1192,7 +1265,7 @@ function stopVoiceover(){
 
 
 /* =========================
-   OPENAI TTS AUDIO
+   OPENAI TTS
 ========================= */
 
 async function getTTSAudio(text){
@@ -1202,9 +1275,12 @@ async function getTTSAudio(text){
       "/api/chat",
       {
         method:"POST",
+
         headers:{
-          "Content-Type":"application/json"
+          "Content-Type":
+            "application/json"
         },
+
         body:JSON.stringify({
           action:"tts",
           text:text
@@ -1215,8 +1291,10 @@ async function getTTSAudio(text){
   let data;
 
   try{
+
     data =
       await response.json();
+
   }catch(error){
 
     throw new Error(
@@ -1263,7 +1341,9 @@ function splitText(
       .trim();
 
   if(!cleanText){
+
     return [];
+
   }
 
   const words =
@@ -1283,7 +1363,11 @@ function splitText(
       words[i];
 
     const test =
-      (current + " " + word).trim();
+      (
+        current +
+        " " +
+        word
+      ).trim();
 
     if(
       test.length > maxLength &&
@@ -1319,6 +1403,10 @@ function splitText(
 }
 
 
+/* =========================
+   PART 1 ENDS HERE
+   DO NOT ADD ANYTHING ELSE
+========================= */
 /* =========================
    DRAW WRAPPED TEXT
 ========================= */
@@ -1405,6 +1493,15 @@ function drawVideoFrame(
   duration
 ){
 
+  ctx.clearRect(
+    0,
+    0,
+    width,
+    height
+  );
+
+  /* Background */
+
   ctx.fillStyle =
     "#0b1020";
 
@@ -1414,6 +1511,9 @@ function drawVideoFrame(
     width,
     height
   );
+
+
+  /* Gradient */
 
   const gradient =
     ctx.createLinearGradient(
@@ -1438,7 +1538,8 @@ function drawVideoFrame(
     "#0f172a"
   );
 
-  ctx.globalAlpha = 0.55;
+  ctx.globalAlpha =
+    0.75;
 
   ctx.fillStyle =
     gradient;
@@ -1450,23 +1551,159 @@ function drawVideoFrame(
     height
   );
 
-  ctx./* =========================
+  ctx.globalAlpha =
+    1;
+
+
+  /* Decorative circles */
+
+  ctx.beginPath();
+
+  ctx.arc(
+    100,
+    180,
+    140,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.fillStyle =
+    "rgba(255,255,255,.08)";
+
+  ctx.fill();
+
+
+  ctx.beginPath();
+
+  ctx.arc(
+    980,
+    1680,
+    220,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.fillStyle =
+    "rgba(255,255,255,.06)";
+
+  ctx.fill();
+
+
+  /* Title */
+
+   ctx.textAlign =
+    "center";
+
+  ctx.textBaseline =
+    "middle";
+
+  ctx.fillStyle =
+    "#ffffff";
+
+  ctx.font =
+    "bold 70px Arial";
+
+  drawWrappedText(
+    ctx,
+    title,
+    width / 2,
+    430,
+    900,
+    88
+  );
+
+
+  /* Main script */
+
+  ctx.font =
+    "bold 48px Arial";
+
+  ctx.fillStyle =
+    "#ffffff";
+
+  drawWrappedText(
+    ctx,
+    text,
+    width / 2,
+    850,
+    880,
+    68
+  );
+
+
+  /* Footer */
+
+  ctx.font =
+    "bold 28px Arial";
+
+  ctx.fillStyle =
+    "#cbd5e1";
+
+  ctx.fillText(
+    "AI Command Centre",
+    width / 2,
+    1650
+  );
+
+
+  /* Progress bar */
+
+  const progress =
+    duration > 0
+      ? Math.min(
+          1,
+          elapsed / duration
+        )
+      : 0;
+
+  ctx.fillStyle =
+    "rgba(255,255,255,.25)";
+
+  ctx.fillRect(
+    90,
+    1740,
+    width - 180,
+    10
+  );
+
+  ctx.fillStyle =
+    "#ffffff";
+
+  ctx.fillRect(
+    90,
+    1740,
+    (width - 180) * progress,
+    10
+  );
+
+}
+
+
+/* =========================
    RENDER VIDEO
 ========================= */
 
 async function renderVideo(){
 
   const status =
-    getElement("renderStatus");
+    getElement(
+      "renderStatus"
+    );
 
   const button =
-    getElement("renderButton");
+    getElement(
+      "renderButton"
+    );
 
   const downloadBox =
-    getElement("downloadBox");
+    getElement(
+      "downloadBox"
+    );
 
   const downloadLink =
-    getElement("videoDownloadLink");
+    getElement(
+      "videoDownloadLink"
+    );
 
   if(!currentContent){
 
@@ -1474,6 +1711,7 @@ async function renderVideo(){
       "⚠️ Generate AI content first.";
 
     return;
+
   }
 
   if(
@@ -1485,9 +1723,11 @@ async function renderVideo(){
       "❌ Your browser does not support video rendering.";
 
     return;
+
   }
 
-  button.disabled = true;
+  button.disabled =
+    true;
 
   downloadBox.style.display =
     "none";
@@ -1526,6 +1766,21 @@ async function renderVideo(){
     const audioContext =
       new AudioContextClass();
 
+    if(
+      audioContext.state ===
+      "suspended"
+    ){
+
+      try{
+
+        await audioContext.resume();
+
+      }catch(error){
+
+      }
+
+    }
+
     const decodedBuffers = [];
 
     for(
@@ -1548,7 +1803,8 @@ async function renderVideo(){
 
       if(
         !base64Audio ||
-        typeof base64Audio !== "string"
+        typeof base64Audio !==
+          "string"
       ){
 
         throw new Error(
@@ -1558,7 +1814,9 @@ async function renderVideo(){
       }
 
       const binary =
-        atob(base64Audio);
+        atob(
+          base64Audio
+        );
 
       const bytes =
         new Uint8Array(
@@ -1587,7 +1845,9 @@ async function renderVideo(){
 
     }
 
-    if(!decodedBuffers.length){
+    if(
+      !decodedBuffers.length
+    ){
 
       throw new Error(
         "No audio was generated."
@@ -1595,10 +1855,12 @@ async function renderVideo(){
 
     }
 
-    let totalLength = 0;
+    let totalLength =
+      0;
 
     for(
-      const buffer of decodedBuffers
+      const buffer of
+        decodedBuffers
     ){
 
       totalLength +=
@@ -1607,7 +1869,8 @@ async function renderVideo(){
     }
 
     const sampleRate =
-      decodedBuffers[0].sampleRate;
+      decodedBuffers[0]
+        .sampleRate;
 
     const combinedBuffer =
       audioContext.createBuffer(
@@ -1617,16 +1880,22 @@ async function renderVideo(){
       );
 
     const combinedData =
-      combinedBuffer.getChannelData(0);
+      combinedBuffer.getChannelData(
+        0
+      );
 
-    let offset = 0;
+    let offset =
+      0;
 
     for(
-      const buffer of decodedBuffers
+      const buffer of
+        decodedBuffers
     ){
 
       const inputData =
-        buffer.getChannelData(0);
+        buffer.getChannelData(
+          0
+        );
 
       combinedData.set(
         inputData,
@@ -1640,6 +1909,17 @@ async function renderVideo(){
 
     const duration =
       combinedBuffer.duration;
+
+    if(
+      !duration ||
+      duration <= 0
+    ){
+
+      throw new Error(
+        "Generated audio has no duration."
+      );
+
+    }
 
     status.textContent =
       "🎥 Preparing vertical video...";
@@ -1689,10 +1969,13 @@ async function renderVideo(){
     const combinedStream =
       new MediaStream([
         ...videoStream.getVideoTracks(),
-        ...audioDestination.stream.getAudioTracks()
+        ...audioDestination
+          .stream
+          .getAudioTracks()
       ]);
 
-    let recorder = null;
+    let recorder =
+      null;
 
     const formats = [
 
@@ -1718,7 +2001,8 @@ async function renderVideo(){
           new MediaRecorder(
             combinedStream,
             {
-              mimeType:mimeType
+              mimeType:
+                mimeType
             }
           );
 
@@ -1737,7 +2021,8 @@ async function renderVideo(){
 
     }
 
-    const videoChunks = [];
+    const videoChunks =
+      [];
 
     recorder.ondataavailable =
       function(event){
@@ -1757,10 +2042,13 @@ async function renderVideo(){
 
     const recordingPromise =
       new Promise(
-        function(resolve,reject){
+        function(
+          resolve,
+          reject
+        ){
 
           recorder.onerror =
-            function(event){
+            function(){
 
               reject(
                 new Error(
@@ -1790,22 +2078,24 @@ async function renderVideo(){
     const title =
       getElement(
         "topic"
-      ).value.trim() ||
+      )
+      .value
+      .trim() ||
       "AI Short";
-
-    const frameInterval =
-      1000 / 30;
 
     const startTime =
       performance.now();
 
-    let animationId;
+    let animationId =
+      null;
 
     function drawFrame(){
 
       const elapsed =
-        (performance.now() -
-          startTime) / 1000;
+        (
+          performance.now() -
+          startTime
+        ) / 1000;
 
       drawVideoFrame(
         ctx,
@@ -1841,7 +2131,7 @@ async function renderVideo(){
           resolve,
           Math.max(
             1000,
-            duration * 1000 + 500
+            duration * 1000 + 800
           )
         );
 
@@ -1857,7 +2147,8 @@ async function renderVideo(){
     }
 
     if(
-      recorder.state !== "inactive"
+      recorder.state !==
+      "inactive"
     ){
 
       recorder.stop();
@@ -1867,26 +2158,41 @@ async function renderVideo(){
     await recordingPromise;
 
     try{
+
       source.stop();
+
     }catch(error){
-      /* source may already have stopped */
+
     }
 
     videoStream
       .getTracks()
       .forEach(
         function(track){
+
           track.stop();
+
         }
       );
 
-    audioDestination.stream
+    audioDestination
+      .stream
       .getTracks()
       .forEach(
         function(track){
+
           track.stop();
+
         }
       );
+
+    try{
+
+      await audioContext.close();
+
+    }catch(error){
+
+    }
 
     const blob =
       new Blob(
@@ -1935,6 +2241,31 @@ async function renderVideo(){
       "Video rendered successfully."
     );
 
+    try{
+
+      const link =
+        document.createElement(
+          "a"
+        );
+
+      link.href =
+        currentVideoUrl;
+
+      link.download =
+        "ai-command-centre-short.webm";
+
+      document.body.appendChild(
+        link
+      );
+
+      link.click();
+
+      link.remove();
+
+    }catch(error){
+
+    }
+
   }catch(error){
 
     status.textContent =
@@ -1958,7 +2289,8 @@ async function renderVideo(){
 
   }finally{
 
-    button.disabled = false;
+    button.disabled =
+      false;
 
   }
 
@@ -1969,7 +2301,9 @@ async function renderVideo(){
    PLATFORM PREPARATION
 ========================= */
 
-function preparePlatform(platform){
+function preparePlatform(
+  platform
+){
 
   const status =
     getElement(
@@ -1979,7 +2313,9 @@ function preparePlatform(platform){
   const topic =
     getElement(
       "topic"
-    ).value.trim();
+    )
+    .value
+    .trim();
 
   if(!topic){
 
@@ -1991,6 +2327,7 @@ function preparePlatform(platform){
     ).focus();
 
     return;
+
   }
 
   getElement(
@@ -2025,7 +2362,9 @@ async function runAutomation(){
   const topic =
     getElement(
       "automationTopic"
-    ).value.trim();
+    )
+    .value
+    .trim();
 
   const status =
     getElement(
@@ -2038,6 +2377,7 @@ async function runAutomation(){
       "⚠️ Enter an automation topic first.";
 
     return;
+
   }
 
   status.textContent =
@@ -2050,23 +2390,31 @@ async function runAutomation(){
         "/api/chat",
         {
           method:"POST",
+
           headers:{
-            "Content-Type":"application/json"
+            "Content-Type":
+              "application/json"
           },
+
           body:JSON.stringify({
+
             message:
               "Create a concise daily short-form social media content idea about: " +
               topic +
               ". Include a title, hook, short script, caption and hashtags."
+
           })
+
         }
       );
 
     let data;
 
     try{
+
       data =
         await response.json();
+
     }catch(error){
 
       throw new Error(
@@ -2095,7 +2443,15 @@ async function runAutomation(){
       ).textContent =
         currentContent;
 
-      saveContent();
+      localStorage.setItem(
+        "aiCommandCentreSavedContent",
+        currentContent
+      );
+
+      getElement(
+        "savedOutput"
+      ).textContent =
+        currentContent;
 
       status.textContent =
         "✅ Automation generated new content.";
@@ -2115,7 +2471,8 @@ async function runAutomation(){
   }catch(error){
 
     status.textContent =
-      "❌ " + error.message;
+      "❌ " +
+      error.message;
 
     logActivity(
       "Automation error: " +
@@ -2132,7 +2489,9 @@ function startAutomation(){
   const topic =
     getElement(
       "automationTopic"
-    ).value.trim();
+    )
+    .value
+    .trim();
 
   const status =
     getElement(
@@ -2149,27 +2508,36 @@ function startAutomation(){
     ).focus();
 
     return;
+
   }
 
-  if(automationRunning){
+   if(
+    automationRunning
+  ){
 
     status.textContent =
       "⚠️ Automation is already running.";
 
     return;
+
   }
+
 
   automationRunning =
     true;
 
+
   status.textContent =
     "🟢 Automation is running.";
+
 
   logActivity(
     "Automation started."
   );
 
+
   runAutomation();
+
 
   automationTimer =
     setInterval(
@@ -2190,10 +2558,15 @@ function startAutomation(){
 }
 
 
+/* =========================
+   STOP AUTOMATION
+========================= */
+
 function stopAutomation(){
 
   automationRunning =
     false;
+
 
   if(automationTimer){
 
@@ -2206,10 +2579,12 @@ function stopAutomation(){
 
   }
 
+
   getElement(
     "automationStatus"
   ).textContent =
     "🔴 Automation is stopped.";
+
 
   logActivity(
     "Automation stopped."
@@ -2229,8 +2604,10 @@ function updateTradingStatus(){
       "tradingStatus"
     );
 
+
   status.textContent =
     "📊 Trading monitor checked. No trades are placed by this Command Centre.";
+
 
   logActivity(
     "Trading monitor checked."
@@ -2273,6 +2650,38 @@ document.addEventListener(
     logActivity(
       "Command Centre loaded successfully."
     );
+
+  }
+);
+
+
+/* =========================
+   CLEANUP
+========================= */
+
+window.addEventListener(
+  "beforeunload",
+  function(){
+
+    if(
+      currentVideoUrl
+    ){
+
+      URL.revokeObjectURL(
+        currentVideoUrl
+      );
+
+    }
+
+    if(
+      automationTimer
+    ){
+
+      clearInterval(
+        automationTimer
+      );
+
+    }
 
   }
 );
