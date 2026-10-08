@@ -19,7 +19,9 @@ module.exports = async function handler(req, res) {
     if (action === "market_data") {
       const requestedSymbol = String(
         req.body?.symbol || "NIFTY"
-      ).trim().toUpperCase();
+      )
+        .trim()
+        .toUpperCase();
 
       const symbolMap = {
         NIFTY: "^NSEI",
@@ -36,110 +38,197 @@ module.exports = async function handler(req, res) {
 
       if (!yahooSymbol) {
         return res.status(400).json({
+          success: false,
           error: "Unsupported market symbol",
           supportedSymbols: Object.keys(symbolMap)
         });
       }
 
-      const yahooUrl =
+      /*
+       * Try Yahoo Finance endpoints.
+       * We use two hosts so a temporary problem with one
+       * Yahoo endpoint does not automatically break the
+       * trading dashboard.
+       */
+
+      const yahooUrls = [
         "https://query1.finance.yahoo.com/v8/finance/chart/" +
-        encodeURIComponent(yahooSymbol) +
-        "?range=1d&interval=5m";
+          encodeURIComponent(yahooSymbol) +
+          "?range=1d&interval=5m",
 
-      const controller = new AbortController();
+        "https://query2.finance.yahoo.com/v8/finance/chart/" +
+          encodeURIComponent(yahooSymbol) +
+          "?range=1d&interval=5m"
+      ];
 
-      const timeout = setTimeout(() => {
-        controller.abort();
-      }, 15000);
+      let data = null;
+      let lastError = null;
 
-      let response;
+      for (const yahooUrl of yahooUrls) {
+        const controller = new AbortController();
 
-      try {
-        response = await fetch(yahooUrl, {
-          method: "GET",
-          headers: {
-            "User-Agent": "Mozilla/5.0"
-          },
-          signal: controller.signal
-        });
-      } catch (error) {
-        clearTimeout(timeout);
+        const timeout = setTimeout(() => {
+          controller.abort();
+        }, 15000);
 
-        if (error?.name === "AbortError") {
-          return res.status(504).json({
-            error: "Market data request timed out"
+        try {
+          const response = await fetch(yahooUrl, {
+            method: "GET",
+            headers: {
+              "User-Agent":
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            },
+            signal: controller.signal
           });
+
+          clearTimeout(timeout);
+
+          if (!response.ok) {
+            lastError =
+              "Yahoo Finance returned HTTP " +
+              response.status;
+            continue;
+          }
+
+          const json = await response.json();
+
+          if (json?.chart?.result?.[0]) {
+            data = json;
+            break;
+          }
+
+          lastError = "Yahoo Finance returned no data.";
+        } catch (error) {
+          clearTimeout(timeout);
+
+          lastError =
+            error?.name === "AbortError"
+              ? "Market data request timed out."
+              : error?.message ||
+                "Unable to connect to Yahoo Finance.";
         }
+      }
 
+      if (!data) {
         return res.status(502).json({
-          error: "Unable to connect to market data provider"
+          success: false,
+          error:
+            lastError ||
+            "Unable to retrieve market data right now.",
+          symbol: requestedSymbol
         });
       }
 
-      clearTimeout(timeout);
+      const result =
+        data?.chart?.result?.[0];
 
-      if (!response.ok) {
-        return res.status(502).json({
-          error: "Market data provider returned an error",
-          providerStatus: response.status
-        });
-      }
+      const meta =
+        result?.meta || {};
 
-      let data;
+      const timestamps =
+        result?.timestamp || [];
 
-      try {
-        data = await response.json();
-      } catch (error) {
-        return res.status(502).json({
-          error: "Market data provider returned invalid JSON"
-        });
-      }
+      const quote =
+        result?.indicators?.quote?.[0] || {};
 
-      const result = data?.chart?.result?.[0];
+      const opens =
+        quote.open || [];
 
-      if (!result) {
-        return res.status(502).json({
-          error: "No market data was returned"
-        });
-      }
+      const highs =
+        quote.high || [];
 
-      const meta = result.meta || {};
-      const timestamps = result.timestamp || [];
-      const quote = result.indicators?.quote?.[0] || {};
+      const lows =
+        quote.low || [];
 
-      const opens = quote.open || [];
-      const highs = quote.high || [];
-      const lows = quote.low || [];
-      const closes = quote.close || [];
-      const volumes = quote.volume || [];
+      const closes =
+        quote.close || [];
+
+      const volumes =
+        quote.volume || [];
+
+      /*
+       * Find latest valid closing price.
+       */
 
       let latestIndex = -1;
 
-      for (let i = closes.length - 1; i >= 0; i--) {
+      for (
+        let i = closes.length - 1;
+        i >= 0;
+        i--
+      ) {
         if (
           typeof closes[i] === "number" &&
-          Number.isFinite(closes[i])
+          Number.isFinite(closes[i]) &&
+          closes[i] > 0
         ) {
           latestIndex = i;
           break;
         }
       }
 
-      if (latestIndex === -1) {
+      /*
+       * Fallback to Yahoo regularMarketPrice if the
+       * intraday candle array is unavailable.
+       */
+
+      let price = null;
+
+      if (latestIndex >= 0) {
+        price = Number(
+          closes[latestIndex]
+        );
+      }
+
+      if (
+        !Number.isFinite(price) ||
+        price <= 0
+      ) {
+        const regularMarketPrice =
+          Number(
+            meta.regularMarketPrice
+          );
+
+        if (
+          Number.isFinite(
+            regularMarketPrice
+          ) &&
+          regularMarketPrice > 0
+        ) {
+          price =
+            regularMarketPrice;
+        }
+      }
+
+      if (
+        !Number.isFinite(price) ||
+        price <= 0
+      ) {
         return res.status(502).json({
-          error: "No valid market price was returned"
+          success: false,
+          error:
+            "Yahoo Finance returned no valid price.",
+          symbol: requestedSymbol
         });
       }
 
-      const price = Number(closes[latestIndex]);
+      /*
+       * Previous close
+       */
 
-      let previousClose = Number(meta.previousClose);
+      let previousClose =
+        Number(
+          meta.previousClose
+        );
 
       if (
         !Number.isFinite(previousClose) ||
         previousClose <= 0
       ) {
-        previousClose = Number(meta.chartPreviousClose);
+        previousClose =
+          Number(
+            meta.chartPreviousClose
+          );
       }
 
       if (
@@ -149,91 +238,160 @@ module.exports = async function handler(req, res) {
         previousClose = price;
       }
 
-      const change = price - previousClose;
+      const change =
+        price - previousClose;
 
       const changePercent =
         previousClose !== 0
           ? (change / previousClose) * 100
           : 0;
 
+      /*
+       * Build recent candles.
+       */
+
       const candles = [];
 
-      for (
-        let i = Math.max(0, closes.length - 100);
-        i < closes.length;
-        i++
-      ) {
-        if (
-          typeof closes[i] !== "number" ||
-          !Number.isFinite(closes[i])
-        ) {
-          continue;
-        }
+      if (latestIndex >= 0) {
+        const start =
+          Math.max(
+            0,
+            closes.length - 100
+          );
 
-        candles.push({
-          timestamp:
-            typeof timestamps[i] === "number"
-              ? timestamps[i]
-              : null,
-          open:
-            typeof opens[i] === "number"
-              ? opens[i]
-              : null,
-          high:
-            typeof highs[i] === "number"
-              ? highs[i]
-              : null,
-          low:
-            typeof lows[i] === "number"
-              ? lows[i]
-              : null,
-          close: Number(closes[i]),
-          volume:
-            typeof volumes[i] === "number"
-              ? volumes[i]
-              : null
-        });
+        for (
+          let i = start;
+          i < closes.length;
+          i++
+        ) {
+          if (
+            typeof closes[i] !== "number" ||
+            !Number.isFinite(closes[i])
+          ) {
+            continue;
+          }
+
+          candles.push({
+            timestamp:
+              typeof timestamps[i] ===
+              "number"
+                ? timestamps[i]
+                : null,
+
+            open:
+              typeof opens[i] ===
+              "number"
+                ? opens[i]
+                : null,
+
+            high:
+              typeof highs[i] ===
+              "number"
+                ? highs[i]
+                : null,
+
+            low:
+              typeof lows[i] ===
+              "number"
+                ? lows[i]
+                : null,
+
+            close:
+              Number(closes[i]),
+
+            volume:
+              typeof volumes[i] ===
+              "number"
+                ? volumes[i]
+                : null
+          });
+        }
       }
 
       return res.status(200).json({
         success: true,
-        symbol: requestedSymbol,
-        yahooSymbol: yahooSymbol,
-        currency: meta.currency || "INR",
+
+        symbol:
+          requestedSymbol,
+
+        yahooSymbol:
+          yahooSymbol,
+
+        currency:
+          meta.currency || "INR",
+
         exchange:
           meta.exchangeName ||
           meta.fullExchangeName ||
           "N/A",
-        marketState: meta.marketState || "UNKNOWN",
-        price: price,
-        currentPrice: price,
-        previousClose: previousClose,
-        change: change,
-        changePercent: changePercent,
+
+        marketState:
+          meta.marketState ||
+          "UNKNOWN",
+
+        price:
+          Number(price),
+
+        currentPrice:
+          Number(price),
+
+        previousClose:
+          Number(previousClose),
+
+        change:
+          Number(change),
+
+        changePercent:
+          Number(changePercent),
+
         open:
-          typeof opens[latestIndex] === "number"
+          latestIndex >= 0 &&
+          typeof opens[latestIndex] ===
+            "number"
             ? opens[latestIndex]
             : null,
+
         high:
-          typeof highs[latestIndex] === "number"
+          latestIndex >= 0 &&
+          typeof highs[latestIndex] ===
+            "number"
             ? highs[latestIndex]
             : null,
+
         low:
-          typeof lows[latestIndex] === "number"
+          latestIndex >= 0 &&
+          typeof lows[latestIndex] ===
+            "number"
             ? lows[latestIndex]
             : null,
+
         volume:
-          typeof volumes[latestIndex] === "number"
+          latestIndex >= 0 &&
+          typeof volumes[latestIndex] ===
+            "number"
             ? volumes[latestIndex]
             : null,
+
         timestamp:
-          typeof timestamps[latestIndex] === "number"
+          latestIndex >= 0 &&
+          typeof timestamps[latestIndex] ===
+            "number"
             ? timestamps[latestIndex]
-            : Math.floor(Date.now() / 1000),
-        candles: candles,
-        dataSource: "Yahoo Finance",
-        paperTradingOnly: true,
-        fetchedAt: new Date().toISOString()
+            : Math.floor(
+                Date.now() / 1000
+              ),
+
+        candles:
+          candles,
+
+        dataSource:
+          "Yahoo Finance",
+
+        paperTradingOnly:
+          true,
+
+        fetchedAt:
+          new Date().toISOString()
       });
     }
 
@@ -246,40 +404,64 @@ module.exports = async function handler(req, res) {
     if (action === "paper_trade") {
       const symbol = String(
         req.body?.symbol || ""
-      ).trim().toUpperCase();
+      )
+        .trim()
+        .toUpperCase();
 
       const side = String(
         req.body?.side || ""
-      ).trim().toUpperCase();
+      )
+        .trim()
+        .toUpperCase();
 
-      const quantity = Number(req.body?.quantity);
-      const price = Number(req.body?.price);
+      const quantity =
+        Number(req.body?.quantity);
+
+      const price =
+        Number(req.body?.price);
 
       if (!symbol) {
         return res.status(400).json({
+          success: false,
           error: "Symbol is required"
         });
       }
 
-      if (side !== "BUY" && side !== "SELL") {
+      if (
+        side !== "BUY" &&
+        side !== "SELL"
+      ) {
         return res.status(400).json({
-          error: "Side must be BUY or SELL"
+          success: false,
+          error:
+            "Side must be BUY or SELL"
         });
       }
 
-      if (!Number.isFinite(quantity) || quantity <= 0) {
+      if (
+        !Number.isFinite(quantity) ||
+        quantity <= 0
+      ) {
         return res.status(400).json({
-          error: "Quantity must be greater than zero"
+          success: false,
+          error:
+            "Quantity must be greater than zero"
         });
       }
 
-      if (!Number.isFinite(price) || price <= 0) {
+      if (
+        !Number.isFinite(price) ||
+        price <= 0
+      ) {
         return res.status(400).json({
-          error: "Price must be greater than zero"
+          success: false,
+          error:
+            "Price must be greater than zero"
         });
       }
 
-      const orderValue = quantity * price;
+      const orderValue =
+        quantity * price;
 
       const orderId =
         "PAPER-" +
@@ -292,18 +474,38 @@ module.exports = async function handler(req, res) {
 
       return res.status(200).json({
         success: true,
+
         paperTrade: true,
-        realTradeExecuted: false,
+
+        realTradeExecuted:
+          false,
+
         order: {
-          orderId: orderId,
-          symbol: symbol,
-          side: side,
-          quantity: quantity,
-          price: price,
-          value: orderValue,
-          status: "SIMULATED",
-          createdAt: new Date().toISOString()
+          orderId:
+            orderId,
+
+          symbol:
+            symbol,
+
+          side:
+            side,
+
+          quantity:
+            quantity,
+
+          price:
+            price,
+
+          value:
+            orderValue,
+
+          status:
+            "SIMULATED",
+
+          createdAt:
+            new Date().toISOString()
         },
+
         message:
           "Paper trade simulated successfully. No real order was placed."
       });
@@ -316,26 +518,33 @@ module.exports = async function handler(req, res) {
      */
 
     if (action === "tts") {
-      const apiKey = process.env.OPENAI_API_KEY;
+      const apiKey =
+        process.env.OPENAI_API_KEY;
 
       if (!apiKey) {
         return res.status(500).json({
-          error: "OPENAI_API_KEY is missing in Vercel"
+          success: false,
+          error:
+            "OPENAI_API_KEY is missing in Vercel"
         });
       }
 
-      const text = String(
-        req.body?.text || ""
-      ).trim();
+      const text =
+        String(
+          req.body?.text || ""
+        ).trim();
 
       if (!text) {
         return res.status(400).json({
-          error: "Text is required for voice generation"
+          success: false,
+          error:
+            "Text is required for voice generation"
         });
       }
 
       if (text.length > 4096) {
         return res.status(400).json({
+          success: false,
           error:
             "Text is too long for one voice request"
         });
@@ -349,45 +558,71 @@ module.exports = async function handler(req, res) {
         process.env.OPENAI_TTS_VOICE ||
         "alloy";
 
-      const controller = new AbortController();
+      const controller =
+        new AbortController();
 
-      const timeout = setTimeout(() => {
-        controller.abort();
-      }, 60000);
+      const timeout =
+        setTimeout(() => {
+          controller.abort();
+        }, 60000);
 
       let response;
 
       try {
-        response = await fetch(
-          "https://api.openai.com/v1/audio/speech",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": "Bearer " + apiKey
-            },
-            body: JSON.stringify({
-              model: ttsModel,
-              voice: ttsVoice,
-              input: text,
-              instructions:
-                "Speak clearly and naturally for a short-form social media video. Use an engaging, confident and conversational tone. Do not sound robotic.",
-              response_format: "mp3",
-              speed: 1.0
-            }),
-            signal: controller.signal
-          }
-        );
+        response =
+          await fetch(
+            "https://api.openai.com/v1/audio/speech",
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+
+                "Authorization":
+                  "Bearer " + apiKey
+              },
+
+              body: JSON.stringify({
+                model:
+                  ttsModel,
+
+                voice:
+                  ttsVoice,
+
+                input:
+                  text,
+
+                instructions:
+                  "Speak clearly and naturally for a short-form social media video. Use an engaging, confident and conversational tone. Do not sound robotic.",
+
+                response_format:
+                  "mp3",
+
+                speed:
+                  1.0
+              }),
+
+              signal:
+                controller.signal
+            }
+          );
       } catch (error) {
         clearTimeout(timeout);
 
-        if (error?.name === "AbortError") {
+        if (
+          error?.name ===
+          "AbortError"
+        ) {
           return res.status(504).json({
-            error: "Voice generation timed out"
+            success: false,
+            error:
+              "Voice generation timed out"
           });
         }
 
         return res.status(502).json({
+          success: false,
           error:
             "Unable to connect to OpenAI voice service"
         });
@@ -399,28 +634,43 @@ module.exports = async function handler(req, res) {
         let errorData = {};
 
         try {
-          errorData = await response.json();
-        } catch (error) {
+          errorData =
+            await response.json();
+        } catch (_) {
           errorData = {};
         }
 
-        return res.status(response.status).json({
+        return res.status(
+          response.status
+        ).json({
+          success: false,
           error:
             errorData?.error?.message ||
             "OpenAI voice generation failed"
         });
       }
 
-      const audioBuffer = Buffer.from(
-        await response.arrayBuffer()
-      );
+      const audioBuffer =
+        Buffer.from(
+          await response.arrayBuffer()
+        );
 
       return res.status(200).json({
         success: true,
-        audio: audioBuffer.toString("base64"),
-        mimeType: "audio/mpeg",
-        model: ttsModel,
-        voice: ttsVoice
+
+        audio:
+          audioBuffer.toString(
+            "base64"
+          ),
+
+        mimeType:
+          "audio/mpeg",
+
+        model:
+          ttsModel,
+
+        voice:
+          ttsVoice
       });
     }
 
@@ -430,53 +680,74 @@ module.exports = async function handler(req, res) {
      * =====================================================
      */
 
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey =
+      process.env.OPENAI_API_KEY;
 
     if (!apiKey) {
       return res.status(500).json({
-        error: "OPENAI_API_KEY is missing in Vercel"
+        success: false,
+        error:
+          "OPENAI_API_KEY is missing in Vercel"
       });
     }
 
     const message =
-      typeof req.body?.message === "string"
+      typeof req.body?.message ===
+      "string"
         ? req.body.message.trim()
         : "";
 
     const conversation =
-      Array.isArray(req.body?.conversation)
+      Array.isArray(
+        req.body?.conversation
+      )
         ? req.body.conversation
         : [];
 
-    if (!message && conversation.length === 0) {
+    if (
+      !message &&
+      conversation.length === 0
+    ) {
       return res.status(400).json({
-        error: "Message is required"
+        success: false,
+        error:
+          "Message is required"
       });
     }
 
     let input = [];
 
     if (conversation.length > 0) {
-      input = conversation
-        .filter((item) => {
-          return (
-            item &&
-            typeof item === "object" &&
-            typeof item.role === "string" &&
-            typeof item.content === "string" &&
-            item.content.trim()
-          );
-        })
-        .map((item) => ({
-          role:
-            item.role === "assistant"
-              ? "assistant"
-              : "user",
-          content: item.content.trim()
-        }));
+      input =
+        conversation
+          .filter((item) => {
+            return (
+              item &&
+              typeof item ===
+                "object" &&
+              typeof item.role ===
+                "string" &&
+              typeof item.content ===
+                "string" &&
+              item.content.trim()
+            );
+          })
+          .map((item) => ({
+            role:
+              item.role ===
+              "assistant"
+                ? "assistant"
+                : "user",
+
+            content:
+              item.content.trim()
+          }));
     }
 
-    if (input.length === 0 && message) {
+    if (
+      input.length === 0 &&
+      message
+    ) {
       input = [
         {
           role: "user",
@@ -486,51 +757,75 @@ module.exports = async function handler(req, res) {
     }
 
     if (input.length > 30) {
-      input = input.slice(-30);
+      input =
+        input.slice(-30);
     }
 
     const textModel =
       process.env.OPENAI_TEXT_MODEL ||
       "gpt-4.1-mini";
 
-    const controller = new AbortController();
+    const controller =
+      new AbortController();
 
-    const timeout = setTimeout(() => {
-      controller.abort();
-    }, 60000);
+    const timeout =
+      setTimeout(() => {
+        controller.abort();
+      }, 60000);
 
     let response;
 
     try {
-      response = await fetch(
-        "https://api.openai.com/v1/responses",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + apiKey
-          },
-          body: JSON.stringify({
-            model: textModel,
-            input: input,
-            instructions:
-              "You are the AI Command Centre assistant. Help the user create useful, accurate and practical content. When asked to create social media content, provide clear ready-to-use output. When discussing trading or investments, provide educational information only and never execute real financial transactions.",
-            max_output_tokens: 2000
-          }),
-          signal: controller.signal
-        }
-      );
+      response =
+        await fetch(
+          "https://api.openai.com/v1/responses",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              "Authorization":
+                "Bearer " + apiKey
+            },
+
+            body: JSON.stringify({
+              model:
+                textModel,
+
+              input:
+                input,
+
+              instructions:
+                "You are the AI Command Centre assistant. Help the user create useful, accurate and practical content. When asked to create social media content, provide clear ready-to-use output. When discussing trading or investments, provide educational information only and never execute real financial transactions.",
+
+              max_output_tokens:
+                2000
+            }),
+
+            signal:
+              controller.signal
+          }
+        );
     } catch (error) {
       clearTimeout(timeout);
 
-      if (error?.name === "AbortError") {
+      if (
+        error?.name ===
+        "AbortError"
+      ) {
         return res.status(504).json({
-          error: "OpenAI request timed out"
+          success: false,
+          error:
+            "OpenAI request timed out"
         });
       }
 
       return res.status(502).json({
-        error: "Unable to connect to OpenAI"
+        success: false,
+        error:
+          "Unable to connect to OpenAI"
       });
     }
 
@@ -539,15 +834,21 @@ module.exports = async function handler(req, res) {
     let data;
 
     try {
-      data = await response.json();
-    } catch (error) {
+      data =
+        await response.json();
+    } catch (_) {
       return res.status(502).json({
-        error: "OpenAI returned invalid JSON"
+        success: false,
+        error:
+          "OpenAI returned invalid JSON"
       });
     }
 
     if (!response.ok) {
-      return res.status(response.status).json({
+      return res.status(
+        response.status
+      ).json({
+        success: false,
         error:
           data?.error?.message ||
           "OpenAI request failed"
@@ -556,42 +857,72 @@ module.exports = async function handler(req, res) {
 
     let reply = "";
 
-    if (typeof data?.output_text === "string") {
-      reply = data.output_text.trim();
+    if (
+      typeof data?.output_text ===
+      "string"
+    ) {
+      reply =
+        data.output_text.trim();
     }
 
-    if (!reply && Array.isArray(data?.output)) {
+    if (
+      !reply &&
+      Array.isArray(
+        data?.output
+      )
+    ) {
       const parts = [];
 
-      for (const item of data.output) {
-        if (!Array.isArray(item?.content)) {
+      for (
+        const item of data.output
+      ) {
+        if (
+          !Array.isArray(
+            item?.content
+          )
+        ) {
           continue;
         }
 
-        for (const part of item.content) {
+        for (
+          const part of
+            item.content
+        ) {
           if (
-            part?.type === "output_text" &&
-            typeof part?.text === "string"
+            part?.type ===
+              "output_text" &&
+            typeof part?.text ===
+              "string"
           ) {
-            parts.push(part.text);
+            parts.push(
+              part.text
+            );
           }
         }
       }
 
-      reply = parts.join("\n").trim();
+      reply =
+        parts.join("\n").trim();
     }
 
     if (!reply) {
       return res.status(500).json({
-        error: "OpenAI returned no text response"
+        success: false,
+        error:
+          "OpenAI returned no text response"
       });
     }
 
     return res.status(200).json({
       success: true,
-      reply: reply,
-      model: textModel
+
+      reply:
+        reply,
+
+      model:
+        textModel
     });
+
   } catch (error) {
     console.error(
       "AI Command Centre API Error:",
@@ -599,6 +930,7 @@ module.exports = async function handler(req, res) {
     );
 
     return res.status(500).json({
+      success: false,
       error:
         error?.message ||
         "Server error"
