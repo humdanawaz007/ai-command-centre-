@@ -257,9 +257,125 @@ pre{
   margin-top:6px;
 }
 
+
+/* =========================
+   TRADING DASHBOARD
+========================= */
+
+.trading-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+  margin-top:12px;
+}
+
+.trading-stat{
+  background:#0d1324;
+  border:1px solid #374151;
+  border-radius:12px;
+  padding:14px;
+}
+
+.trading-stat-label{
+  color:#9ca3af;
+  font-size:12px;
+  margin-bottom:6px;
+}
+
+.trading-stat-value{
+  font-size:21px;
+  font-weight:bold;
+}
+
+.positive{
+  color:#4ade80;
+}
+
+.negative{
+  color:#f87171;
+}
+
+.neutral{
+  color:#93c5fd;
+}
+
+.trade-panel{
+  margin-top:14px;
+  padding:14px;
+  background:#0d1324;
+  border:1px solid #374151;
+  border-radius:12px;
+}
+
+.trade-history{
+  margin-top:14px;
+  max-height:300px;
+  overflow-y:auto;
+  background:#0d1324;
+  border-radius:10px;
+}
+
+.trade-row{
+  padding:12px;
+  border-bottom:1px solid #20283d;
+  font-size:13px;
+}
+
+.trade-row:last-child{
+  border-bottom:0;
+}
+
+.trade-buy{
+  color:#4ade80;
+  font-weight:bold;
+}
+
+.trade-sell{
+  color:#f87171;
+  font-weight:bold;
+}
+
+.warning-box{
+  background:#422006;
+  border:1px solid #92400e;
+  color:#fde68a;
+  padding:12px;
+  border-radius:10px;
+  margin-top:12px;
+  font-size:13px;
+  line-height:1.5;
+}
+
+.paper-badge{
+  background:#14532d;
+  color:#86efac;
+  padding:6px 10px;
+  border-radius:999px;
+  display:inline-block;
+  font-size:12px;
+  font-weight:bold;
+}
+
+.risk-box{
+  background:#0d1324;
+  border:1px solid #374151;
+  border-radius:12px;
+  padding:14px;
+  margin-top:12px;
+}
+
+.reset-button{
+  width:100%;
+  margin-top:10px;
+}
+
 @media(max-width:600px){
 
   .grid{
+    grid-template-columns:1fr;
+  }
+
+  .trading-grid{
     grid-template-columns:1fr;
   }
 
@@ -295,6 +411,7 @@ pre{
   <p>Your personal AI content and automation workspace</p>
   <div class="badge">SYSTEM READY</div>
 </header>
+
 
 <!-- AI CONTENT GENERATOR -->
 
@@ -483,47 +600,27 @@ Video renderer ready.
 <div class="grid">
 
 <div class="platform">
-
 <div class="platform-icon">▶️</div>
-
 <strong>YouTube</strong>
-
-<button
-  onclick="preparePlatform('YouTube Shorts')"
->
+<button onclick="preparePlatform('YouTube Shorts')">
 Prepare
 </button>
-
 </div>
 
-
 <div class="platform">
-
 <div class="platform-icon">📸</div>
-
 <strong>Instagram</strong>
-
-<button
-  onclick="preparePlatform('Instagram Reels')"
->
+<button onclick="preparePlatform('Instagram Reels')">
 Prepare
 </button>
-
 </div>
 
-
 <div class="platform">
-
 <div class="platform-icon">👻</div>
-
 <strong>Snapchat</strong>
-
-<button
-  onclick="preparePlatform('Snapchat')"
->
+<button onclick="preparePlatform('Snapchat')">
 Prepare
 </button>
-
 </div>
 
 </div>
@@ -592,28 +689,202 @@ Runs every 60 seconds while active.
 </div>
 
 
-<!-- TRADING -->
+<!-- TRADING DASHBOARD -->
 
 <div class="card">
 
-<h2>📈 Trading Monitor</h2>
+<h2>📈 Paper Trading Command Centre</h2>
+
+<div class="paper-badge">
+🟢 PAPER TRADING ONLY
+</div>
 
 <p class="small">
-Trading monitor placeholder. This section does not place trades.
+Market data is displayed for monitoring. BUY and SELL actions are simulated only and do not place real-money orders.
 </p>
+
+<label for="tradingSymbol">
+Market / Instrument
+</label>
+
+<select id="tradingSymbol">
+  <option value="NIFTY">NIFTY 50</option>
+  <option value="SENSEX">SENSEX</option>
+  <option value="RELIANCE">RELIANCE</option>
+  <option value="TCS">TCS</option>
+  <option value="INFY">INFOSYS</option>
+  <option value="HDFCBANK">HDFC BANK</option>
+  <option value="ICICIBANK">ICICI BANK</option>
+  <option value="SBIN">SBI</option>
+</select>
+
+<div class="button-row">
+
+<button
+  class="primary"
+  id="marketRefreshButton"
+  onclick="refreshMarketData()"
+>
+📊 Refresh Market Data
+</button>
 
 <button
   class="secondary"
-  onclick="updateTradingStatus()"
+  onclick="resetPaperAccount()"
 >
-📊 Check Trading Monitor
+🔄 Reset Paper Account
 </button>
+
+</div>
 
 <div
   id="tradingStatus"
   class="status"
 >
-Trading monitor ready.
+Trading dashboard ready. Tap Refresh Market Data.
+</div>
+
+<div class="trading-grid">
+
+<div class="trading-stat">
+<div class="trading-stat-label">
+Current Price
+</div>
+<div
+  id="tradingPrice"
+  class="trading-stat-value neutral"
+>
+₹—
+</div>
+</div>
+
+<div class="trading-stat">
+<div class="trading-stat-label">
+Change
+</div>
+<div
+  id="tradingChange"
+  class="trading-stat-value neutral"
+>
+—
+</div>
+</div>
+
+<div class="trading-stat">
+<div class="trading-stat-label">
+Virtual Balance
+</div>
+<div
+  id="paperBalance"
+  class="trading-stat-value"
+>
+₹1,00,000
+</div>
+</div>
+
+<div class="trading-stat">
+<div class="trading-stat-label">
+Realised P/L
+</div>
+<div
+  id="realisedPL"
+  class="trading-stat-value neutral"
+>
+₹0
+</div>
+</div>
+
+</div>
+
+<div class="trade-panel">
+
+<h3>🛒 Paper Order</h3>
+
+<label for="tradeSide">
+Order Side
+</label>
+
+<select id="tradeSide">
+  <option value="BUY">BUY</option>
+  <option value="SELL">SELL</option>
+</select>
+
+<label for="tradeQuantity">
+Quantity
+</label>
+
+<input
+  id="tradeQuantity"
+  type="number"
+  min="1"
+  step="1"
+  value="1"
+  placeholder="Enter quantity"
+>
+
+<label for="tradePrice">
+Execution Price
+</label>
+
+<input
+  id="tradePrice"
+  type="number"
+  min="0"
+  step="0.01"
+  placeholder="Refresh market data first"
+>
+
+<button
+  class="success"
+  id="paperTradeButton"
+  onclick="executePaperTrade()"
+>
+💰 Execute Paper Trade
+</button>
+
+<div
+  id="tradeStatus"
+  class="status"
+>
+No paper trade executed yet.
+</div>
+
+</div>
+
+<div class="risk-box">
+
+<strong>🛡️ Risk Controls</strong>
+
+<label for="maxTradeValue">
+Maximum Trade Value
+</label>
+
+<input
+  id="maxTradeValue"
+  type="number"
+  min="1"
+  value="25000"
+>
+
+<p class="small">
+Paper trades above this value will be blocked. This limit is only for the simulator.
+</p>
+
+</div>
+
+<div class="warning-box">
+⚠️ This is an educational paper-trading simulator. It does not connect to a broker and cannot place real trades.
+</div>
+
+<h3>📋 Paper Trade History</h3>
+
+<div
+  id="tradeHistory"
+  class="trade-history"
+>
+<div class="trade-row">
+No paper trades yet.
+</div>
 </div>
 
 </div>
@@ -672,6 +943,67 @@ let currentVideoUrl = null;
 
 
 /* =========================
+   PAPER TRADING STATE
+========================= */
+
+const PAPER_STARTING_BALANCE = 100000;
+
+let paperBalance =
+  Number(
+    localStorage.getItem(
+      "aiPaperTradingBalance"
+    )
+  );
+
+if(
+  !Number.isFinite(paperBalance) ||
+  paperBalance < 0
+){
+  paperBalance =
+    PAPER_STARTING_BALANCE;
+}
+
+let realisedPL =
+  Number(
+    localStorage.getItem(
+      "aiPaperTradingRealisedPL"
+    )
+  );
+
+if(
+  !Number.isFinite(realisedPL)
+){
+  realisedPL = 0;
+}
+
+let paperTrades = [];
+
+try{
+
+  const savedTrades =
+    localStorage.getItem(
+      "aiPaperTradingTrades"
+    );
+
+  paperTrades =
+    savedTrades
+      ? JSON.parse(savedTrades)
+      : [];
+
+  if(!Array.isArray(paperTrades)){
+    paperTrades = [];
+  }
+
+}catch(error){
+
+  paperTrades = [];
+
+}
+
+let currentMarketData = null;
+
+
+/* =========================
    BASIC HELPERS
 ========================= */
 
@@ -707,9 +1039,7 @@ function logActivity(message){
     getElement("activityLog");
 
   if(!log){
-
     return;
-
   }
 
   const entry =
@@ -732,9 +1062,7 @@ function clearActivityLog(){
     getElement("activityLog");
 
   if(!log){
-
     return;
-
   }
 
   log.innerHTML =
@@ -817,12 +1145,10 @@ async function generateContent(){
         "/api/chat",
         {
           method:"POST",
-
           headers:{
             "Content-Type":
               "application/json"
           },
-
           body:JSON.stringify({
             message:prompt
           })
@@ -1073,9 +1399,7 @@ async function generateVideoPackage(){
     status.textContent =
       "⚠️ Enter a topic first.";
 
-    getElement(
-      "topic"
-    ).focus();
+    getElement("topic").focus();
 
     return;
 
@@ -1103,7 +1427,8 @@ async function generateVideoPackage(){
       "1. Video title\n" +
       "2. Hook\n" +
       "3. Voiceover script\n" +
-      "4. Scene-by-scene visual plan\n" +
+      "4. Scene-by-scene visual
+ plan\n" +
       "5. On-screen text\n" +
       "6. Caption\n" +
       "7. Call to action\n" +
@@ -1116,12 +1441,10 @@ async function generateVideoPackage(){
         "/api/chat",
         {
           method:"POST",
-
           headers:{
             "Content-Type":
               "application/json"
           },
-
           body:JSON.stringify({
             message:prompt
           })
@@ -1404,10 +1727,6 @@ function splitText(
 
 
 /* =========================
-   PART 1 ENDS HERE
-   DO NOT ADD ANYTHING ELSE
-========================= */
-/* =========================
    DRAW WRAPPED TEXT
 ========================= */
 
@@ -1500,8 +1819,6 @@ function drawVideoFrame(
     height
   );
 
-  /* Background */
-
   ctx.fillStyle =
     "#0b1020";
 
@@ -1511,9 +1828,6 @@ function drawVideoFrame(
     width,
     height
   );
-
-
-  /* Gradient */
 
   const gradient =
     ctx.createLinearGradient(
@@ -1554,9 +1868,6 @@ function drawVideoFrame(
   ctx.globalAlpha =
     1;
 
-
-  /* Decorative circles */
-
   ctx.beginPath();
 
   ctx.arc(
@@ -1571,7 +1882,6 @@ function drawVideoFrame(
     "rgba(255,255,255,.08)";
 
   ctx.fill();
-
 
   ctx.beginPath();
 
@@ -1588,10 +1898,7 @@ function drawVideoFrame(
 
   ctx.fill();
 
-
-  /* Title */
-
-   ctx.textAlign =
+  ctx.textAlign =
     "center";
 
   ctx.textBaseline =
@@ -1612,9 +1919,6 @@ function drawVideoFrame(
     88
   );
 
-
-  /* Main script */
-
   ctx.font =
     "bold 48px Arial";
 
@@ -1630,9 +1934,6 @@ function drawVideoFrame(
     68
   );
 
-
-  /* Footer */
-
   ctx.font =
     "bold 28px Arial";
 
@@ -1644,9 +1945,6 @@ function drawVideoFrame(
     width / 2,
     1650
   );
-
-
-  /* Progress bar */
 
   const progress =
     duration > 0
@@ -1978,13 +2276,9 @@ async function renderVideo(){
       null;
 
     const formats = [
-
       "video/webm;codecs=vp9,opus",
-
       "video/webm;codecs=vp8,opus",
-
       "video/webm"
-
     ];
 
     for(
@@ -2511,7 +2805,7 @@ function startAutomation(){
 
   }
 
-   if(
+  if(
     automationRunning
   ){
 
@@ -2522,22 +2816,17 @@ function startAutomation(){
 
   }
 
-
   automationRunning =
     true;
 
-
   status.textContent =
     "🟢 Automation is running.";
-
 
   logActivity(
     "Automation started."
   );
 
-
   runAutomation();
-
 
   automationTimer =
     setInterval(
@@ -2567,7 +2856,6 @@ function stopAutomation(){
   automationRunning =
     false;
 
-
   if(automationTimer){
 
     clearInterval(
@@ -2579,39 +2867,963 @@ function stopAutomation(){
 
   }
 
-
   getElement(
     "automationStatus"
   ).textContent =
     "🔴 Automation is stopped.";
-
 
   logActivity(
     "Automation stopped."
   );
 
 }
-
-
 /* =========================
    TRADING MONITOR
 ========================= */
 
-function updateTradingStatus(){
+function savePaperTradingState(){
+
+  localStorage.setItem(
+    "aiPaperTradingBalance",
+    String(paperBalance)
+  );
+
+  localStorage.setItem(
+    "aiPaperTradingRealisedPL",
+    String(realisedPL)
+  );
+
+  localStorage.setItem(
+    "aiPaperTradingTrades",
+    JSON.stringify(paperTrades)
+  );
+
+}
+
+
+/* =========================
+   FORMAT MONEY
+========================= */
+
+function formatMoney(value){
+
+  const number =
+    Number(value);
+
+  if(!Number.isFinite(number)){
+    return "₹—";
+  }
+
+  return "₹" +
+    number.toLocaleString(
+      "en-IN",
+      {
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
+      }
+    );
+
+}
+
+
+/* =========================
+   UPDATE PAPER DISPLAY
+========================= */
+
+function updatePaperTradingDisplay(){
+
+  const balanceElement =
+    getElement(
+      "paperBalance"
+    );
+
+  const plElement =
+    getElement(
+      "realisedPL"
+    );
+
+  if(balanceElement){
+
+    balanceElement.textContent =
+      formatMoney(
+        paperBalance
+      );
+
+  }
+
+  if(plElement){
+
+    plElement.textContent =
+      formatMoney(
+        realisedPL
+      );
+
+    plElement.classList.remove(
+      "positive",
+      "negative",
+      "neutral"
+    );
+
+    if(realisedPL > 0){
+
+      plElement.classList.add(
+        "positive"
+      );
+
+    }else if(realisedPL < 0){
+
+      plElement.classList.add(
+        "negative"
+      );
+
+    }else{
+
+      plElement.classList.add(
+        "neutral"
+      );
+
+    }
+
+  }
+
+}
+
+
+/* =========================
+   UPDATE TRADE HISTORY
+========================= */
+
+function renderTradeHistory(){
+
+  const history =
+    getElement(
+      "tradeHistory"
+    );
+
+  if(!history){
+    return;
+  }
+
+  if(
+    !paperTrades.length
+  ){
+
+    history.innerHTML =
+      "<div class=\"trade-row\">No paper trades yet.</div>";
+
+    return;
+
+  }
+
+  history.innerHTML = "";
+
+  const recentTrades =
+    paperTrades
+      .slice()
+      .reverse();
+
+  recentTrades.forEach(
+    function(trade){
+
+      const row =
+        document.createElement(
+          "div"
+        );
+
+      row.className =
+        "trade-row";
+
+      const sideClass =
+        trade.side === "BUY"
+          ? "trade-buy"
+          : "trade-sell";
+
+      const date =
+        newDate(
+        trade.createdAt
+      ).toLocaleString();
+
+      row.innerHTML =
+        "<div>" +
+        "<span class=\"" +
+        sideClass +
+        "\">" +
+        trade.side +
+        "</span> " +
+        "<strong>" +
+        trade.symbol +
+        "</strong>" +
+        "</div>" +
+
+        "<div>" +
+        "Quantity: " +
+        trade.quantity +
+        " × " +
+        formatMoney(
+          trade.price
+        ) +
+        "</div>" +
+
+        "<div>" +
+        "Value: " +
+        formatMoney(
+          trade.value
+        ) +
+        "</div>" +
+
+        "<div>" +
+        "Status: " +
+        trade.status +
+        "</div>" +
+
+        "<div class=\"small\">" +
+        date +
+        "</div>";
+
+      history.appendChild(
+        row
+      );
+
+    }
+  );
+
+}
+
+
+/* =========================
+   REFRESH MARKET DATA
+========================= */
+
+async function refreshMarketData(){
+
+  const symbol =
+    getElement(
+      "tradingSymbol"
+    ).value;
 
   const status =
     getElement(
       "tradingStatus"
     );
 
+  const button =
+    getElement(
+      "marketRefreshButton"
+    );
+
+  const priceElement =
+    getElement(
+      "tradingPrice"
+    );
+
+  const changeElement =
+    getElement(
+      "tradingChange"
+    );
+
+  const tradePrice =
+    getElement(
+      "tradePrice"
+    );
+
+  button.disabled =
+    true;
 
   status.textContent =
-    "📊 Trading monitor checked. No trades are placed by this Command Centre.";
+    "📡 Loading market data for " +
+    symbol +
+    "...";
 
+  try{
+
+    const response =
+      await fetch(
+        "/api/chat",
+        {
+          method:"POST",
+
+          headers:{
+            "Content-Type":
+              "application/json"
+          },
+
+          body:JSON.stringify({
+            action:"market_data",
+            symbol:symbol
+          })
+        }
+      );
+
+    let data;
+
+    try{
+
+      data =
+        await response.json();
+
+    }catch(error){
+
+      throw new Error(
+        "Market server returned invalid JSON."
+      );
+
+    }
+
+    if(!response.ok){
+
+      throw new Error(
+        data && data.error
+          ? data.error
+          : "Market data request failed."
+      );
+
+    }
+
+    if(
+      !data ||
+      data.success !== true
+    ){
+
+      throw new Error(
+        "Market data was not returned."
+      );
+
+    }
+
+    currentMarketData =
+      data;
+
+    priceElement.textContent =
+      formatMoney(
+        data.price
+      );
+
+    const change =
+      Number(
+        data.change
+      ) || 0;
+
+    const changePercent =
+      Number(
+        data.changePercent
+      ) || 0;
+
+    const sign =
+      change >= 0
+        ? "+"
+        : "";
+
+    changeElement.textContent =
+      sign +
+      change.toFixed(2) +
+      " (" +
+      sign +
+      changePercent.toFixed(2) +
+      "%)";
+
+    changeElement.classList.remove(
+      "positive",
+      "negative",
+      "neutral"
+    );
+
+    if(change > 0){
+
+      changeElement.classList.add(
+        "positive"
+      );
+
+    }else if(change < 0){
+
+      changeElement.classList.add(
+        "negative"
+      );
+
+    }else{
+
+      changeElement.classList.add(
+        "neutral"
+      );
+
+    }
+
+    tradePrice.value =
+      Number(
+        data.price
+      ).toFixed(2);
+
+    status.textContent =
+      "✅ " +
+      symbol +
+      " market data updated. " +
+      "Source: " +
+      (
+        data.dataSource ||
+        "Market data provider"
+      ) +
+      ".";
+
+    logActivity(
+      "Market data refreshed: " +
+      symbol
+    );
+
+  }catch(error){
+
+    status.textContent =
+      "❌ " +
+      (
+        error &&
+        error.message
+          ? error.message
+          : "Unable to load market data."
+      );
+
+    logActivity(
+      "Market data error: " +
+      (
+        error &&
+        error.message
+          ? error.message
+          : "Unknown error"
+      )
+    );
+
+  }finally{
+
+    button.disabled =
+      false;
+
+  }
+
+}
+
+
+/* =========================
+   EXECUTE PAPER TRADE
+========================= */
+
+async function executePaperTrade(){
+
+  const symbol =
+    getElement(
+      "tradingSymbol"
+    ).value;
+
+  const side =
+    getElement(
+      "tradeSide"
+    ).value;
+
+  const quantity =
+    Number(
+      getElement(
+        "tradeQuantity"
+      ).value
+    );
+
+  const price =
+    Number(
+      getElement(
+        "tradePrice"
+      ).value
+    );
+
+  const maxTradeValue =
+    Number(
+      getElement(
+        "maxTradeValue"
+      ).value
+    );
+
+  const status =
+    getElement(
+      "tradeStatus"
+    );
+
+  const button =
+    getElement(
+      "paperTradeButton"
+    );
+
+  if(!symbol){
+
+    status.textContent =
+      "⚠️ Select an instrument.";
+
+    return;
+
+  }
+
+  if(
+    !Number.isFinite(quantity) ||
+    quantity <= 0
+  ){
+
+    status.textContent =
+      "⚠️ Enter a valid quantity.";
+
+    getElement(
+      "tradeQuantity"
+    ).focus();
+
+    return;
+
+  }
+
+  if(
+    !Number.isFinite(price) ||
+    price <= 0
+  ){
+
+    status.textContent =
+      "⚠️ Enter a valid execution price. Refresh market data first.";
+
+    getElement(
+      "tradePrice"
+    ).focus();
+
+    return;
+
+  }
+
+  if(
+    !Number.isFinite(maxTradeValue) ||
+    maxTradeValue <= 0
+  ){
+
+    status.textContent =
+      "⚠️ Enter a valid maximum trade value.";
+
+    getElement(
+      "maxTradeValue"
+    ).focus();
+
+    return;
+
+  }
+
+  const orderValue =
+    quantity * price;
+
+  if(
+    orderValue >
+    maxTradeValue
+  ){
+
+    status.textContent =
+      "🛡️ Trade blocked. Order value " +
+      formatMoney(orderValue) +
+      " exceeds your paper-trading risk limit of " +
+      formatMoney(maxTradeValue) +
+      ".";
+
+    logActivity(
+      "Paper trade blocked by risk limit."
+    );
+
+    return;
+
+  }
+
+  if(
+    side === "BUY" &&
+    orderValue > paperBalance
+  ){
+
+    status.textContent =
+      "❌ Insufficient virtual balance. " +
+      "Available: " +
+      formatMoney(
+        paperBalance
+      );
+
+    return;
+
+  }
+
+  button.disabled =
+    true;
+
+  status.textContent =
+    "⏳ Simulating paper order...";
+
+  try{
+
+    const response =
+      await fetch(
+        "/api/chat",
+        {
+          method:"POST",
+
+          headers:{
+            "Content-Type":
+              "application/json"
+          },
+
+          body:JSON.stringify({
+            action:"paper_trade",
+            symbol:symbol,
+            side:side,
+            quantity:quantity,
+            price:price
+          })
+        }
+      );
+
+    let data;
+
+    try{
+
+      data =
+        await response.json();
+
+    }catch(error){
+
+      throw new Error(
+        "Paper-trade server returned invalid JSON."
+      );
+
+    }
+
+    if(!response.ok){
+
+      throw new Error(
+        data && data.error
+          ? data.error
+          : "Paper trade failed."
+      );
+
+    }
+
+    if(
+      !data ||
+      data.success !== true ||
+      !data.order
+    ){
+
+      throw new Error(
+        "Paper-trade confirmation was not returned."
+      );
+
+    }
+
+    const order =
+      data.order;
+
+    if(
+      side === "BUY"
+    ){
+
+      paperBalance -=
+        orderValue;
+
+    }else{
+
+      paperBalance +=
+        orderValue;
+
+    }
+
+    const tradeRecord = {
+
+      orderId:
+        order.orderId,
+
+      symbol:
+        symbol,
+
+      side:
+        side,
+
+      quantity:
+        quantity,
+
+      price:
+        price,
+
+      value:
+        orderValue,
+
+      status:
+        "SIMULATED",
+
+      createdAt:
+        new Date().toISOString()
+
+    };
+
+    paperTrades.push(
+      tradeRecord
+    );
+
+    calculateRealisedPL();
+
+    savePaperTradingState();
+
+    updatePaperTradingDisplay();
+
+    renderTradeHistory();
+
+    status.textContent =
+      "✅ Paper " +
+      side +
+      " simulated successfully. " +
+      "Order ID: " +
+      order.orderId +
+      ". No real trade was placed.";
+
+    logActivity(
+      "Paper " +
+      side +
+      " executed: " +
+      symbol +
+      " × " +
+      quantity
+    );
+
+  }catch(error){
+
+    status.textContent =
+      "❌ " +
+      (
+        error &&
+        error.message
+          ? error.message
+          : "Paper trade failed."
+      );
+
+    logActivity(
+      "Paper trade error: " +
+      (
+        error &&
+        error.message
+          ? error.message
+          : "Unknown error"
+      )
+    );
+
+  }finally{
+
+    button.disabled =
+      false;
+
+  }
+
+}
+
+
+/* =========================
+   REALISED P/L
+========================= */
+
+function calculateRealisedPL(){
+
+  const openLots = {};
+
+  let totalPL = 0;
+
+  paperTrades.forEach(
+    function(trade){
+
+      const symbol =
+        trade.symbol;
+
+      const quantity =
+        Number(
+          trade.quantity
+        );
+
+      const price =
+        Number(
+          trade.price
+        );
+
+      if(
+        !Number.isFinite(quantity) ||
+        !Number.isFinite(price)
+      ){
+
+        return;
+
+      }
+
+      if(
+        !openLots[symbol]
+      ){
+
+        openLots[symbol] = [];
+
+      }
+
+      if(
+        trade.side === "BUY"
+      ){
+
+        openLots[symbol].push({
+
+          quantity:
+            quantity,
+
+          price:
+            price
+
+        });
+
+        return;
+
+      }
+
+      if(
+        trade.side === "SELL"
+      ){
+
+        let remaining =
+          quantity;
+
+        while(
+          remaining > 0 &&
+          openLots[symbol].length > 0
+        ){
+
+          const lot =
+            openLots[symbol][0];
+
+          const matched =
+            Math.min(
+              remaining,
+              lot.quantity
+            );
+
+          totalPL +=
+            (
+              price -
+              lot.price
+            ) *
+            matched;
+
+          lot.quantity -=
+            matched;
+
+          remaining -=
+            matched;
+
+          if(
+            lot.quantity <= 0
+          ){
+
+            openLots[symbol].shift();
+
+          }
+
+        }
+
+      }
+
+    }
+  );
+
+  realisedPL =
+    totalPL;
+
+}
+
+
+/* =========================
+   RESET PAPER ACCOUNT
+========================= */
+
+function resetPaperAccount(){
+
+  const confirmed =
+    confirm(
+      "Reset the paper-trading account to ₹1,00,000 and delete all paper trades?"
+    );
+
+  if(!confirmed){
+
+    return;
+
+  }
+
+  paperBalance =
+    PAPER_STARTING_BALANCE;
+
+  realisedPL =
+    0;
+
+  paperTrades =
+    [];
+
+  currentMarketData =
+    null;
+
+  savePaperTradingState();
+
+  updatePaperTradingDisplay();
+
+  renderTradeHistory();
+
+  getElement(
+    "tradingPrice"
+  ).textContent =
+    "₹—";
+
+  getElement(
+    "tradingChange"
+  ).textContent =
+    "—";
+
+  getElement(
+    "tradePrice"
+  ).value =
+    "";
+
+  getElement(
+    "tradingStatus"
+  ).textContent =
+    "🔄 Paper account reset to ₹1,00,000.";
+
+  getElement(
+    "tradeStatus"
+  ).textContent =
+    "No paper trade executed yet.";
 
   logActivity(
-    "Trading monitor checked."
+    "Paper trading account reset."
   );
+
+}
+
+
+/* =========================
+   TRADING SYMBOL CHANGE
+========================= */
+
+function handleTradingSymbolChange(){
+
+  currentMarketData =
+    null;
+
+  getElement(
+    "tradingPrice"
+  ).textContent =
+    "₹—";
+
+  getElement(
+    "tradingChange"
+  ).textContent =
+    "—";
+
+  getElement(
+    "tradePrice"
+  ).value =
+    "";
+
+  getElement(
+    "tradingStatus"
+  ).textContent =
+    "Select Refresh Market Data to load the new instrument.";
 
 }
 
@@ -2646,6 +3858,28 @@ document.addEventListener(
   function(){
 
     loadSavedContent();
+
+    calculateRealisedPL();
+
+    savePaperTradingState();
+
+    updatePaperTradingDisplay();
+
+    renderTradeHistory();
+
+    const tradingSymbol =
+      getElement(
+        "tradingSymbol"
+      );
+
+    if(tradingSymbol){
+
+      tradingSymbol.addEventListener(
+        "change",
+        handleTradingSymbolChange
+      );
+
+    }
 
     logActivity(
       "Command Centre loaded successfully."
@@ -2685,7 +3919,6 @@ window.addEventListener(
 
   }
 );
-
 </script>
 
 </body>
