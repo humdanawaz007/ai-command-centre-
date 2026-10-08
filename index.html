@@ -10,6 +10,10 @@
   box-sizing:border-box;
 }
 
+html{
+  scroll-behavior:smooth;
+}
+
 body{
   margin:0;
   font-family:Arial,sans-serif;
@@ -36,6 +40,7 @@ header h1{
 
 header p{
   color:#9ca3af;
+  margin-bottom:0;
 }
 
 .card{
@@ -44,6 +49,7 @@ header p{
   border-radius:16px;
   padding:18px;
   margin-bottom:16px;
+  box-shadow:0 8px 25px rgba(0,0,0,.15);
 }
 
 .card h2{
@@ -66,6 +72,13 @@ textarea{
   background:#0d1324;
   color:#fff;
   font-size:15px;
+  outline:none;
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+  border-color:#2563eb;
 }
 
 textarea{
@@ -81,11 +94,18 @@ button{
   font-size:15px;
   font-weight:bold;
   cursor:pointer;
+  transition:.2s;
+}
+
+button:hover{
+  transform:translateY(-1px);
+  filter:brightness(1.08);
 }
 
 button:disabled{
   opacity:.6;
   cursor:not-allowed;
+  transform:none;
 }
 
 .primary{
@@ -127,21 +147,25 @@ button:disabled{
   border-radius:10px;
   color:#93c5fd;
   margin-top:12px;
+  line-height:1.5;
 }
 
 pre{
   white-space:pre-wrap;
   word-wrap:break-word;
+  overflow-wrap:anywhere;
   background:#0d1324;
   padding:14px;
   border-radius:10px;
   line-height:1.5;
   min-height:120px;
+  margin-bottom:12px;
 }
 
 .small{
   color:#9ca3af;
   font-size:13px;
+  line-height:1.5;
 }
 
 .grid{
@@ -203,13 +227,66 @@ hr{
   margin:20px 0;
 }
 
+.button-row{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.button-row button{
+  flex:1;
+  min-width:150px;
+}
+
+.download-box{
+  display:none;
+  margin-top:12px;
+  padding:14px;
+  background:#0d1324;
+  border:1px solid #374151;
+  border-radius:10px;
+}
+
+.download-box a{
+  color:#93c5fd;
+  font-weight:bold;
+  text-decoration:none;
+}
+
+.badge{
+  display:inline-block;
+  padding:5px 9px;
+  border-radius:999px;
+  background:#1e293b;
+  color:#93c5fd;
+  font-size:12px;
+  margin-top:6px;
+}
+
 @media(max-width:600px){
+
   .grid{
     grid-template-columns:1fr;
   }
 
   header h1{
     font-size:24px;
+  }
+
+  .container{
+    padding:10px;
+  }
+
+  .card{
+    padding:15px;
+  }
+
+  .button-row{
+    flex-direction:column;
+  }
+
+  .button-row button{
+    width:100%;
   }
 }
 </style>
@@ -222,7 +299,9 @@ hr{
 <header>
   <h1>🤖 AI Command Centre</h1>
   <p>Your personal AI content and automation workspace</p>
+  <div class="badge">SYSTEM READY</div>
 </header>
+
 
 <!-- AI CONTENT GENERATOR -->
 
@@ -274,6 +353,8 @@ Ready to generate.
 
 <pre id="contentOutput">Your generated content will appear here.</pre>
 
+<div class="button-row">
+
 <button
   class="secondary"
   onclick="copyContent()"
@@ -290,6 +371,8 @@ Ready to generate.
 
 </div>
 
+</div>
+
 
 <!-- VIDEO PACKAGE -->
 
@@ -303,6 +386,7 @@ Generate a complete package for a short-form video.
 
 <button
   class="video"
+  id="videoPackageButton"
   onclick="generateVideoPackage()"
 >
 🎬 Generate Video Package
@@ -327,8 +411,10 @@ Video package ready.
 <h2>🔊 AI Voiceover</h2>
 
 <p class="small">
-Play the generated content using your device's voice.
+Play the generated content using your device's built-in voice system.
 </p>
+
+<div class="button-row">
 
 <button
   class="success"
@@ -346,6 +432,8 @@ Play the generated content using your device's voice.
 
 </div>
 
+</div>
+
 
 <!-- VIDEO RENDERER -->
 
@@ -354,21 +442,16 @@ Play the generated content using your device's voice.
 <h2>🎞️ Video Renderer</h2>
 
 <p class="small">
-Create a vertical video with AI-generated voice audio embedded directly in the downloaded video.
+Create a vertical video with the generated script and AI voice audio.
+The finished video will be downloaded to your device.
 </p>
 
 <button
   class="render"
+  id="renderButton"
   onclick="renderVideo()"
 >
 🎥 Render Video With AI Voice
-</button>
-
-<button
-  class="success"
-  onclick="playVoiceover()"
->
-🔊 Play Voiceover
 </button>
 
 <div
@@ -376,6 +459,17 @@ Create a vertical video with AI-generated voice audio embedded directly in the d
   class="status"
 >
 Video renderer ready.
+</div>
+
+<div
+  id="downloadBox"
+  class="download-box"
+>
+<strong>✅ Video ready!</strong>
+<br><br>
+<a id="videoDownloadLink" href="#" download>
+⬇️ Download your video
+</a>
 </div>
 
 </div>
@@ -555,6 +649,25 @@ let currentContent = "";
 let currentVideoPackage = "";
 let automationRunning = false;
 let automationTimer = null;
+let currentVideoUrl = null;
+
+
+/* =========================
+   BASIC HELPERS
+========================= */
+
+function getElement(id){
+  return document.getElementById(id);
+}
+
+
+function setStatus(id,message){
+  const element = getElement(id);
+
+  if(element){
+    element.textContent = message;
+  }
+}
 
 
 /* =========================
@@ -563,7 +676,7 @@ let automationTimer = null;
 
 function logActivity(message){
 
-  const log = document.getElementById("activityLog");
+  const log = getElement("activityLog");
 
   if(!log){
     return;
@@ -571,12 +684,28 @@ function logActivity(message){
 
   const entry = document.createElement("div");
 
-  const time = new Date().toLocaleTimeString();
+  const time =
+    new Date().toLocaleTimeString();
 
   entry.textContent =
     time + " — " + message;
 
   log.prepend(entry);
+
+}
+
+
+function clearActivityLog(){
+
+  const log =
+    getElement("activityLog");
+
+  if(!log){
+    return;
+  }
+
+  log.innerHTML =
+    "<div>Activity log cleared.</div>";
 
 }
 
@@ -588,19 +717,19 @@ function logActivity(message){
 async function generateContent(){
 
   const topicElement =
-    document.getElementById("topic");
+    getElement("topic");
 
   const platformElement =
-    document.getElementById("platform");
+    getElement("platform");
 
   const output =
-    document.getElementById("contentOutput");
+    getElement("contentOutput");
 
   const status =
-    document.getElementById("generatorStatus");
+    getElement("generatorStatus");
 
   const button =
-    document.getElementById("generateButton");
+    getElement("generateButton");
 
   const topic =
     topicElement.value.trim();
@@ -729,27 +858,165 @@ async function generateContent(){
 
 
 /* =========================
+   COPY CONTENT
+========================= */
+
+async function copyContent(){
+
+  if(!currentContent){
+
+    alert(
+      "Generate AI content first."
+    );
+
+    return;
+  }
+
+  try{
+
+    await navigator.clipboard.writeText(
+      currentContent
+    );
+
+    logActivity(
+      "Generated content copied."
+    );
+
+    alert(
+      "Content copied successfully."
+    );
+
+  }catch(error){
+
+    const textArea =
+      document.createElement("textarea");
+
+    textArea.value =
+      currentContent;
+
+    document.body.appendChild(
+      textArea
+    );
+
+    textArea.select();
+
+    document.execCommand("copy");
+
+    textArea.remove();
+
+    alert(
+      "Content copied."
+    );
+
+  }
+
+}
+
+
+/* =========================
+   SAVE CONTENT
+========================= */
+
+function saveContent(){
+
+  if(!currentContent){
+
+    alert(
+      "Generate AI content first."
+    );
+
+    return;
+  }
+
+  localStorage.setItem(
+    "aiCommandCentreSavedContent",
+    currentContent
+  );
+
+  getElement(
+    "savedOutput"
+  ).textContent =
+    currentContent;
+
+  logActivity(
+    "Content saved locally."
+  );
+
+}
+
+
+/* =========================
+   LOAD SAVED CONTENT
+========================= */
+
+function loadSavedContent(){
+
+  const saved =
+    localStorage.getItem(
+      "aiCommandCentreSavedContent"
+    );
+
+  if(saved){
+
+    getElement(
+      "savedOutput"
+    ).textContent =
+      saved;
+
+  }
+
+}
+
+
+/* =========================
+   CLEAR SAVED CONTENT
+========================= */
+
+function clearSavedContent(){
+
+  localStorage.removeItem(
+    "aiCommandCentreSavedContent"
+  );
+
+  getElement(
+    "savedOutput"
+  ).textContent =
+    "No saved content yet.";
+
+  logActivity(
+    "Saved content cleared."
+  );
+
+}
+
+
+/* =========================
    VIDEO PACKAGE
 ========================= */
 
 async function generateVideoPackage(){
 
   const topic =
-    document.getElementById("topic").value.trim();
+    getElement("topic").value.trim();
 
   const platform =
-    document.getElementById("platform").value;
+    getElement("platform").value;
 
   const output =
-    document.getElementById("videoPackageOutput");
+    getElement("videoPackageOutput");
 
   const status =
-    document.getElementById("videoPackageStatus");
+    getElement("videoPackageStatus");
+
+  const button =
+    getElement("videoPackageButton");
 
   if(!topic){
 
     status.textContent =
       "⚠️ Enter a topic first.";
+
+    getElement("topic").focus();
 
     return;
   }
@@ -759,6 +1026,8 @@ async function generateVideoPackage(){
 
   output.textContent =
     "Please wait...";
+
+  button.disabled = true;
 
   try{
 
@@ -796,20 +1065,37 @@ async function generateVideoPackage(){
         }
       );
 
-    const data =
-      await response.json();
+    let data;
+
+    try{
+      data =
+        await response.json();
+    }catch(error){
+      throw new Error(
+        "Server returned an invalid response."
+      );
+    }
 
     if(!response.ok){
 
       throw new Error(
-        data.error ||
-        "Video package generation failed."
+        data && data.error
+          ? data.error
+          : "Video package generation failed."
       );
 
     }
 
     currentVideoPackage =
       data.reply || "";
+
+    if(!currentVideoPackage){
+
+      throw new Error(
+        "AI returned no video package."
+      );
+
+    }
 
     output.textContent =
       currentVideoPackage;
@@ -829,6 +1115,15 @@ async function generateVideoPackage(){
 
     status.textContent =
       "❌ " + error.message;
+
+    logActivity(
+      "Video package error: " +
+      error.message
+    );
+
+  }finally{
+
+    button.disabled = false;
 
   }
 
@@ -897,7 +1192,7 @@ function stopVoiceover(){
 
 
 /* =========================
-   TTS AUDIO FROM OPENAI
+   OPENAI TTS AUDIO
 ========================= */
 
 async function getTTSAudio(text){
@@ -920,18 +1215,22 @@ async function getTTSAudio(text){
   let data;
 
   try{
-    data = await response.json();
+    data =
+      await response.json();
   }catch(error){
+
     throw new Error(
       "Voice server returned an invalid response."
     );
+
   }
 
   if(!response.ok){
 
     throw new Error(
-      data.error ||
-      "Voice generation failed."
+      data && data.error
+        ? data.error
+        : "Voice generation failed."
     );
 
   }
@@ -939,7 +1238,7 @@ async function getTTSAudio(text){
   if(!data.audio){
 
     throw new Error(
-      "No audio was returned."
+      "No audio was returned by the voice service."
     );
 
   }
@@ -958,10 +1257,17 @@ function splitText(
   maxLength
 ){
 
+  const cleanText =
+    text
+      .replace(/\s+/g," ")
+      .trim();
+
+  if(!cleanText){
+    return [];
+  }
+
   const words =
-    text.replace(/\s+/g," ")
-        .trim()
-        .split(" ");
+    cleanText.split(" ");
 
   const chunks = [];
 
@@ -976,25 +1282,25 @@ function splitText(
     const word =
       words[i];
 
+    const test =
+      (current + " " + word).trim();
+
     if(
-      (current + " " + word).trim().length
-      > maxLength
+      test.length > maxLength &&
+      current
     ){
 
-      if(current){
+      chunks.push(
+        current.trim()
+      );
 
-        chunks.push(
-          current.trim()
-        );
-
-      }
-
-      current = word;
+      current =
+        word;
 
     }else{
 
       current =
-        (current + " " + word).trim();
+        test;
 
     }
 
@@ -1014,7 +1320,7 @@ function splitText(
 
 
 /* =========================
-   DRAW TEXT
+   DRAW WRAPPED TEXT
 ========================= */
 
 function drawWrappedText(
@@ -1027,7 +1333,7 @@ function drawWrappedText(
 ){
 
   const words =
-    text.split(" ");
+    text.split(/\s+/);
 
   let line = "";
   let currentY = y;
@@ -1043,11 +1349,11 @@ function drawWrappedText(
       (line ? " " : "") +
       words[i];
 
-    const width =
-      ctx.measureText(testLine).width;
+    const metrics =
+      ctx.measureText(testLine);
 
     if(
-      width > maxWidth &&
+      metrics.width > maxWidth &&
       line
     ){
 
@@ -1086,42 +1392,139 @@ function drawWrappedText(
 
 
 /* =========================
+   VIDEO FRAME
+========================= */
+
+function drawVideoFrame(
+  ctx,
+  width,
+  height,
+  title,
+  text,
+  elapsed,
+  duration
+){
+
+  ctx.fillStyle =
+    "#0b1020";
+
+  ctx.fillRect(
+    0,
+    0,
+    width,
+    height
+  );
+
+  const gradient =
+    ctx.createLinearGradient(
+      0,
+      0,
+      width,
+      height
+    );
+
+  gradient.addColorStop(
+    0,
+    "#1d4ed8"
+  );
+
+  gradient.addColorStop(
+    0.5,
+    "#4c1d95"
+  );
+
+  gradient.addColorStop(
+    1,
+    "#0f172a"
+  );
+
+  ctx.globalAlpha = 0.55;
+
+  ctx.fillStyle =
+    gradient;
+
+  ctx.fillRect(
+    0,
+    0,
+    width,
+    height
+  );
+
+  ctx./* =========================
    RENDER VIDEO
 ========================= */
 
 async function renderVideo(){
 
+  const status =
+    getElement("renderStatus");
+
+  const button =
+    getElement("renderButton");
+
+  const downloadBox =
+    getElement("downloadBox");
+
+  const downloadLink =
+    getElement("videoDownloadLink");
+
   if(!currentContent){
 
-    document.getElementById(
-      "renderStatus"
-    ).textContent =
+    status.textContent =
       "⚠️ Generate AI content first.";
 
     return;
   }
 
-  const status =
-    document.getElementById(
-      "renderStatus"
-    );
+  if(
+    !window.MediaRecorder ||
+    !HTMLCanvasElement.prototype.captureStream
+  ){
+
+    status.textContent =
+      "❌ Your browser does not support video rendering.";
+
+    return;
+  }
+
+  button.disabled = true;
+
+  downloadBox.style.display =
+    "none";
 
   try{
 
     status.textContent =
-      "🔊 Generating AI voice...";
+      "🔊 Preparing AI voice...";
 
     const chunks =
       splitText(
         currentContent,
-        3500
+        3000
       );
 
+    if(!chunks.length){
+
+      throw new Error(
+        "There is no content to render."
+      );
+
+    }
+
+    const AudioContextClass =
+      window.AudioContext ||
+      window.webkitAudioContext;
+
+    if(!AudioContextClass){
+
+      throw new Error(
+        "Your browser does not support audio processing."
+      );
+
+    }
+
     const audioContext =
-      new (
-        window.AudioContext ||
-        window.webkitAudioContext
-      )();
+      new AudioContextClass();
 
     const decodedBuffers = [];
 
@@ -1132,8 +1535,8 @@ async function renderVideo(){
     ){
 
       status.textContent =
-        "🔊 Generating voice " +
-        (i+1) +
+        "🔊 Generating AI voice " +
+        (i + 1) +
         " of " +
         chunks.length +
         "...";
@@ -1142,6 +1545,17 @@ async function renderVideo(){
         await getTTSAudio(
           chunks[i]
         );
+
+      if(
+        !base64Audio ||
+        typeof base64Audio !== "string"
+      ){
+
+        throw new Error(
+          "Invalid audio data received."
+        );
+
+      }
 
       const binary =
         atob(base64Audio);
@@ -1162,17 +1576,24 @@ async function renderVideo(){
 
       }
 
-      const buffer =
+      const audioBuffer =
         await audioContext.decodeAudioData(
-          bytes.buffer
+          bytes.buffer.slice(0)
         );
 
       decodedBuffers.push(
-        buffer
+        audioBuffer
       );
 
     }
 
+    if(!decodedBuffers.length){
+
+      throw new Error(
+        "No audio was generated."
+      );
+
+    }
 
     let totalLength = 0;
 
@@ -1185,15 +1606,18 @@ async function renderVideo(){
 
     }
 
-    const combined =
+    const sampleRate =
+      decodedBuffers[0].sampleRate;
+
+    const combinedBuffer =
       audioContext.createBuffer(
         1,
         totalLength,
-        decodedBuffers[0].sampleRate
+        sampleRate
       );
 
-    const outputData =
-      combined.getChannelData(0);
+    const combinedData =
+      combinedBuffer.getChannelData(0);
 
     let offset = 0;
 
@@ -1204,7 +1628,7 @@ async function renderVideo(){
       const inputData =
         buffer.getChannelData(0);
 
-      outputData.set(
+      combinedData.set(
         inputData,
         offset
       );
@@ -1214,41 +1638,40 @@ async function renderVideo(){
 
     }
 
+    const duration =
+      combinedBuffer.duration;
 
     status.textContent =
-      "🎥 Preparing video...";
-
+      "🎥 Preparing vertical video...";
 
     const canvas =
       document.createElement(
         "canvas"
       );
 
-    canvas.width = 1080;
-    canvas.height = 1920;
+    canvas.width =
+      1080;
+
+    canvas.height =
+      1920;
 
     const ctx =
-      canvas.getContext("2d");
+      canvas.getContext(
+        "2d"
+      );
 
-    if(!canvas.captureStream){
+    if(!ctx){
 
       throw new Error(
-        "Your browser does not support video rendering."
+        "Unable to create video canvas."
       );
 
     }
-
-    if(!window.MediaRecorder){
-
-      throw new Error(
-        "Your browser does not support video recording."
-      );
-
-    }
-
 
     const videoStream =
-      canvas.captureStream(30);
+      canvas.captureStream(
+        30
+      );
 
     const audioDestination =
       audioContext.createMediaStreamDestination();
@@ -1257,53 +1680,46 @@ async function renderVideo(){
       audioContext.createBufferSource();
 
     source.buffer =
-      combined;
+      combinedBuffer;
 
     source.connect(
       audioDestination
     );
 
-
-    const tracks = [
-      ...videoStream.getVideoTracks(),
-      ...audioDestination.stream.getAudioTracks()
-    ];
-
     const combinedStream =
-      new MediaStream(tracks);
+      new MediaStream([
+        ...videoStream.getVideoTracks(),
+        ...audioDestination.stream.getAudioTracks()
+      ]);
 
+    let recorder = null;
 
-    let recorder;
+    const formats = [
 
-    const optionsList = [
-      {
-        mimeType:
-          "video/webm;codecs=vp9,opus"
-      },
-      {
-        mimeType:
-          "video/webm;codecs=vp8,opus"
-      },
-      {
-        mimeType:
-          "video/webm"
-      }
+      "video/webm;codecs=vp9,opus",
+
+      "video/webm;codecs=vp8,opus",
+
+      "video/webm"
+
     ];
 
     for(
-      const options of optionsList
+      const mimeType of formats
     ){
 
       if(
         MediaRecorder.isTypeSupported(
-          options.mimeType
+          mimeType
         )
       ){
 
         recorder =
           new MediaRecorder(
             combinedStream,
-            options
+            {
+              mimeType:mimeType
+            }
           );
 
         break;
@@ -1320,7 +1736,6 @@ async function renderVideo(){
         );
 
     }
-
 
     const videoChunks = [];
 
@@ -1340,369 +1755,212 @@ async function renderVideo(){
 
       };
 
+    const recordingPromise =
+      new Promise(
+        function(resolve,reject){
 
-    recorder.onerror =
-      function(){
+          recorder.onerror =
+            function(event){
 
-        status.textContent =
-          "❌ Video recording error.";
+              reject(
+                new Error(
+                  "Video recording failed."
+                )
+              );
 
-      };
+            };
 
+          recorder.onstop =
+            function(){
 
-    recorder.onstop =
-      function(){
+              resolve();
 
-        const blob =
-          new Blob(
-            videoChunks,
-            {
-              type:"video/webm"
-            }
-          );
+            };
 
-        const url =
-          URL.createObjectURL(
-            blob
-          );
-
-        const link =
-          document.createElement("a");
-
-        link.href =
-          url;
-
-        link.download =
-          "ai-command-centre-short.webm";
-
-        document.body.appendChild(
-          link
-        );
-
-        link.click();
-
-        link.remove();
-
-        setTimeout(
-          function(){
-
-            URL.revokeObjectURL(
-              url
-            );
-
-          },
-          5000
-        );
-
-        status.textContent =
-          "✅ Video created with AI voice. Download started.";
-
-        logActivity(
-          "Video with AI voice created."
-        );
-
-        audioContext.close();
-
-      };
-
-
-    const words =
-      currentContent
-        .replace(/\s+/g," ")
-        .trim()
-        .split(" ");
-
-    const pages = [];
-
-    let page = "";
-
-    for(
-      let i=0;
-      i<words.length;
-      i++
-    ){
-
-      page +=
-        (page ? " " : "") +
-        words[i];
-
-      if(
-        page.length > 100
-      ){
-
-        pages.push(page);
-        page = "";
-
-      }
-
-    }
-
-    if(page){
-
-      pages.push(page);
-
-    }
-
-    const totalPages =
-      Math.max(
-        1,
-        Math.min(
-          pages.length,
-          12
-        )
+        }
       );
 
-    let pageIndex = 0;
+    status.textContent =
+      "🎥 Rendering video...";
 
+    recorder.start(
+      250
+    );
 
-    function drawPage(){
+    const title =
+      getElement(
+        "topic"
+      ).value.trim() ||
+      "AI Short";
 
-      ctx.fillStyle =
-        "#0b1020";
+    const frameInterval =
+      1000 / 30;
 
-      ctx.fillRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-      );
+    const startTime =
+      performance.now();
 
-      ctx.fillStyle =
-        "#2563eb";
+    let animationId;
 
-      ctx.fillRect(
-        0,
-        0,
-        1080,
-        18
-      );
+    function drawFrame(){
 
-      ctx.fillStyle =
-        "#ffffff";
+      const elapsed =
+        (performance.now() -
+          startTime) / 1000;
 
-      ctx.textAlign =
-        "center";
-
-      ctx.font =
-        "bold 62px Arial";
-
-      ctx.fillText(
-        "AI SHORT",
-        540,
-        230
-      );
-
-      ctx.font =
-        "bold 48px Arial";
-
-      const pageText =
-        pages[pageIndex] ||
-        currentContent;
-
-      drawWrappedText(
+      drawVideoFrame(
         ctx,
-        pageText,
-        540,
-        700,
-        850,
-        72
+        canvas.width,
+        canvas.height,
+        title,
+        currentContent,
+        elapsed,
+        duration
       );
-
-      ctx.fillStyle =
-        "#93c5fd";
-
-      ctx.font =
-        "32px Arial";
-
-      ctx.fillText(
-        "AI Command Centre",
-        540,
-        1750
-      );
-
-      ctx.fillText(
-        (pageIndex + 1) +
-        " / " +
-        totalPages,
-        540,
-        1810
-      );
-
-      pageIndex++;
 
       if(
-        pageIndex < totalPages
+        elapsed < duration
       ){
 
-        setTimeout(
-          drawPage,
-          2500
-        );
+        animationId =
+          requestAnimationFrame(
+            drawFrame
+          );
 
       }
 
     }
 
-    recorder.start();
+    drawFrame();
 
     source.start(0);
 
-    status.textContent =
-      "🎥 Rendering video with AI voice...";
+    await new Promise(
+      function(resolve){
 
-    drawPage();
+        setTimeout(
+          resolve,
+          Math.max(
+            1000,
+            duration * 1000 + 500
+          )
+        );
 
-    setTimeout(
-      function(){
+      }
+    );
 
-        if(
-          recorder.state !== "inactive"
-        ){
+    if(animationId){
 
-          recorder.stop();
+      cancelAnimationFrame(
+        animationId
+      );
 
+    }
+
+    if(
+      recorder.state !== "inactive"
+    ){
+
+      recorder.stop();
+
+    }
+
+    await recordingPromise;
+
+    try{
+      source.stop();
+    }catch(error){
+      /* source may already have stopped */
+    }
+
+    videoStream
+      .getTracks()
+      .forEach(
+        function(track){
+          track.stop();
         }
+      );
 
-      },
-      Math.max(
-        5000,
-        combined.duration * 1000 + 1500
-      )
+    audioDestination.stream
+      .getTracks()
+      .forEach(
+        function(track){
+          track.stop();
+        }
+      );
+
+    const blob =
+      new Blob(
+        videoChunks,
+        {
+          type:
+            recorder.mimeType ||
+            "video/webm"
+        }
+      );
+
+    if(!blob.size){
+
+      throw new Error(
+        "The video file was empty."
+      );
+
+    }
+
+    if(currentVideoUrl){
+
+      URL.revokeObjectURL(
+        currentVideoUrl
+      );
+
+    }
+
+    currentVideoUrl =
+      URL.createObjectURL(
+        blob
+      );
+
+    downloadLink.href =
+      currentVideoUrl;
+
+    downloadLink.download =
+      "ai-command-centre-short.webm";
+
+    downloadBox.style.display =
+      "block";
+
+    status.textContent =
+      "✅ Video created successfully. Tap the download link below.";
+
+    logActivity(
+      "Video rendered successfully."
     );
 
   }catch(error){
 
     status.textContent =
-      "❌ Video error: " +
-      error.message;
+      "❌ " +
+      (
+        error &&
+        error.message
+          ? error.message
+          : "Video rendering failed."
+      );
 
     logActivity(
       "Video rendering error: " +
-      error.message
+      (
+        error &&
+        error.message
+          ? error.message
+          : "Unknown error"
+      )
     );
+
+  }finally{
+
+    button.disabled = false;
 
   }
-
-}
-
-
-/* =========================
-   COPY
-========================= */
-
-async function copyContent(){
-
-  if(!currentContent){
-
-    alert(
-      "Generate content first."
-    );
-
-    return;
-  }
-
-  try{
-
-    await navigator.clipboard.writeText(
-      currentContent
-    );
-
-    alert(
-      "Content copied."
-    );
-
-    logActivity(
-      "Content copied."
-    );
-
-  }catch(error){
-
-    alert(
-      "Could not copy content."
-    );
-
-  }
-
-}
-
-
-/* =========================
-   SAVE CONTENT
-========================= */
-
-function saveContent(){
-
-  if(!currentContent){
-
-    alert(
-      "Generate content first."
-    );
-
-    return;
-  }
-
-  localStorage.setItem(
-    "aiCommandCentreContent",
-    currentContent
-  );
-
-  document.getElementById(
-    "savedOutput"
-  ).textContent =
-    currentContent;
-
-  logActivity(
-    "Content saved locally."
-  );
-
-  alert(
-    "Content saved."
-  );
-
-}
-
-
-/* =========================
-   LOAD SAVED CONTENT
-========================= */
-
-function loadSavedContent(){
-
-  const saved =
-    localStorage.getItem(
-      "aiCommandCentreContent"
-    );
-
-  if(saved){
-
-    document.getElementById(
-      "savedOutput"
-    ).textContent =
-      saved;
-
-  }
-
-}
-
-
-/* =========================
-   CLEAR SAVED CONTENT
-========================= */
-
-function clearSavedContent(){
-
-  localStorage.removeItem(
-    "aiCommandCentreContent"
-  );
-
-  document.getElementById(
-    "savedOutput"
-  ).textContent =
-    "No saved content yet.";
-
-  logActivity(
-    "Saved content cleared."
-  );
 
 }
 
@@ -1711,81 +1969,49 @@ function clearSavedContent(){
    PLATFORM PREPARATION
 ========================= */
 
-function preparePlatform(
-  platform
-){
+function preparePlatform(platform){
 
-  if(!currentContent){
-
-    document.getElementById(
+  const status =
+    getElement(
       "platformStatus"
-    ).textContent =
-      "⚠️ Generate AI content first.";
+    );
+
+  const topic =
+    getElement(
+      "topic"
+    ).value.trim();
+
+  if(!topic){
+
+    status.textContent =
+      "⚠️ Enter a topic first.";
+
+    getElement(
+      "topic"
+    ).focus();
 
     return;
-
   }
 
-  const packageText =
-    currentContent +
-    "\n\nPrepared for: " +
+  getElement(
+    "platform"
+  ).value =
     platform;
 
-  const blob =
-    new Blob(
-      [packageText],
-      {
-        type:"text/plain"
-      }
-    );
-
-  const url =
-    URL.createObjectURL(
-      blob
-    );
-
-  const link =
-    document.createElement("a");
-
-  link.href =
-    url;
-
-  link.download =
-    platform
-      .toLowerCase()
-      .replace(/\s+/g,"-") +
-    "-content-package.txt";
-
-  document.body.appendChild(
-    link
-  );
-
-  link.click();
-
-  link.remove();
-
-  setTimeout(
-    function(){
-
-      URL.revokeObjectURL(
-        url
-      );
-
-    },
-    3000
-  );
-
-  document.getElementById(
-    "platformStatus"
-  ).textContent =
-    "✅ " +
+  status.textContent =
+    "✅ Content prepared for " +
     platform +
-    " package prepared and downloaded.";
+    ". Generate your content package to continue.";
 
   logActivity(
-    platform +
-    " package prepared."
+    "Platform selected: " +
+    platform
   );
+
+  window.scrollTo({
+    top:0,
+    behavior:"smooth"
+  });
 
 }
 
@@ -1794,67 +2020,28 @@ function preparePlatform(
    AUTOMATION
 ========================= */
 
-function startAutomation(){
+async function runAutomation(){
 
   const topic =
-    document.getElementById(
+    getElement(
       "automationTopic"
     ).value.trim();
 
   const status =
-    document.getElementById(
+    getElement(
       "automationStatus"
     );
 
   if(!topic){
 
     status.textContent =
-      "⚠️ Enter an automation topic.";
+      "⚠️ Enter an automation topic first.";
 
     return;
-
   }
-
-  if(automationRunning){
-
-    status.textContent =
-      "Automation is already running.";
-
-    return;
-
-  }
-
-  automationRunning = true;
 
   status.textContent =
-    "🟢 Automation is running.";
-
-  logActivity(
-    "Automation started."
-  );
-
-  runAutomation(topic);
-
-  automationTimer =
-    setInterval(
-      function(){
-
-        runAutomation(topic);
-
-      },
-      60000
-    );
-
-}
-
-
-async function runAutomation(topic){
-
-  if(!automationRunning){
-
-    return;
-
-  }
+    "⚙️ Automation is generating content...";
 
   try{
 
@@ -1868,54 +2055,67 @@ async function runAutomation(topic){
           },
           body:JSON.stringify({
             message:
-              "Create one high-quality short-form social media content idea about: " +
+              "Create a concise daily short-form social media content idea about: " +
               topic +
-              ". Include a hook, short script, caption and hashtags."
+              ". Include a title, hook, short script, caption and hashtags."
           })
         }
       );
 
-    const data =
-      await response.json();
+    let data;
 
-    if(
-      response.ok &&
-      data.reply
-    ){
+    try{
+      data =
+        await response.json();
+    }catch(error){
+
+      throw new Error(
+        "Automation server returned an invalid response."
+      );
+
+    }
+
+    if(!response.ok){
+
+      throw new Error(
+        data && data.error
+          ? data.error
+          : "Automation request failed."
+      );
+
+    }
+
+    if(data.reply){
 
       currentContent =
         data.reply;
 
-      document.getElementById(
+      getElement(
         "contentOutput"
       ).textContent =
         currentContent;
 
-      document.getElementById(
-        "automationStatus"
-      ).textContent =
-        "🟢 Automation generated new content.";
+      saveContent();
+
+      status.textContent =
+        "✅ Automation generated new content.";
 
       logActivity(
-        "Automation generated content."
+        "Automation generated new content."
       );
 
     }else{
 
       throw new Error(
-        data.error ||
-        "Automation request failed."
+        "Automation returned no content."
       );
 
     }
 
   }catch(error){
 
-    document.getElementById(
-      "automationStatus"
-    ).textContent =
-      "❌ Automation error: " +
-      error.message;
+    status.textContent =
+      "❌ " + error.message;
 
     logActivity(
       "Automation error: " +
@@ -1923,6 +2123,69 @@ async function runAutomation(topic){
     );
 
   }
+
+}
+
+
+function startAutomation(){
+
+  const topic =
+    getElement(
+      "automationTopic"
+    ).value.trim();
+
+  const status =
+    getElement(
+      "automationStatus"
+    );
+
+  if(!topic){
+
+    status.textContent =
+      "⚠️ Enter an automation topic first.";
+
+    getElement(
+      "automationTopic"
+    ).focus();
+
+    return;
+  }
+
+  if(automationRunning){
+
+    status.textContent =
+      "⚠️ Automation is already running.";
+
+    return;
+  }
+
+  automationRunning =
+    true;
+
+  status.textContent =
+    "🟢 Automation is running.";
+
+  logActivity(
+    "Automation started."
+  );
+
+  runAutomation();
+
+  automationTimer =
+    setInterval(
+      function(){
+
+        if(
+          automationRunning
+        ){
+
+          runAutomation();
+
+        }
+
+      },
+      60000
+    );
 
 }
 
@@ -1943,10 +2206,10 @@ function stopAutomation(){
 
   }
 
-  document.getElementById(
+  getElement(
     "automationStatus"
   ).textContent =
-    "⏹ Automation is stopped.";
+    "🔴 Automation is stopped.";
 
   logActivity(
     "Automation stopped."
@@ -1956,15 +2219,18 @@ function stopAutomation(){
 
 
 /* =========================
-   TRADING
+   TRADING MONITOR
 ========================= */
 
 function updateTradingStatus(){
 
-  document.getElementById(
-    "tradingStatus"
-  ).textContent =
-    "📊 Trading monitor is ready. No trades are being placed.";
+  const status =
+    getElement(
+      "tradingStatus"
+    );
+
+  status.textContent =
+    "📊 Trading monitor checked. No trades are placed by this Command Centre.";
 
   logActivity(
     "Trading monitor checked."
@@ -1974,24 +2240,28 @@ function updateTradingStatus(){
 
 
 /* =========================
-   CLEAR LOG
+   KEYBOARD SHORTCUT
 ========================= */
 
-function clearActivityLog(){
+document.addEventListener(
+  "keydown",
+  function(event){
 
-  const log =
-    document.getElementById(
-      "activityLog"
-    );
+    if(
+      event.key === "Enter" &&
+      event.ctrlKey
+    ){
 
-  log.innerHTML =
-    "<div>Activity log cleared.</div>";
+      generateContent();
 
-}
+    }
+
+  }
+);
 
 
 /* =========================
-   STARTUP
+   PAGE STARTUP
 ========================= */
 
 document.addEventListener(
@@ -2008,466 +2278,6 @@ document.addEventListener(
 );
 
 </script>
-<!-- =========================
-     TRADING / PAPER TRADING
-     ========================= -->
-<section id="trading-centre" style="
-  margin:30px auto;
-  max-width:1100px;
-  padding:24px;
-  border-radius:20px;
-  background:#111827;
-  color:#fff;
-  font-family:Arial,sans-serif;
-  box-shadow:0 10px 30px rgba(0,0,0,.25);
-">
 
-  <h2 style="margin-top:0;">📈 Trading Centre</h2>
-
-  <p style="color:#9ca3af;">
-    Automatic market analysis and paper trading. No real money is used.
-  </p>
-
-  <div style="
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-    gap:15px;
-    margin:20px 0;
-  ">
-
-    <div style="background:#1f2937;padding:18px;border-radius:14px;">
-      <small>Paper Balance</small>
-      <h3 id="paperBalance">₹1,00,000</h3>
-    </div>
-
-    <div style="background:#1f2937;padding:18px;border-radius:14px;">
-      <small>Total P/L</small>
-      <h3 id="totalPL">₹0</h3>
-    </div>
-
-    <div style="background:#1f2937;padding:18px;border-radius:14px;">
-      <small>Open Trades</small>
-      <h3 id="openTrades">0</h3>
-    </div>
-
-    <div style="background:#1f2937;padding:18px;border-radius:14px;">
-      <small>System Status</small>
-      <h3 id="tradingStatus">READY</h3>
-    </div>
-
-  </div>
-
-  <div style="
-    background:#1f2937;
-    padding:20px;
-    border-radius:16px;
-    margin-bottom:20px;
-  ">
-
-    <h3>🔎 Market Scanner</h3>
-
-    <div style="
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-      gap:12px;
-    ">
-
-      <button onclick="scanMarket()" style="
-        padding:14px;
-        border:0;
-        border-radius:10px;
-        cursor:pointer;
-        font-weight:bold;
-      ">
-        🔍 Scan Market
-      </button>
-
-      <button onclick="generateSignal()" style="
-        padding:14px;
-        border:0;
-        border-radius:10px;
-        cursor:pointer;
-        font-weight:bold;
-      ">
-        🤖 Generate Signal
-      </button>
-
-      <button onclick="resetPaperTrading()" style="
-        padding:14px;
-        border:0;
-        border-radius:10px;
-        cursor:pointer;
-        font-weight:bold;
-      ">
-        ♻️ Reset Account
-      </button>
-
-    </div>
-
-    <div id="marketResult" style="
-      margin-top:18px;
-      padding:18px;
-      border-radius:12px;
-      background:#0f172a;
-      color:#d1d5db;
-    ">
-      Market scanner ready.
-    </div>
-
-  </div>
-
-  <div style="
-    background:#1f2937;
-    padding:20px;
-    border-radius:16px;
-    margin-bottom:20px;
-  ">
-
-    <h3>🤖 AI Trade Signal</h3>
-
-    <div id="tradeSignal" style="
-      padding:20px;
-      border-radius:12px;
-      background:#0f172a;
-      line-height:1.7;
-    ">
-      No signal generated yet.
-    </div>
-
-  </div>
-
-  <div style="
-    background:#1f2937;
-    padding:20px;
-    border-radius:16px;
-  ">
-
-    <h3>📋 Paper Trade History</h3>
-
-    <div style="overflow-x:auto;">
-
-      <table style="
-        width:100%;
-        border-collapse:collapse;
-        min-width:600px;
-      ">
-
-        <thead>
-          <tr>
-            <th style="padding:10px;text-align:left;">Asset</th>
-            <th style="padding:10px;text-align:left;">Action</th>
-            <th style="padding:10px;text-align:left;">Entry</th>
-            <th style="padding:10px;text-align:left;">Target</th>
-            <th style="padding:10px;text-align:left;">Stop</th>
-            <th style="padding:10px;text-align:left;">Status</th>
-          </tr>
-        </thead>
-
-        <tbody id="tradeHistory">
-          <tr>
-            <td colspan="6" style="padding:15px;color:#9ca3af;">
-              No paper trades yet.
-            </td>
-          </tr>
-        </tbody>
-
-      </table>
-
-    </div>
-
-  </div>
-
-  <div style="
-    margin-top:20px;
-    padding:15px;
-    border-radius:12px;
-    background:#172033;
-    color:#9ca3af;
-    font-size:13px;
-  ">
-    ⚠️ Paper-trading prototype. Signals are simulated and are not financial
-    advice. Real-money trading is disabled.
-  </div>
-
-</section>
-
-<script>
-/* =========================
-   PAPER TRADING ENGINE
-   ========================= */
-
-let paperBalance = 100000;
-let totalPL = 0;
-let openTrades = 0;
-let tradeHistory = [];
-
-const demoAssets = [
-  "NIFTY 50",
-  "SENSEX",
-  "RELIANCE",
-  "TCS",
-  "INFY"
-];
-
-function formatINR(value) {
-  return "₹" + Number(value).toLocaleString("en-IN", {
-    maximumFractionDigits: 2
-  });
-}
-
-function updateTradingDashboard() {
-
-  document.getElementById("paperBalance").textContent =
-    formatINR(paperBalance);
-
-  document.getElementById("totalPL").textContent =
-    formatINR(totalPL);
-
-  document.getElementById("openTrades").textContent =
-    openTrades;
-
-}
-
-function scanMarket() {
-
-  const result =
-    document.getElementById("marketResult");
-
-  document.getElementById("tradingStatus").textContent =
-    "SCANNING...";
-
-  result.innerHTML =
-    "🔄 Scanning available paper-market data...";
-
-  setTimeout(() => {
-
-    const asset =
-      demoAssets[Math.floor(Math.random() * demoAssets.length)];
-
-    const trend =
-      ["BULLISH", "BEARISH", "NEUTRAL"]
-      [Math.floor(Math.random() * 3)];
-
-    result.innerHTML = `
-      <strong>Market Scan Complete</strong><br><br>
-      Asset: ${asset}<br>
-      Trend: ${trend}<br>
-      Risk: Moderate<br>
-      Mode: Paper Trading
-    `;
-
-    document.getElementById("tradingStatus").textContent =
-      "READY";
-
-  }, 900);
-}
-
-function generateSignal() {
-
-  const signalBox =
-    document.getElementById("tradeSignal");
-
-  const asset =
-    demoAssets[Math.floor(Math.random() * demoAssets.length)];
-
-  const signals = [
-    "BUY",
-    "WAIT",
-    "SELL"
-  ];
-
-  const action =
-    signals[Math.floor(Math.random() * signals.length)];
-
-  const entry =
-    Math.floor(500 + Math.random() * 2500);
-
-  const target =
-    Math.round(entry * 1.04);
-
-  const stop =
-    Math.round(entry * 0.98);
-
-  signalBox.innerHTML = `
-    <strong>Asset:</strong> ${asset}<br>
-    <strong>Signal:</strong> ${action}<br>
-    <strong>Paper Entry:</strong> ${formatINR(entry)}<br>
-    <strong>Target:</strong> ${formatINR(target)}<br>
-    <strong>Stop Loss:</strong> ${formatINR(stop)}<br>
-    <strong>Risk:</strong> Moderate<br><br>
-
-    <button onclick="executePaperTrade('${asset}', '${action}', ${entry}, ${target}, ${stop})"
-      style="
-        padding:12px 18px;
-        border:0;
-        border-radius:9px;
-        cursor:pointer;
-        font-weight:bold;
-      ">
-      ▶ Execute Paper Trade
-    </button>
-  `;
-
-}
-
-function executePaperTrade(asset, action, entry, target, stop) {
-
-  if (action === "WAIT") {
-
-    alert("Signal is WAIT. No trade opened.");
-
-    return;
-  }
-
-  openTrades++;
-
-  const trade = {
-    asset,
-    action,
-    entry,
-    target,
-    stop,
-    status: "OPEN"
-  };
-
-  tradeHistory.push(trade);
-
-  renderTradeHistory();
-  updateTradingDashboard();
-
-}
-
-function renderTradeHistory() {
-
-  const table =
-    document.getElementById("tradeHistory");
-
-  if (tradeHistory.length === 0) {
-
-    table.innerHTML = `
-      <tr>
-        <td colspan="6" style="padding:15px;color:#9ca3af;">
-          No paper trades yet.
-        </td>
-      </tr>
-    `;
-
-    return;
-  }
-
-  table.innerHTML =
-    tradeHistory.map((trade, index) => `
-
-      <tr>
-
-        <td style="padding:10px;">
-          ${trade.asset}
-        </td>
-
-        <td style="padding:10px;">
-          ${trade.action}
-        </td>
-
-        <td style="padding:10px;">
-          ${formatINR(trade.entry)}
-        </td>
-
-        <td style="padding:10px;">
-          ${formatINR(trade.target)}
-        </td>
-
-        <td style="padding:10px;">
-          ${formatINR(trade.stop)}
-        </td>
-
-        <td style="padding:10px;">
-          ${trade.status}
-          ${
-            trade.status === "OPEN"
-            ? `
-              <button
-                onclick="closePaperTrade(${index})"
-                style="
-                  margin-left:8px;
-                  padding:5px 8px;
-                  border:0;
-                  border-radius:6px;
-                  cursor:pointer;
-                "
-              >
-                Close
-              </button>
-            `
-            : ""
-          }
-        </td>
-
-      </tr>
-
-    `).join("");
-
-}
-
-function closePaperTrade(index) {
-
-  const trade =
-    tradeHistory[index];
-
-  if (!trade || trade.status !== "OPEN") {
-    return;
-  }
-
-  const simulatedResult =
-    Math.round(
-      (Math.random() - 0.35) *
-      (trade.entry * 0.04)
-    );
-
-  trade.status =
-    simulatedResult >= 0
-    ? "PROFIT"
-    : "LOSS";
-
-  totalPL += simulatedResult;
-  paperBalance += simulatedResult;
-  openTrades--;
-
-  renderTradeHistory();
-  updateTradingDashboard();
-
-}
-
-function resetPaperTrading() {
-
-  const confirmed =
-    confirm(
-      "Reset the paper-trading account to ₹1,00,000?"
-    );
-
-  if (!confirmed) {
-    return;
-  }
-
-  paperBalance = 100000;
-  totalPL = 0;
-  openTrades = 0;
-  tradeHistory = [];
-
-  document.getElementById("tradingStatus").textContent =
-    "READY";
-
-  document.getElementById("marketResult").innerHTML =
-    "Market scanner ready.";
-
-  document.getElementById("tradeSignal").innerHTML =
-    "No signal generated yet.";
-
-  renderTradeHistory();
-  updateTradingDashboard();
-
-}
-
-updateTradingDashboard();
-</script>
 </body>
 </html>
