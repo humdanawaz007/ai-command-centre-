@@ -3974,3 +3974,603 @@ window.addEventListener(
 
 </body>
 </html>
+<script>
+/* =========================
+   HOLDINGS & UNREALISED P/L
+   MOBILE-SAFE ADD-ON
+========================= */
+
+(function(){
+
+  function money(value){
+    const n = Number(value);
+
+    if(!Number.isFinite(n)){
+      return "₹—";
+    }
+
+    return "₹" + n.toLocaleString(
+      "en-IN",
+      {
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
+      }
+    );
+  }
+
+  function createHoldingsPanel(){
+
+    if(document.getElementById("holdingsPanel")){
+      return;
+    }
+
+    const headings =
+      Array.from(
+        document.querySelectorAll("h2")
+      );
+
+    const tradingHeading =
+      headings.find(function(h){
+        return h.textContent.includes(
+          "Paper Trading Command Centre"
+        );
+      });
+
+    if(!tradingHeading){
+      return;
+    }
+
+    const tradingCard =
+      tradingHeading.closest(".card");
+
+    if(!tradingCard){
+      return;
+    }
+
+    const panel =
+      document.createElement("div");
+
+    panel.id =
+      "holdingsPanel";
+
+    panel.className =
+      "trade-panel";
+
+    panel.innerHTML = `
+      <h3>📊 Holdings & P/L</h3>
+
+      <div class="trading-grid">
+
+        <div class="trading-stat">
+          <div class="trading-stat-label">
+            Total Holdings
+          </div>
+
+          <div
+            id="holdingsCount"
+            class="trading-stat-value neutral"
+          >
+            0
+          </div>
+        </div>
+
+        <div class="trading-stat">
+          <div class="trading-stat-label">
+            Unrealised P/L
+          </div>
+
+          <div
+            id="unrealisedPL"
+            class="trading-stat-value neutral"
+          >
+            ₹0.00
+          </div>
+        </div>
+
+      </div>
+
+      <div
+        id="holdingsList"
+        class="trade-history"
+      >
+        <div class="trade-row">
+          No open holdings.
+        </div>
+      </div>
+    `;
+
+    tradingCard.appendChild(panel);
+
+    renderHoldings();
+  }
+
+
+  function renderHoldings(){
+
+    const count =
+      document.getElementById(
+        "holdingsCount"
+      );
+
+    const plElement =
+      document.getElementById(
+        "unrealisedPL"
+      );
+
+    const list =
+      document.getElementById(
+        "holdingsList"
+      );
+
+    if(
+      !count ||
+      !plElement ||
+      !list
+    ){
+      return;
+    }
+
+    let trades = [];
+
+    try{
+
+      const saved =
+        localStorage.getItem(
+          "aiPaperTradingTrades"
+        );
+
+      trades =
+        saved
+          ? JSON.parse(saved)
+          : [];
+
+      if(!Array.isArray(trades)){
+        trades = [];
+      }
+
+    }catch(error){
+
+      trades = [];
+
+    }
+
+
+    const lots = {};
+
+
+    trades.forEach(function(trade){
+
+      const symbol =
+        trade.symbol;
+
+      const quantity =
+        Number(
+          trade.quantity
+        );
+
+      const price =
+        Number(
+          trade.price
+        );
+
+      if(
+        !symbol ||
+        !Number.isFinite(quantity) ||
+        !Number.isFinite(price) ||
+        quantity <= 0
+      ){
+        return;
+      }
+
+
+      if(!lots[symbol]){
+        lots[symbol] = [];
+      }
+
+
+      if(
+        trade.side === "BUY"
+      ){
+
+        lots[symbol].push({
+          quantity: quantity,
+          price: price
+        });
+
+      }
+
+
+      if(
+        trade.side === "SELL"
+      ){
+
+        let remaining =
+          quantity;
+
+        while(
+          remaining > 0 &&
+          lots[symbol].length > 0
+        ){
+
+          const lot =
+            lots[symbol][0];
+
+          const matched =
+            Math.min(
+              remaining,
+              lot.quantity
+            );
+
+          lot.quantity -=
+            matched;
+
+          remaining -=
+            matched;
+
+          if(
+            lot.quantity <= 0
+          ){
+            lots[symbol].shift();
+          }
+
+        }
+
+      }
+
+    });
+
+
+    const symbols =
+      Object.keys(lots).filter(
+        function(symbol){
+
+          return lots[symbol].some(
+            function(lot){
+              return lot.quantity > 0;
+            }
+          );
+
+        }
+      );
+
+
+    count.textContent =
+      String(symbols.length);
+
+
+    if(!symbols.length){
+
+      list.innerHTML =
+        '<div class="trade-row">' +
+        'No open holdings.' +
+        '</div>';
+
+      plElement.textContent =
+        money(0);
+
+      plElement.className =
+        "trading-stat-value neutral";
+
+      return;
+    }
+
+
+    list.innerHTML = "";
+
+
+    const selectedSymbolElement =
+      document.getElementById(
+        "tradingSymbol"
+      );
+
+    const priceElement =
+      document.getElementById(
+        "tradingPrice"
+      );
+
+
+    const selectedSymbol =
+      selectedSymbolElement
+        ? selectedSymbolElement.value
+        : null;
+
+
+    let selectedPrice =
+      null;
+
+
+    if(priceElement){
+
+      const priceText =
+        priceElement.textContent
+          .replace(/[₹,\s]/g,"");
+
+      const parsed =
+        Number(priceText);
+
+      if(
+        Number.isFinite(parsed) &&
+        parsed > 0
+      ){
+        selectedPrice =
+          parsed;
+      }
+
+    }
+
+
+    let totalPL = 0;
+
+
+    symbols.forEach(function(symbol){
+
+      let quantity = 0;
+      let invested = 0;
+
+
+      lots[symbol].forEach(
+        function(lot){
+
+          if(lot.quantity > 0){
+
+            quantity +=
+              lot.quantity;
+
+            invested +=
+              lot.quantity *
+              lot.price;
+
+          }
+
+        }
+      );
+
+
+      if(quantity <= 0){
+        return;
+      }
+
+
+      const averagePrice =
+        invested / quantity;
+
+
+      let currentPrice =
+        null;
+
+
+      if(
+        symbol === selectedSymbol &&
+        Number.isFinite(selectedPrice)
+      ){
+
+        currentPrice =
+          selectedPrice;
+
+      }
+
+
+      let unrealised =
+        null;
+
+
+      if(
+        Number.isFinite(currentPrice)
+      ){
+
+        unrealised =
+          (
+            currentPrice -
+            averagePrice
+          ) *
+          quantity;
+
+        totalPL +=
+          unrealised;
+
+      }
+
+
+      const row =
+        document.createElement(
+          "div"
+        );
+
+      row.className =
+        "trade-row";
+
+
+      const title =
+        document.createElement(
+          "div"
+        );
+
+      title.innerHTML =
+        "<strong>" +
+        symbol +
+        "</strong>";
+
+      row.appendChild(title);
+
+
+      const quantityRow =
+        document.createElement(
+          "div"
+        );
+
+      quantityRow.textContent =
+        "Quantity: " +
+        quantity;
+
+      row.appendChild(
+        quantityRow
+      );
+
+
+      const averageRow =
+        document.createElement(
+          "div"
+        );
+
+      averageRow.textContent =
+        "Average Buy: " +
+        money(averagePrice);
+
+      row.appendChild(
+        averageRow
+      );
+
+
+      const currentRow =
+        document.createElement(
+          "div"
+        );
+
+      currentRow.textContent =
+        "Current Price: " +
+        (
+          Number.isFinite(
+            currentPrice
+          )
+            ? money(currentPrice)
+            : "Refresh market data"
+        );
+
+      row.appendChild(
+        currentRow
+      );
+
+
+      const investedRow =
+        document.createElement(
+          "div"
+        );
+
+      investedRow.textContent =
+        "Invested: " +
+        money(invested);
+
+      row.appendChild(
+        investedRow
+      );
+
+
+      const plRow =
+        document.createElement(
+          "div"
+        );
+
+
+      if(
+        Number.isFinite(unrealised)
+      ){
+
+        plRow.textContent =
+          "Unrealised P/L: " +
+          money(unrealised);
+
+        if(unrealised > 0){
+
+          plRow.className =
+            "positive";
+
+        }else if(unrealised < 0){
+
+          plRow.className =
+            "negative";
+
+        }else{
+
+          plRow.className =
+            "neutral";
+
+        }
+
+      }else{
+
+        plRow.textContent =
+          "Unrealised P/L: ₹—";
+
+        plRow.className =
+          "neutral";
+
+      }
+
+
+      row.appendChild(
+        plRow
+      );
+
+      list.appendChild(
+        row
+      );
+
+    });
+
+
+    plElement.textContent =
+      money(totalPL);
+
+
+    plElement.classList.remove(
+      "positive",
+      "negative",
+      "neutral"
+    );
+
+
+    if(totalPL > 0){
+
+      plElement.classList.add(
+        "positive"
+      );
+
+    }else if(totalPL < 0){
+
+      plElement.classList.add(
+        "negative"
+      );
+
+    }else{
+
+      plElement.classList.add(
+        "neutral"
+      );
+
+    }
+
+  }
+
+
+  function start(){
+
+    createHoldingsPanel();
+
+    renderHoldings();
+
+    setInterval(
+      renderHoldings,
+      2000
+    );
+
+  }
+
+
+  if(
+    document.readyState ===
+    "loading"
+  ){
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      start
+    );
+
+  }else{
+
+    start();
+
+  }
+
+})();
+</script>
