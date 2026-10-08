@@ -4970,3 +4970,591 @@ window.addEventListener(
 
 })();
 </script>
+<script>
+/* =========================
+   PORTFOLIO DASHBOARD
+========================= */
+
+(function(){
+
+  function money(value){
+    const n = Number(value);
+
+    if(!Number.isFinite(n)){
+      return "₹—";
+    }
+
+    return "₹" + n.toLocaleString(
+      "en-IN",
+      {
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
+      }
+    );
+  }
+
+
+  function createPortfolioDashboard(){
+
+    if(
+      document.getElementById(
+        "portfolioDashboard"
+      )
+    ){
+      return;
+    }
+
+
+    const tradingHeading =
+      Array.from(
+        document.querySelectorAll("h2")
+      ).find(function(h){
+
+        return h.textContent.includes(
+          "Paper Trading Command Centre"
+        );
+
+      });
+
+
+    if(!tradingHeading){
+      return;
+    }
+
+
+    const tradingCard =
+      tradingHeading.closest(".card");
+
+
+    if(!tradingCard){
+      return;
+    }
+
+
+    const dashboard =
+      document.createElement("div");
+
+    dashboard.id =
+      "portfolioDashboard";
+
+    dashboard.className =
+      "trade-panel";
+
+
+    dashboard.innerHTML = `
+      <h3>💼 Portfolio Dashboard</h3>
+
+      <div class="trading-grid">
+
+        <div class="trading-stat">
+          <div class="trading-stat-label">
+            Available Cash
+          </div>
+
+          <div
+            id="portfolioCash"
+            class="trading-stat-value neutral"
+          >
+            ₹0.00
+          </div>
+        </div>
+
+        <div class="trading-stat">
+          <div class="trading-stat-label">
+            Invested Capital
+          </div>
+
+          <div
+            id="portfolioInvested"
+            class="trading-stat-value neutral"
+          >
+            ₹0.00
+          </div>
+        </div>
+
+        <div class="trading-stat">
+          <div class="trading-stat-label">
+            Portfolio Value
+          </div>
+
+          <div
+            id="portfolioValue"
+            class="trading-stat-value neutral"
+          >
+            ₹0.00
+          </div>
+        </div>
+
+        <div class="trading-stat">
+          <div class="trading-stat-label">
+            Total P/L
+          </div>
+
+          <div
+            id="portfolioTotalPL"
+            class="trading-stat-value neutral"
+          >
+            ₹0.00
+          </div>
+        </div>
+
+        <div class="trading-stat">
+          <div class="trading-stat-label">
+            Total P/L %
+          </div>
+
+          <div
+            id="portfolioPLPercent"
+            class="trading-stat-value neutral"
+          >
+            0.00%
+          </div>
+        </div>
+
+      </div>
+
+      <div
+        id="portfolioStatus"
+        class="status"
+      >
+        Portfolio dashboard ready.
+      </div>
+    `;
+
+
+    tradingCard.appendChild(
+      dashboard
+    );
+
+    updatePortfolioDashboard();
+
+  }
+
+
+  function updatePortfolioDashboard(){
+
+    const cashElement =
+      document.getElementById(
+        "portfolioCash"
+      );
+
+    const investedElement =
+      document.getElementById(
+        "portfolioInvested"
+      );
+
+    const valueElement =
+      document.getElementById(
+        "portfolioValue"
+      );
+
+    const totalPLElement =
+      document.getElementById(
+        "portfolioTotalPL"
+      );
+
+    const percentElement =
+      document.getElementById(
+        "portfolioPLPercent"
+      );
+
+    const statusElement =
+      document.getElementById(
+        "portfolioStatus"
+      );
+
+
+    if(
+      !cashElement ||
+      !investedElement ||
+      !valueElement ||
+      !totalPLElement ||
+      !percentElement
+    ){
+      return;
+    }
+
+
+    let cash =
+      Number(
+        localStorage.getItem(
+          "aiPaperTradingBalance"
+        )
+      );
+
+
+    if(!Number.isFinite(cash)){
+      cash = 100000;
+    }
+
+
+    let realised =
+      Number(
+        localStorage.getItem(
+          "aiPaperTradingRealisedPL"
+        )
+      );
+
+
+    if(!Number.isFinite(realised)){
+      realised = 0;
+    }
+
+
+    let trades = [];
+
+
+    try{
+
+      const saved =
+        localStorage.getItem(
+          "aiPaperTradingTrades"
+        );
+
+      trades =
+        saved
+          ? JSON.parse(saved)
+          : [];
+
+      if(!Array.isArray(trades)){
+        trades = [];
+      }
+
+    }catch(error){
+
+      trades = [];
+
+    }
+
+
+    const positions = {};
+
+
+    trades.forEach(function(trade){
+
+      const symbol =
+        String(
+          trade.symbol || ""
+        ).trim();
+
+      const side =
+        String(
+          trade.side || ""
+        ).toUpperCase();
+
+      const quantity =
+        Number(
+          trade.quantity
+        );
+
+      const price =
+        Number(
+          trade.price
+        );
+
+
+      if(
+        !symbol ||
+        !Number.isFinite(quantity) ||
+        !Number.isFinite(price) ||
+        quantity <= 0
+      ){
+        return;
+      }
+
+
+      if(!positions[symbol]){
+        positions[symbol] = [];
+      }
+
+
+      if(side === "BUY"){
+
+        positions[symbol].push({
+          quantity:quantity,
+          price:price
+        });
+
+      }
+
+
+      if(side === "SELL"){
+
+        let remaining =
+          quantity;
+
+
+        while(
+          remaining > 0 &&
+          positions[symbol].length
+        ){
+
+          const lot =
+            positions[symbol][0];
+
+
+          const matched =
+            Math.min(
+              remaining,
+              lot.quantity
+            );
+
+
+          lot.quantity -=
+            matched;
+
+          remaining -=
+            matched;
+
+
+          if(
+            lot.quantity <= 0
+          ){
+
+            positions[symbol].shift();
+
+          }
+
+        }
+
+      }
+
+    });
+
+
+    let invested = 0;
+    let marketValue = 0;
+    let unrealised = 0;
+    let openPositions = 0;
+
+
+    const selectedSymbolElement =
+      document.getElementById(
+        "tradingSymbol"
+      );
+
+
+    const priceElement =
+      document.getElementById(
+        "tradingPrice"
+      );
+
+
+    const selectedSymbol =
+      selectedSymbolElement
+        ? selectedSymbolElement.value
+        : "";
+
+
+    let selectedPrice =
+      null;
+
+
+    if(priceElement){
+
+      const text =
+        priceElement.textContent
+          .replace(/[₹,\s]/g,"");
+
+
+      const price =
+        Number(text);
+
+
+      if(
+        Number.isFinite(price) &&
+        price > 0
+      ){
+
+        selectedPrice =
+          price;
+
+      }
+
+    }
+
+
+    Object.keys(
+      positions
+    ).forEach(function(symbol){
+
+      let quantity = 0;
+      let cost = 0;
+
+
+      positions[symbol].forEach(
+        function(lot){
+
+          if(
+            lot.quantity > 0
+          ){
+
+            quantity +=
+              lot.quantity;
+
+            cost +=
+              lot.quantity *
+              lot.price;
+
+          }
+
+        }
+      );
+
+
+      if(quantity <= 0){
+        return;
+      }
+
+
+      openPositions++;
+
+
+      invested +=
+        cost;
+
+
+      if(
+        symbol === selectedSymbol &&
+        Number.isFinite(selectedPrice)
+      ){
+
+        const value =
+          quantity *
+          selectedPrice;
+
+
+        marketValue +=
+          value;
+
+
+        unrealised +=
+          value -
+          cost;
+
+      }
+
+    });
+
+
+    const portfolioValue =
+      cash +
+      marketValue;
+
+
+    const totalPL =
+      realised +
+      unrealised;
+
+
+    const plPercent =
+      (
+        totalPL /
+        100000
+      ) *
+      100;
+
+
+    cashElement.textContent =
+      money(cash);
+
+
+    investedElement.textContent =
+      money(invested);
+
+
+    valueElement.textContent =
+      money(portfolioValue);
+
+
+    totalPLElement.textContent =
+      money(totalPL);
+
+
+    percentElement.textContent =
+      (
+        plPercent >= 0
+          ? "+"
+          : ""
+      ) +
+      plPercent.toFixed(2) +
+      "%";
+
+
+    totalPLElement.className =
+      "trading-stat-value " +
+      (
+        totalPL > 0
+          ? "positive"
+          : totalPL < 0
+            ? "negative"
+            : "neutral"
+      );
+
+
+    percentElement.className =
+      "trading-stat-value " +
+      (
+        plPercent > 0
+          ? "positive"
+          : plPercent < 0
+            ? "negative"
+            : "neutral"
+      );
+
+
+    if(statusElement){
+
+      if(
+        openPositions > 0 &&
+        !Number.isFinite(selectedPrice)
+      ){
+
+        statusElement.textContent =
+          "ℹ️ Refresh market data to update portfolio value and unrealised P/L.";
+
+      }else{
+
+        statusElement.textContent =
+          "✅ Portfolio dashboard updated.";
+
+      }
+
+    }
+
+  }
+
+
+  function startPortfolio(){
+
+    createPortfolioDashboard();
+
+    updatePortfolioDashboard();
+
+
+    setInterval(
+      updatePortfolioDashboard,
+      2000
+    );
+
+  }
+
+
+  if(
+    document.readyState ===
+    "loading"
+  ){
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      startPortfolio
+    );
+
+  }else{
+
+    startPortfolio();
+
+  }
+
+})();
+</script>
