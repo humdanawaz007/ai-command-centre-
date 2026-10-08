@@ -8,246 +8,144 @@ module.exports = async function handler(req, res) {
 
   try {
 
-    if (!process.env.OPENAI_API_KEY) {
-      return res.status(500).json({
-        error: "OPENAI_API_KEY is missing in Vercel"
-      });
-    }
+    /*
+     * ============================================
+     * ENVIRONMENT CHECK
+     * ============================================
+     */
 
     const action = req.body?.action;
 
     /*
      * ============================================
-     * TEXT TO SPEECH
+     * MARKET DATA
+     *
+     * Server-side market-data request.
+     * This keeps external data requests away
+     * from the browser.
+     *
+     * PAPER TRADING ONLY.
      * ============================================
      */
 
-    if (action === "tts") {
+    if (action === "market_data") {
 
-      const text = req.body?.text;
+      const requestedSymbol =
+        String(req.body?.symbol || "NIFTY")
+          .trim()
+          .toUpperCase();
 
-      if (!text || !text.trim()) {
+      const symbolMap = {
+
+        NIFTY: "^NSEI",
+
+        SENSEX: "^BSESN",
+
+        RELIANCE: "RELIANCE.NS",
+
+        TCS: "TCS.NS",
+
+        INFY: "INFY.NS",
+
+        HDFCBANK: "HDFCBANK.NS",
+
+        ICICIBANK: "ICICIBANK.NS",
+
+        SBIN: "SBIN.NS"
+
+      };
+
+      const yahooSymbol =
+        symbolMap[requestedSymbol];
+
+      if (!yahooSymbol) {
+
         return res.status(400).json({
-          error: "Text is required for voice generation"
+          error: "Unsupported market symbol",
+          supportedSymbols:
+            Object.keys(symbolMap)
         });
+
       }
 
-      /*
-       * OpenAI speech input has a maximum length.
-       * The browser will split longer scripts into
-       * smaller pieces when we connect the renderer.
-       */
-      if (text.length > 4096) {
-        return res.status(400).json({
-          error:
-            "Text is too long for one voice request. Please split the script into smaller sections."
-        });
+      const yahooUrl =
+        "https://query1.finance.yahoo.com/v8/finance/chart/" +
+        encodeURIComponent(yahooSymbol) +
+        "?range=1d&interval=5m";
+
+      const controller =
+        new AbortController();
+
+      const timeout =
+        setTimeout(() => {
+          controller.abort();
+        }, 15000);
+
+      let response;
+
+      try {
+
+        response = await fetch(
+          yahooUrl,
+          {
+            method: "GET",
+            headers: {
+              "User-Agent":
+                "Mozilla/5.0"
+            },
+            signal: controller.signal
+          }
+        );
+
+      } finally {
+
+        clearTimeout(timeout);
+
       }
-
-      const controller = new AbortController();
-
-      const timeout = setTimeout(() => {
-        controller.abort();
-      }, 60000);
-
-      const response = await fetch(
-        "https://api.openai.com/v1/audio/speech",
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization":
-              `Bearer ${process.env.OPENAI_API_KEY}`
-          },
-
-          body: JSON.stringify({
-            model: "gpt-4o-mini-tts",
-
-            voice: "alloy",
-
-            input: text,
-
-            instructions:
-              "Speak clearly and naturally for a short-form social media video. Use an engaging, confident and conversational tone. Do not sound robotic.",
-
-            response_format: "mp3",
-
-            speed: 1.0
-          }),
-
-          signal: controller.signal
-        }
-      );
-
-      clearTimeout(timeout);
 
       if (!response.ok) {
 
-        let errorData = {};
-
-        try {
-          errorData = await response.json();
-        } catch (_) {
-          errorData = {};
-        }
-
-        return res.status(response.status).json({
+        return res.status(502).json({
           error:
-            errorData?.error?.message ||
-            "OpenAI voice generation failed"
+            "Market data provider returned an error",
+          providerStatus:
+            response.status
         });
+
       }
 
-      const audioBuffer = Buffer.from(
-        await response.arrayBuffer()
-      );
+      const data =
+        await response.json();
 
-      const audioBase64 =
-        audioBuffer.toString("base64");
+      const result =
+        data?.chart?.result?.[0];
 
-      return res.status(200).json({
-        audio: audioBase64,
-        mimeType: "audio/mpeg"
-      });
-    }
+      if (!result) {
 
+        return res.status(502).json({
+          error:
+            "No market data was returned"
+        });
 
-    /*
-     * ============================================
-     * EXISTING AI TEXT GENERATION
-     * ============================================
-     */
-
-    const message = req.body?.message;
-
-    const conversation =
-      req.body?.conversation || [];
-
-    if (!message || !message.trim()) {
-      return res.status(400).json({
-        error: "Message is required"
-      });
-    }
-
-    const input =
-      conversation.length > 0
-        ? conversation
-        : [
-            {
-              role: "user",
-              content: message
-            }
-          ];
-
-    const controller = new AbortController();
-
-    const timeout = setTimeout(() => {
-      controller.abort();
-    }, 30000);
-
-    const response = await fetch(
-      "https://api.openai.com/v1/responses",
-      {
-        method: "POST",
-
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization":
-            `Bearer ${process.env.OPENAI_API_KEY}`
-        },
-
-        body: JSON.stringify({
-          model: "gpt-6-luna",
-          input: input,
-          max_output_tokens: 1500
-        }),
-
-        signal: controller.signal
-      }
-    );
-
-    clearTimeout(timeout);
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      return res.status(response.status).json({
-        error:
-          data?.error?.message ||
-          "OpenAI request failed"
-      });
-    }
-
-    let reply = "";
-
-    if (
-      typeof data?.output_text === "string"
-    ) {
-      reply =
-        data.output_text.trim();
-    }
-
-    if (
-      !reply &&
-      Array.isArray(data?.output)
-    ) {
-
-      const parts = [];
-
-      for (
-        const item of data.output
-      ) {
-
-        if (
-          !Array.isArray(item?.content)
-        ) {
-          continue;
-        }
-
-        for (
-          const part of item.content
-        ) {
-
-          if (
-            part?.type === "output_text" &&
-            typeof part?.text === "string"
-          ) {
-            parts.push(part.text);
-          }
-        }
       }
 
-      reply =
-        parts.join("\n").trim();
-    }
+      const meta =
+        result.meta || {};
 
-    if (!reply) {
-      return res.status(500).json({
-        error:
-          "OpenAI returned no text response."
-      });
-    }
+      const timestamps =
+        result.timestamp || [];
 
-    return res.status(200).json({
-      reply: reply
-    });
+      const quote =
+        result.indicators?.quote?.[0] || {};
 
-  } catch (error) {
+      const closes =
+        quote.close || [];
 
-    if (
-      error?.name === "AbortError"
-    ) {
-      return res.status(504).json({
-        error:
-          "OpenAI request timed out"
-      });
-    }
+      const opens =
+        quote.open || [];
 
-    return res.status(500).json({
-      error:
-        error?.message ||
-        "Server error"
-    });
-  }
-};
+      const highs =
+        quote.high || [];
+
+      const lows =
+        quote.low
