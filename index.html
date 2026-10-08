@@ -4574,3 +4574,399 @@ window.addEventListener(
 
 })();
 </script>
+<script>
+/* =========================
+   HOLDINGS FIX
+========================= */
+
+(function(){
+
+  function renderRealHoldings(){
+
+    const count =
+      document.getElementById("holdingsCount");
+
+    const pl =
+      document.getElementById("unrealisedPL");
+
+    const list =
+      document.getElementById("holdingsList");
+
+    if(!count || !pl || !list){
+      return;
+    }
+
+    let trades = [];
+
+    try{
+
+      const saved =
+        localStorage.getItem(
+          "aiPaperTradingTrades"
+        );
+
+      trades =
+        saved
+          ? JSON.parse(saved)
+          : [];
+
+    }catch(error){
+
+      trades = [];
+
+    }
+
+    if(!Array.isArray(trades)){
+      trades = [];
+    }
+
+
+    const positions = {};
+
+
+    trades.forEach(function(trade){
+
+      const symbol =
+        String(trade.symbol || "").trim();
+
+      const side =
+        String(trade.side || "").toUpperCase();
+
+      const quantity =
+        Number(trade.quantity);
+
+      const price =
+        Number(trade.price);
+
+      if(
+        !symbol ||
+        !Number.isFinite(quantity) ||
+        !Number.isFinite(price) ||
+        quantity <= 0
+      ){
+        return;
+      }
+
+
+      if(!positions[symbol]){
+
+        positions[symbol] = {
+          lots:[]
+        };
+
+      }
+
+
+      if(side === "BUY"){
+
+        positions[symbol].lots.push({
+          quantity:quantity,
+          price:price
+        });
+
+      }
+
+
+      if(side === "SELL"){
+
+        let remaining =
+          quantity;
+
+        while(
+          remaining > 0 &&
+          positions[symbol].lots.length > 0
+        ){
+
+          const lot =
+            positions[symbol].lots[0];
+
+          const matched =
+            Math.min(
+              remaining,
+              lot.quantity
+            );
+
+          lot.quantity -=
+            matched;
+
+          remaining -=
+            matched;
+
+          if(lot.quantity <= 0){
+
+            positions[symbol].lots.shift();
+
+          }
+
+        }
+
+      }
+
+    });
+
+
+    const openSymbols =
+      Object.keys(positions).filter(
+        function(symbol){
+
+          return positions[symbol].lots.some(
+            function(lot){
+              return lot.quantity > 0;
+            }
+          );
+
+        }
+      );
+
+
+    count.textContent =
+      String(openSymbols.length);
+
+
+    if(!openSymbols.length){
+
+      list.innerHTML =
+        '<div class="trade-row">' +
+        'No open holdings.' +
+        '</div>';
+
+      pl.textContent =
+        "₹0.00";
+
+      pl.className =
+        "trading-stat-value neutral";
+
+      return;
+
+    }
+
+
+    list.innerHTML = "";
+
+    let totalPL = 0;
+
+
+    openSymbols.forEach(function(symbol){
+
+      const lots =
+        positions[symbol].lots;
+
+
+      let quantity = 0;
+      let invested = 0;
+
+
+      lots.forEach(function(lot){
+
+        quantity +=
+          lot.quantity;
+
+        invested +=
+          lot.quantity *
+          lot.price;
+
+      });
+
+
+      const averagePrice =
+        invested / quantity;
+
+
+      let currentPrice =
+        null;
+
+
+      const selectedSymbol =
+        document.getElementById(
+          "tradingSymbol"
+        );
+
+
+      const priceInput =
+        document.getElementById(
+          "tradePrice"
+        );
+
+
+      if(
+        selectedSymbol &&
+        selectedSymbol.value === symbol &&
+        priceInput
+      ){
+
+        const value =
+          Number(priceInput.value);
+
+        if(
+          Number.isFinite(value) &&
+          value > 0
+        ){
+
+          currentPrice =
+            value;
+
+        }
+
+      }
+
+
+      let unrealised = 0;
+
+
+      if(
+        Number.isFinite(currentPrice)
+      ){
+
+        unrealised =
+          (
+            currentPrice -
+            averagePrice
+          ) *
+          quantity;
+
+        totalPL +=
+          unrealised;
+
+      }
+
+
+      const row =
+        document.createElement(
+          "div"
+        );
+
+      row.className =
+        "trade-row";
+
+
+      row.innerHTML =
+        "<div><strong>" +
+        symbol +
+        "</strong></div>" +
+
+        "<div>Quantity: " +
+        quantity +
+        "</div>" +
+
+        "<div>Average Buy: ₹" +
+        averagePrice.toLocaleString(
+          "en-IN",
+          {
+            minimumFractionDigits:2,
+            maximumFractionDigits:2
+          }
+        ) +
+        "</div>" +
+
+        "<div>Current Price: " +
+        (
+          Number.isFinite(currentPrice)
+            ? "₹" +
+              currentPrice.toLocaleString(
+                "en-IN",
+                {
+                  minimumFractionDigits:2,
+                  maximumFractionDigits:2
+                }
+              )
+            : "Refresh market data"
+        ) +
+        "</div>" +
+
+        "<div>Invested: ₹" +
+        invested.toLocaleString(
+          "en-IN",
+          {
+            minimumFractionDigits:2,
+            maximumFractionDigits:2
+          }
+        ) +
+        "</div>" +
+
+        "<div class=\"" +
+        (
+          unrealised > 0
+            ? "positive"
+            : unrealised < 0
+              ? "negative"
+              : "neutral"
+        ) +
+        "\"><strong>" +
+
+        "Unrealised P/L: " +
+
+        (
+          Number.isFinite(currentPrice)
+            ? "₹" +
+              unrealised.toLocaleString(
+                "en-IN",
+                {
+                  minimumFractionDigits:2,
+                  maximumFractionDigits:2
+                }
+              )
+            : "₹—"
+        ) +
+
+        "</strong></div>";
+
+
+      list.appendChild(row);
+
+    });
+
+
+    pl.textContent =
+      "₹" +
+      totalPL.toLocaleString(
+        "en-IN",
+        {
+          minimumFractionDigits:2,
+          maximumFractionDigits:2
+        }
+      );
+
+
+    pl.className =
+      "trading-stat-value " +
+      (
+        totalPL > 0
+          ? "positive"
+          : totalPL < 0
+            ? "negative"
+            : "neutral"
+      );
+
+  }
+
+
+  function startHoldings(){
+
+    renderRealHoldings();
+
+    setInterval(
+      renderRealHoldings,
+      1000
+    );
+
+  }
+
+
+  if(
+    document.readyState ===
+    "loading"
+  ){
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      startHoldings
+    );
+
+  }else{
+
+    startHoldings();
+
+  }
+
+})();
+</script>
