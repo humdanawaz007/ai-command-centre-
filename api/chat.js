@@ -1,8 +1,10 @@
+
 module.exports = async function handler(req, res) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
 
   if (req.method !== "POST") {
     return res.status(405).json({
+      success: false,
       error: "Method not allowed"
     });
   }
@@ -10,16 +12,12 @@ module.exports = async function handler(req, res) {
   try {
     const action = req.body?.action || "chat";
 
-    /*
-     * =====================================================
-     * MARKET DATA
-     * =====================================================
-     */
+    // =====================================================
+    // MARKET DATA — Yahoo Finance
+    // =====================================================
 
     if (action === "market_data") {
-      const requestedSymbol = String(
-        req.body?.symbol || "NIFTY"
-      )
+      const symbol = String(req.body?.symbol || "NIFTY")
         .trim()
         .toUpperCase();
 
@@ -34,7 +32,7 @@ module.exports = async function handler(req, res) {
         SBIN: "SBIN.NS"
       };
 
-      const yahooSymbol = symbolMap[requestedSymbol];
+      const yahooSymbol = symbolMap[symbol];
 
       if (!yahooSymbol) {
         return res.status(400).json({
@@ -44,39 +42,26 @@ module.exports = async function handler(req, res) {
         });
       }
 
-      /*
-       * Try Yahoo Finance endpoints.
-       * We use two hosts so a temporary problem with one
-       * Yahoo endpoint does not automatically break the
-       * trading dashboard.
-       */
+      let marketData = null;
+      let lastError = "Market data unavailable";
 
-      const yahooUrls = [
-        "https://query1.finance.yahoo.com/v8/finance/chart/" +
-          encodeURIComponent(yahooSymbol) +
-          "?range=1d&interval=5m",
-
-        "https://query2.finance.yahoo.com/v8/finance/chart/" +
-          encodeURIComponent(yahooSymbol) +
-          "?range=1d&interval=5m"
-      ];
-
-      let data = null;
-      let lastError = null;
-
-      for (const yahooUrl of yahooUrls) {
+      for (const host of [
+        "query1.finance.yahoo.com",
+        "query2.finance.yahoo.com"
+      ]) {
         const controller = new AbortController();
-
-        const timeout = setTimeout(() => {
-          controller.abort();
-        }, 15000);
+        const timeout = setTimeout(() => controller.abort(), 15000);
 
         try {
-          const response = await fetch(yahooUrl, {
-            method: "GET",
+          const url =
+            "https://" + host +
+            "/v8/finance/chart/" +
+            encodeURIComponent(yahooSymbol) +
+            "?range=1d&interval=5m";
+
+          const response = await fetch(url, {
             headers: {
-              "User-Agent":
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+              "User-Agent": "Mozilla/5.0"
             },
             signal: controller.signal
           });
@@ -84,79 +69,46 @@ module.exports = async function handler(req, res) {
           clearTimeout(timeout);
 
           if (!response.ok) {
-            lastError =
-              "Yahoo Finance returned HTTP " +
-              response.status;
+            lastError = "Yahoo Finance HTTP " + response.status;
             continue;
           }
 
           const json = await response.json();
 
           if (json?.chart?.result?.[0]) {
-            data = json;
+            marketData = json.chart.result[0];
             break;
           }
 
-          lastError = "Yahoo Finance returned no data.";
+          lastError = "No market data returned";
         } catch (error) {
           clearTimeout(timeout);
-
-          lastError =
-            error?.name === "AbortError"
-              ? "Market data request timed out."
-              : error?.message ||
-                "Unable to connect to Yahoo Finance.";
+          lastError = error?.name === "AbortError"
+            ? "Market data request timed out"
+            : "Unable to connect to Yahoo Finance";
         }
       }
 
-      if (!data) {
+      if (!marketData) {
         return res.status(502).json({
           success: false,
-          error:
-            lastError ||
-            "Unable to retrieve market data right now.",
-          symbol: requestedSymbol
+          error: lastError,
+          symbol
         });
       }
 
-      const result =
-        data?.chart?.result?.[0];
-
-      const meta =
-        result?.meta || {};
-
-      const timestamps =
-        result?.timestamp || [];
-
-      const quote =
-        result?.indicators?.quote?.[0] || {};
-
-      const opens =
-        quote.open || [];
-
-      const highs =
-        quote.high || [];
-
-      const lows =
-        quote.low || [];
-
-      const closes =
-        quote.close || [];
-
-      const volumes =
-        quote.volume || [];
-
-      /*
-       * Find latest valid closing price.
-       */
+      const meta = marketData.meta || {};
+      const timestamps = marketData.timestamp || [];
+      const quote = marketData.indicators?.quote?.[0] || {};
+      const closes = quote.close || [];
+      const opens = quote.open || [];
+      const highs = quote.high || [];
+      const lows = quote.low || [];
+      const volumes = quote.volume || [];
 
       let latestIndex = -1;
 
-      for (
-        let i = closes.length - 1;
-        i >= 0;
-        i--
-      ) {
+      for (let i = closes.length - 1; i >= 0; i--) {
         if (
           typeof closes[i] === "number" &&
           Number.isFinite(closes[i]) &&
@@ -167,258 +119,97 @@ module.exports = async function handler(req, res) {
         }
       }
 
-      /*
-       * Fallback to Yahoo regularMarketPrice if the
-       * intraday candle array is unavailable.
-       */
+      let price = latestIndex >= 0
+        ? Number(closes[latestIndex])
+        : Number(meta.regularMarketPrice);
 
-      let price = null;
-
-      if (latestIndex >= 0) {
-        price = Number(
-          closes[latestIndex]
-        );
+      if (!Number.isFinite(price) || price <= 0) {
+        price = Number(meta.regularMarketPrice);
       }
 
-      if (
-        !Number.isFinite(price) ||
-        price <= 0
-      ) {
-        const regularMarketPrice =
-          Number(
-            meta.regularMarketPrice
-          );
-
-        if (
-          Number.isFinite(
-            regularMarketPrice
-          ) &&
-          regularMarketPrice > 0
-        ) {
-          price =
-            regularMarketPrice;
-        }
-      }
-
-      if (
-        !Number.isFinite(price) ||
-        price <= 0
-      ) {
+      if (!Number.isFinite(price) || price <= 0) {
         return res.status(502).json({
           success: false,
-          error:
-            "Yahoo Finance returned no valid price.",
-          symbol: requestedSymbol
+          error: "No valid market price returned",
+          symbol
         });
       }
 
-      /*
-       * Previous close
-       */
+      let previousClose = Number(
+        meta.previousClose ?? meta.chartPreviousClose
+      );
 
-      let previousClose =
-        Number(
-          meta.previousClose
-        );
-
-      if (
-        !Number.isFinite(previousClose) ||
-        previousClose <= 0
-      ) {
-        previousClose =
-          Number(
-            meta.chartPreviousClose
-          );
-      }
-
-      if (
-        !Number.isFinite(previousClose) ||
-        previousClose <= 0
-      ) {
+      if (!Number.isFinite(previousClose) || previousClose <= 0) {
         previousClose = price;
       }
 
-      const change =
-        price - previousClose;
-
-      const changePercent =
-        previousClose !== 0
-          ? (change / previousClose) * 100
-          : 0;
-
-      /*
-       * Build recent candles.
-       */
-
       const candles = [];
 
-      if (latestIndex >= 0) {
-        const start =
-          Math.max(
-            0,
-            closes.length - 100
-          );
-
-        for (
-          let i = start;
-          i < closes.length;
-          i++
+      for (
+        let i = Math.max(0, closes.length - 100);
+        i < closes.length;
+        i++
+      ) {
+        if (
+          typeof closes[i] !== "number" ||
+          !Number.isFinite(closes[i])
         ) {
-          if (
-            typeof closes[i] !== "number" ||
-            !Number.isFinite(closes[i])
-          ) {
-            continue;
-          }
-
-          candles.push({
-            timestamp:
-              typeof timestamps[i] ===
-              "number"
-                ? timestamps[i]
-                : null,
-
-            open:
-              typeof opens[i] ===
-              "number"
-                ? opens[i]
-                : null,
-
-            high:
-              typeof highs[i] ===
-              "number"
-                ? highs[i]
-                : null,
-
-            low:
-              typeof lows[i] ===
-              "number"
-                ? lows[i]
-                : null,
-
-            close:
-              Number(closes[i]),
-
-            volume:
-              typeof volumes[i] ===
-              "number"
-                ? volumes[i]
-                : null
-          });
+          continue;
         }
+
+        candles.push({
+          timestamp: timestamps[i] ?? null,
+          open: opens[i] ?? null,
+          high: highs[i] ?? null,
+          low: lows[i] ?? null,
+          close: closes[i],
+          volume: volumes[i] ?? null
+        });
       }
 
       return res.status(200).json({
         success: true,
-
-        symbol:
-          requestedSymbol,
-
-        yahooSymbol:
-          yahooSymbol,
-
-        currency:
-          meta.currency || "INR",
-
-        exchange:
-          meta.exchangeName ||
-          meta.fullExchangeName ||
-          "N/A",
-
-        marketState:
-          meta.marketState ||
-          "UNKNOWN",
-
-        price:
-          Number(price),
-
-        currentPrice:
-          Number(price),
-
-        previousClose:
-          Number(previousClose),
-
-        change:
-          Number(change),
-
-        changePercent:
-          Number(changePercent),
-
-        open:
-          latestIndex >= 0 &&
-          typeof opens[latestIndex] ===
-            "number"
-            ? opens[latestIndex]
-            : null,
-
-        high:
-          latestIndex >= 0 &&
-          typeof highs[latestIndex] ===
-            "number"
-            ? highs[latestIndex]
-            : null,
-
-        low:
-          latestIndex >= 0 &&
-          typeof lows[latestIndex] ===
-            "number"
-            ? lows[latestIndex]
-            : null,
-
-        volume:
-          latestIndex >= 0 &&
-          typeof volumes[latestIndex] ===
-            "number"
-            ? volumes[latestIndex]
-            : null,
-
-        timestamp:
-          latestIndex >= 0 &&
-          typeof timestamps[latestIndex] ===
-            "number"
-            ? timestamps[latestIndex]
-            : Math.floor(
-                Date.now() / 1000
-              ),
-
-        candles:
-          candles,
-
-        dataSource:
-          "Yahoo Finance",
-
-        paperTradingOnly:
-          true,
-
-        fetchedAt:
-          new Date().toISOString()
+        symbol,
+        yahooSymbol,
+        currency: meta.currency || "INR",
+        exchange: meta.exchangeName || meta.fullExchangeName || "N/A",
+        marketState: meta.marketState || "UNKNOWN",
+        price,
+        currentPrice: price,
+        previousClose,
+        change: price - previousClose,
+        changePercent: previousClose
+          ? ((price - previousClose) / previousClose) * 100
+          : 0,
+        open: latestIndex >= 0 ? opens[latestIndex] ?? null : null,
+        high: latestIndex >= 0 ? highs[latestIndex] ?? null : null,
+        low: latestIndex >= 0 ? lows[latestIndex] ?? null : null,
+        volume: latestIndex >= 0 ? volumes[latestIndex] ?? null : null,
+        timestamp: latestIndex >= 0
+          ? timestamps[latestIndex] ?? null
+          : Math.floor(Date.now() / 1000),
+        candles,
+        dataSource: "Yahoo Finance",
+        paperTradingOnly: true,
+        fetchedAt: new Date().toISOString()
       });
     }
 
-    /*
-     * =====================================================
-     * PAPER TRADING
-     * =====================================================
-     */
+    // =====================================================
+    // PAPER TRADING — SIMULATED ONLY, NO REAL ORDERS
+    // =====================================================
 
     if (action === "paper_trade") {
-      const symbol = String(
-        req.body?.symbol || ""
-      )
+      const symbol = String(req.body?.symbol || "")
         .trim()
         .toUpperCase();
 
-      const side = String(
-        req.body?.side || ""
-      )
+      const side = String(req.body?.side || "")
         .trim()
         .toUpperCase();
 
-      const quantity =
-        Number(req.body?.quantity);
-
-      const price =
-        Number(req.body?.price);
+      const quantity = Number(req.body?.quantity);
+      const price = Number(req.body?.price);
 
       if (!symbol) {
         return res.status(400).json({
@@ -427,204 +218,109 @@ module.exports = async function handler(req, res) {
         });
       }
 
-      if (
-        side !== "BUY" &&
-        side !== "SELL"
-      ) {
+      if (side !== "BUY" && side !== "SELL") {
         return res.status(400).json({
           success: false,
-          error:
-            "Side must be BUY or SELL"
+          error: "Side must be BUY or SELL"
         });
       }
 
-      if (
-        !Number.isFinite(quantity) ||
-        quantity <= 0
-      ) {
+      if (!Number.isFinite(quantity) || quantity <= 0) {
         return res.status(400).json({
           success: false,
-          error:
-            "Quantity must be greater than zero"
+          error: "Quantity must be greater than zero"
         });
       }
 
-      if (
-        !Number.isFinite(price) ||
-        price <= 0
-      ) {
+      if (!Number.isFinite(price) || price <= 0) {
         return res.status(400).json({
           success: false,
-          error:
-            "Price must be greater than zero"
+          error: "Price must be greater than zero"
         });
       }
-
-      const orderValue =
-        quantity * price;
-
-      const orderId =
-        "PAPER-" +
-        Date.now() +
-        "-" +
-        Math.random()
-          .toString(36)
-          .slice(2, 8)
-          .toUpperCase();
 
       return res.status(200).json({
         success: true,
-
         paperTrade: true,
-
-        realTradeExecuted:
-          false,
-
+        realTradeExecuted: false,
         order: {
-          orderId:
-            orderId,
-
-          symbol:
-            symbol,
-
-          side:
-            side,
-
-          quantity:
-            quantity,
-
-          price:
-            price,
-
-          value:
-            orderValue,
-
-          status:
-            "SIMULATED",
-
-          createdAt:
-            new Date().toISOString()
+          orderId: "PAPER-" + Date.now(),
+          symbol,
+          side,
+          quantity,
+          price,
+          value: quantity * price,
+          status: "SIMULATED",
+          createdAt: new Date().toISOString()
         },
-
-        message:
-          "Paper trade simulated successfully. No real order was placed."
+        message: "Simulated trade only. No real order was placed."
       });
     }
 
-    /*
-     * =====================================================
-     * TEXT TO SPEECH
-     * =====================================================
-     */
+    // =====================================================
+    // OPTIONAL OPENAI TEXT-TO-SPEECH ENDPOINT
+    // The browser voiceover does not require this endpoint.
+    // =====================================================
 
     if (action === "tts") {
-      const apiKey =
-        process.env.OPENAI_API_KEY;
+      const apiKey = process.env.OPENAI_API_KEY;
 
       if (!apiKey) {
-        return res.status(500).json({
+        return res.status(503).json({
           success: false,
-          error:
-            "OPENAI_API_KEY is missing in Vercel"
+          error: "OpenAI voice is unavailable. Use browser voiceover instead."
         });
       }
 
-      const text =
-        String(
-          req.body?.text || ""
-        ).trim();
+      const text = String(req.body?.text || "").trim();
 
       if (!text) {
         return res.status(400).json({
           success: false,
-          error:
-            "Text is required for voice generation"
+          error: "Text is required for voice generation"
         });
       }
 
       if (text.length > 4096) {
         return res.status(400).json({
           success: false,
-          error:
-            "Text is too long for one voice request"
+          error: "Text is too long for one voice request"
         });
       }
 
-      const ttsModel =
-        process.env.OPENAI_TTS_MODEL ||
-        "gpt-4o-mini-tts";
-
-      const ttsVoice =
-        process.env.OPENAI_TTS_VOICE ||
-        "alloy";
-
-      const controller =
-        new AbortController();
-
-      const timeout =
-        setTimeout(() => {
-          controller.abort();
-        }, 60000);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 60000);
 
       let response;
 
       try {
-        response =
-          await fetch(
-            "https://api.openai.com/v1/audio/speech",
-            {
-              method: "POST",
-
-              headers: {
-                "Content-Type":
-                  "application/json",
-
-                "Authorization":
-                  "Bearer " + apiKey
-              },
-
-              body: JSON.stringify({
-                model:
-                  ttsModel,
-
-                voice:
-                  ttsVoice,
-
-                input:
-                  text,
-
-                instructions:
-                  "Speak clearly and naturally for a short-form social media video. Use an engaging, confident and conversational tone. Do not sound robotic.",
-
-                response_format:
-                  "mp3",
-
-                speed:
-                  1.0
-              }),
-
-              signal:
-                controller.signal
-            }
-          );
+        response = await fetch(
+          "https://api.openai.com/v1/audio/speech",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": "Bearer " + apiKey
+            },
+            body: JSON.stringify({
+              model: process.env.OPENAI_TTS_MODEL || "gpt-4o-mini-tts",
+              voice: process.env.OPENAI_TTS_VOICE || "alloy",
+              input: text,
+              response_format: "mp3"
+            }),
+            signal: controller.signal
+          }
+        );
       } catch (error) {
         clearTimeout(timeout);
 
-        if (
-          error?.name ===
-          "AbortError"
-        ) {
-          return res.status(504).json({
-            success: false,
-            error:
-              "Voice generation timed out"
-          });
-        }
-
-        return res.status(502).json({
+        return res.status(
+          error?.name === "AbortError" ? 504 : 502
+        ).json({
           success: false,
-          error:
-            "Unable to connect to OpenAI voice service"
+          error: error?.name === "AbortError"
+            ? "Voice generation timed out"
+            : "Unable to connect to OpenAI voice service"
         });
       }
 
@@ -634,198 +330,153 @@ module.exports = async function handler(req, res) {
         let errorData = {};
 
         try {
-          errorData =
-            await response.json();
-        } catch (_) {
-          errorData = {};
-        }
+          errorData = await response.json();
+        } catch (_) {}
 
-        return res.status(
-          response.status
-        ).json({
+        return res.status(response.status).json({
           success: false,
-          error:
-            errorData?.error?.message ||
+          error: errorData?.error?.message ||
             "OpenAI voice generation failed"
         });
       }
 
-      const audioBuffer =
-        Buffer.from(
-          await response.arrayBuffer()
-        );
+      const audioBuffer = Buffer.from(
+        await response.arrayBuffer()
+      );
 
       return res.status(200).json({
         success: true,
-
-        audio:
-          audioBuffer.toString(
-            "base64"
-          ),
-
-        mimeType:
-          "audio/mpeg",
-
-        model:
-          ttsModel,
-
-        voice:
-          ttsVoice
+        audio: audioBuffer.toString("base64"),
+        mimeType: "audio/mpeg",
+        model: process.env.OPENAI_TTS_MODEL || "gpt-4o-mini-tts",
+        voice: process.env.OPENAI_TTS_VOICE || "alloy"
       });
     }
 
-    /*
-     * =====================================================
-     * NORMAL AI CHAT
-     * =====================================================
-     */
+    // =====================================================
+    // NORMAL AI CHAT — GOOGLE GEMINI
+    // =====================================================
 
-    const apiKey =
-      process.env.OPENAI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
       return res.status(500).json({
         success: false,
-        error:
-          "OPENAI_API_KEY is missing in Vercel"
+        error: "GEMINI_API_KEY is missing in Vercel"
       });
     }
 
-    const message =
-      typeof req.body?.message ===
-      "string"
-        ? req.body.message.trim()
-        : "";
+    const message = typeof req.body?.message === "string"
+      ? req.body.message.trim()
+      : "";
 
-    const conversation =
-      Array.isArray(
-        req.body?.conversation
-      )
-        ? req.body.conversation
-        : [];
+    const conversation = Array.isArray(req.body?.conversation)
+      ? req.body.conversation
+      : [];
 
-    if (
-      !message &&
-      conversation.length === 0
-    ) {
+    if (!message && conversation.length === 0) {
       return res.status(400).json({
         success: false,
-        error:
-          "Message is required"
+        error: "Message is required"
       });
     }
 
-    let input = [];
+    let contents = conversation
+      .filter((item) =>
+        item &&
+        typeof item.role === "string" &&
+        typeof item.content === "string" &&
+        item.content.trim()
+      )
+      .map((item) => ({
+        role: item.role === "assistant" || item.role === "model"
+          ? "model"
+          : "user",
+        parts: [{ text: item.content.trim() }]
+      }));
 
-    if (conversation.length > 0) {
-      input =
-        conversation
-          .filter((item) => {
-            return (
-              item &&
-              typeof item ===
-                "object" &&
-              typeof item.role ===
-                "string" &&
-              typeof item.content ===
-                "string" &&
-              item.content.trim()
-            );
-          })
-          .map((item) => ({
-            role:
-              item.role ===
-              "assistant"
-                ? "assistant"
-                : "user",
-
-            content:
-              item.content.trim()
-          }));
+    if (contents.length === 0 && message) {
+      contents = [{
+        role: "user",
+        parts: [{ text: message }]
+      }];
     }
 
-    if (
-      input.length === 0 &&
-      message
-    ) {
-      input = [
-        {
-          role: "user",
-          content: message
-        }
+    contents = contents.slice(-30);
+
+    // Gemini conversations must start with a user message.
+    while (contents.length && contents[0].role !== "user") {
+      contents.shift();
+    }
+
+    // Gemini does not accept consecutive messages with the same role.
+    const normalizedContents = [];
+
+    for (const item of contents) {
+      const previous = normalizedContents[
+        normalizedContents.length - 1
       ];
+
+      if (previous && previous.role === item.role) {
+        previous.parts[0].text += "\n\n" + item.parts[0].text;
+      } else {
+        normalizedContents.push({
+          role: item.role,
+          parts: [{ text: item.parts[0].text }]
+        });
+      }
     }
 
-    if (input.length > 30) {
-      input =
-        input.slice(-30);
+    if (!normalizedContents.length) {
+      return res.status(400).json({
+        success: false,
+        error: "Please send a new message"
+      });
     }
 
-    const textModel =
-      process.env.OPENAI_TEXT_MODEL ||
-      "gpt-4.1-mini";
-
-    const controller =
-      new AbortController();
-
-    const timeout =
-      setTimeout(() => {
-        controller.abort();
-      }, 60000);
+    const model = "gemini-2.5-flash";
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 60000);
 
     let response;
 
     try {
-      response =
-        await fetch(
-          "https://api.openai.com/v1/responses",
-          {
-            method: "POST",
-
-            headers: {
-              "Content-Type":
-                "application/json",
-
-              "Authorization":
-                "Bearer " + apiKey
+      response = await fetch(
+        "https://generativelanguage.googleapis.com/v1beta/models/" +
+          model +
+          ":generateContent?key=" +
+          encodeURIComponent(apiKey),
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            systemInstruction: {
+              parts: [{
+                text:
+                  "You are the AI Command Centre assistant. Help users create useful, accurate and practical content. For social media, provide ready-to-use titles, hooks, scripts, captions, calls to action and hashtags when relevant. For trading or investments, provide educational information only. Never claim to place real trades. Be clear about uncertainty."
+              }]
             },
-
-            body: JSON.stringify({
-              model:
-                textModel,
-
-              input:
-                input,
-
-              instructions:
-                "You are the AI Command Centre assistant. Help the user create useful, accurate and practical content. When asked to create social media content, provide clear ready-to-use output. When discussing trading or investments, provide educational information only and never execute real financial transactions.",
-
-              max_output_tokens:
-                2000
-            }),
-
-            signal:
-              controller.signal
-          }
-        );
+            contents: normalizedContents,
+            generationConfig: {
+              maxOutputTokens: 2000,
+              temperature: 0.7
+            }
+          }),
+          signal: controller.signal
+        }
+      );
     } catch (error) {
       clearTimeout(timeout);
 
-      if (
-        error?.name ===
-        "AbortError"
-      ) {
-        return res.status(504).json({
-          success: false,
-          error:
-            "OpenAI request timed out"
-        });
-      }
-
-      return res.status(502).json({
+      return res.status(
+        error?.name === "AbortError" ? 504 : 502
+      ).json({
         success: false,
-        error:
-          "Unable to connect to OpenAI"
+        error: error?.name === "AbortError"
+          ? "Gemini request timed out. Please try again."
+          : "Unable to connect to Gemini"
       });
     }
 
@@ -834,106 +485,53 @@ module.exports = async function handler(req, res) {
     let data;
 
     try {
-      data =
-        await response.json();
+      data = await response.json();
     } catch (_) {
       return res.status(502).json({
         success: false,
-        error:
-          "OpenAI returned invalid JSON"
+        error: "Gemini returned invalid JSON"
       });
     }
 
     if (!response.ok) {
-      return res.status(
-        response.status
-      ).json({
+      return res.status(response.status).json({
         success: false,
-        error:
-          data?.error?.message ||
-          "OpenAI request failed"
+        error: data?.error?.message || "Gemini request failed"
       });
     }
 
-    let reply = "";
-
-    if (
-      typeof data?.output_text ===
-      "string"
-    ) {
-      reply =
-        data.output_text.trim();
-    }
-
-    if (
-      !reply &&
-      Array.isArray(
-        data?.output
+    const reply = (
+      data?.candidates?.[0]?.content?.parts || []
+    )
+      .map((part) =>
+        typeof part?.text === "string" ? part.text : ""
       )
-    ) {
-      const parts = [];
-
-      for (
-        const item of data.output
-      ) {
-        if (
-          !Array.isArray(
-            item?.content
-          )
-        ) {
-          continue;
-        }
-
-        for (
-          const part of
-            item.content
-        ) {
-          if (
-            part?.type ===
-              "output_text" &&
-            typeof part?.text ===
-              "string"
-          ) {
-            parts.push(
-              part.text
-            );
-          }
-        }
-      }
-
-      reply =
-        parts.join("\n").trim();
-    }
+      .join("\n")
+      .trim();
 
     if (!reply) {
-      return res.status(500).json({
+      const reason = data?.promptFeedback?.blockReason;
+
+      return res.status(502).json({
         success: false,
-        error:
-          "OpenAI returned no text response"
+        error: reason
+          ? "Gemini could not answer this prompt: " + reason
+          : "Gemini returned no text. Please try again."
       });
     }
 
     return res.status(200).json({
       success: true,
-
-      reply:
-        reply,
-
-      model:
-        textModel
+      reply,
+      model
     });
 
   } catch (error) {
-    console.error(
-      "AI Command Centre API Error:",
-      error
-    );
+    console.error("AI Command Centre API Error:", error);
 
     return res.status(500).json({
       success: false,
-      error:
-        error?.message ||
-        "Server error"
+      error: "Server error"
     });
   }
 };
