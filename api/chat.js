@@ -434,7 +434,7 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    const model = "gemini-2.5-flash";
+    const model = "gemini-3.1-flash-lite";
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 60000);
 
