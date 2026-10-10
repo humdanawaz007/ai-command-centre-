@@ -10,39 +10,39 @@
 :root{--bg:#0b1020;--card:#141e32;--line:#2a3853;--text:#edf3ff;--muted:#9cacc7;--blue:#718cff;--green:#42d6a4;--red:#ff7887}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:15px Arial,sans-serif;line-height:1.5}
-header{padding:20px 16px;background:#111a2c;border-bottom:1px solid var(--line)}
-h1{font-size:23px;margin:0}h2{font-size:18px;margin:0 0 8px}p{margin:8px 0}
-.muted,small{color:var(--muted)}
-main{max-width:1000px;margin:auto;padding:14px}
+header{padding:18px 14px;background:#111a2c;border-bottom:1px solid var(--line)}
+h1{font-size:22px;margin:0}h2{font-size:18px;margin:0 0 8px}h3{font-size:15px}
+p{margin:8px 0}.muted,small{color:var(--muted)}
+main{max-width:1000px;margin:auto;padding:12px}
 nav{display:flex;gap:7px;overflow-x:auto;padding:12px 0}
-button{border:1px solid var(--line);border-radius:9px;padding:10px 13px;background:#202d47;color:white;font-weight:bold;cursor:pointer}
+button{border:1px solid var(--line);border-radius:9px;padding:10px 12px;background:#202d47;color:white;font-weight:bold;cursor:pointer}
 nav button{white-space:nowrap}
 button.active,button.primary{background:var(--blue);border-color:var(--blue)}
-button:disabled{opacity:.5}
+button:disabled{opacity:.55;cursor:wait}
 .view{display:none}.view.active{display:block}
-.card{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:16px;margin:10px 0}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:15px;margin:10px 0}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 label{display:block;color:var(--muted);font-size:13px;margin:12px 0 5px}
 input,select,textarea{width:100%;padding:11px;background:#0b1426;color:white;border:1px solid var(--line);border-radius:8px;font:inherit}
 textarea{min-height:110px;resize:vertical}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.result{white-space:pre-wrap;overflow-wrap:anywhere;background:#0b1426;border:1px solid var(--line);border-radius:9px;padding:12px;margin-top:12px;min-height:48px}
+.result{white-space:pre-wrap;overflow-wrap:anywhere;background:#0b1426;border:1px solid var(--line);border-radius:9px;padding:12px;margin-top:12px;min-height:45px}
 .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.stat{background:var(--card);border:1px solid var(--line);padding:12px;border-radius:10px}
-.stat strong{display:block;font-size:20px}
+.stat{background:var(--card);border:1px solid var(--line);padding:11px;border-radius:10px}
+.stat strong{display:block;font-size:19px}
 .item{border-bottom:1px solid var(--line);padding:12px 0;overflow-wrap:anywhere}
 .item:last-child{border:0}
-.good{color:var(--green)}.bad{color:var(--red)}
 .notice{font-size:12px;color:var(--muted);padding:10px;background:#1b2940;border-radius:8px;margin-top:12px}
-canvas{width:100%;max-width:300px;display:block;margin:12px auto;background:#080d18}
+canvas{width:100%;max-width:360px;aspect-ratio:9/16;display:block;margin:12px auto;background:#080d18;border-radius:10px}
+.scene-nav{display:flex;justify-content:space-between;align-items:center;gap:10px}
 footer{text-align:center;color:var(--muted);padding:24px 8px;font-size:12px}
-@media(max-width:600px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,minmax(0,1fr))}.stat{padding:9px}.stat strong{font-size:17px}}
+@media(max-width:600px){.grid{grid-template-columns:1fr}.stat{padding:8px}.stat strong{font-size:16px}}
 </style>
 </head>
 <body>
 <header>
 <h1>🤖 AI Command Centre</h1>
-<p class="muted">Create · Organise · Market Monitor · Paper Trading</p>
+<p class="muted">Content · Video Studio · Markets · Paper Trading</p>
 <div id="status">Checking server connection…</div>
 </header>
 <main>
@@ -58,14 +58,14 @@ footer{text-align:center;color:var(--muted);padding:24px 8px;font-size:12px}
 
 <section id="home" class="view active">
 <div class="stats">
-<div class="stat"><span class="muted">Saved</span><strong id="savedCount">0</strong></div>
+<div class="stat"><span class="muted">Saved items</span><strong id="savedCount">0</strong></div>
 <div class="stat"><span class="muted">Activities</span><strong id="activityCount">0</strong></div>
-<div class="stat"><span class="muted">Mode</span><strong>Paper</strong></div>
+<div class="stat"><span class="muted">Mode</span><strong>Paper only</strong></div>
 </div>
 <div class="card">
 <h2>AI Assistant</h2>
-<label for="question">Ask something</label>
-<textarea id="question" placeholder="Ask for ideas, scripts, explanations or research…"></textarea>
+<label for="question">Your question</label>
+<textarea id="question" placeholder="Ask for ideas, scripts or explanations…"></textarea>
 <button class="primary" id="ask">Ask AI</button>
 <div class="result" id="answer">Your answer will appear here.</div>
 </div>
@@ -74,10 +74,10 @@ footer{text-align:center;color:var(--muted);padding:24px 8px;font-size:12px}
 <div class="actions">
 <button data-go="content">Generate Content</button>
 <button data-go="video">Video Studio</button>
-<button data-go="markets">Check Markets</button>
-<button data-go="trading">Paper Trade</button>
+<button data-go="markets">Market Monitor</button>
+<button data-go="trading">Paper Trading</button>
 </div>
-<p class="notice">AI requests require working API credentials and available API credits. No real trades or social-media posts are made by this dashboard.</p>
+<p class="notice">AI requests need working API credentials and available credits. Social publishing is not connected. No real trades are placed.</p>
 </div>
 <div class="card"><h2>Recent Activity</h2><div id="recent"></div></div>
 </section>
@@ -85,30 +85,49 @@ footer{text-align:center;color:var(--muted);padding:24px 8px;font-size:12px}
 <section id="content" class="view">
 <div class="card">
 <h2>AI Content Generator</h2>
-<label for="topic">Topic</label><input id="topic" placeholder="Example: interesting science facts">
+<label for="topic">Topic</label><input id="topic" placeholder="Interesting facts about space">
 <label for="platform">Platform</label>
 <select id="platform"><option>YouTube Shorts</option><option>Instagram Reels</option><option>TikTok</option><option>Facebook Reels</option><option>Snapchat Spotlight</option></select>
 <label for="duration">Length</label>
 <select id="duration"><option>15 seconds</option><option selected>30 seconds</option><option>45 seconds</option><option>60 seconds</option></select>
-<button class="primary" id="generate">Generate Package</button>
-<div class="result" id="contentResult">Generated title, hook, script, caption, hashtags and scene ideas will appear here.</div>
-<div class="actions"><button id="save">Save Content</button><button id="copy">Copy Content</button><button id="toVideo">Use in Video Studio</button></div>
+<button class="primary" id="generate">Generate Content Package</button>
+<div class="result" id="contentResult">Generated content will appear here.</div>
+<div class="actions"><button id="save">Save</button><button id="copy">Copy</button><button id="toVideo">Send to Video Studio</button></div>
 </div>
 </section>
 
 <section id="video" class="view">
 <div class="card">
 <h2>Video Studio</h2>
-<label for="vtitle">Video title</label><input id="vtitle" placeholder="My short video">
-<label for="script">Video script</label><textarea id="script" placeholder="Paste your script here."></textarea>
-<button class="primary" id="preview">Preview Vertical Video</button>
+<p class="muted">Create a vertical text video with separate scenes. Voiceover uses your browser's speech engine when available.</p>
+<label for="vtitle">Video title</label><input id="vtitle" placeholder="5 Amazing Facts About Space">
+<label for="script">Script and scenes</label>
+<textarea id="script" placeholder="Scene 1 text here.
+
+Scene 2 text here.
+
+Scene 3 text here."></textarea>
+<label for="theme">Background theme</label>
+<select id="theme"><option value="blue">Midnight blue</option><option value="green">Forest green</option><option value="sunset">Sunset</option><option value="black">Black</option></select>
+<div class="actions">
+<button class="primary" id="prepare">Prepare Scenes</button>
+<button id="previous">Previous</button>
+<button id="next">Next Scene</button>
+</div>
+<div class="scene-nav"><span class="muted" id="sceneLabel">Scene 0</span><span class="muted">Vertical 9:16</span></div>
 <canvas id="canvas" width="360" height="640"></canvas>
-<div id="videoStatus" class="muted">Preview only. This does not generate AI footage or narration.</div>
+<div class="actions">
+<button class="primary" id="download">Render & Download</button>
+<button id="speak">▶ Play Voiceover</button>
+<button id="stopVoice">■ Stop Voiceover</button>
+</div>
+<div class="result" id="videoStatus">Enter a title and script, then tap Prepare Scenes.</div>
+<p class="notice">Video downloads use WebM where supported and contain text scenes without narration. Voiceover plays separately. MP4 export and AI-generated footage are not included in this version.</p>
 </div>
 </section>
 
 <section id="saved" class="view">
-<div class="card"><h2>Saved Content</h2><div id="savedList"></div></div>
+<div class="card"><h2>Saved Content</h2><p class="muted">Saved on this device and browser.</p><div id="savedList"></div></div>
 </section>
 
 <section id="markets" class="view">
@@ -122,23 +141,23 @@ footer{text-align:center;color:var(--muted);padding:24px 8px;font-size:12px}
 <option value="ICICIBANK">ICICI Bank</option><option value="SBIN">SBI</option>
 </select>
 <button class="primary" id="market">Fetch Market Data</button>
-<div class="result" id="marketResult">Select an instrument.</div>
-<p class="notice">Data may be delayed or unavailable. This is not financial advice.</p>
+<div class="result" id="marketResult">Choose an instrument.</div>
+<p class="notice">Market data may be delayed or unavailable. Verify it independently before making financial decisions.</p>
 </div>
 </section>
 
 <section id="trading" class="view">
 <div class="card">
 <h2>Paper Trading</h2>
-<p class="muted">Simulation only. No broker or real-money trading is connected.</p>
+<p class="muted">Simulation only. No broker is connected.</p>
 <label for="tsymbol">Symbol</label>
 <select id="tsymbol"><option>NIFTY</option><option>SENSEX</option><option>RELIANCE</option><option>TCS</option><option>INFY</option><option>HDFCBANK</option><option>ICICIBANK</option><option>SBIN</option></select>
 <label for="side">Side</label><select id="side"><option value="BUY">BUY</option><option value="SELL">SELL</option></select>
 <label for="qty">Quantity</label><input id="qty" type="number" min="1" step="1" value="1">
-<label for="price">Price in ₹</label><input id="price" type="number" min="0.01" step="0.01" placeholder="Enter simulated price">
+<label for="price">Simulated price (₹)</label><input id="price" type="number" min="0.01" step="0.01" placeholder="Enter test price">
 <button class="primary" id="trade">Simulate Order</button>
 <div class="result" id="tradeResult">No simulated order yet.</div>
-<h3>Recent Simulated Orders</h3><div id="trades"></div>
+<h3>Simulated Orders</h3><div id="trades"></div>
 </div>
 </section>
 
@@ -151,92 +170,193 @@ footer{text-align:center;color:var(--muted);padding:24px 8px;font-size:12px}
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
-const KEYS={saved:"aicc_v2_saved",log:"aicc_v2_log",trades:"aicc_v2_trades"};
-function read(key){try{return JSON.parse(localStorage.getItem(key)||"[]")}catch(e){return []}}
-function store(key,value){try{localStorage.setItem(key,JSON.stringify(value))}catch(e){}}
-let saved=read(KEYS.saved),log=read(KEYS.log),trades=read(KEYS.trades);
-function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-function record(message){log.unshift({message,time:new Date().toLocaleString()});log=log.slice(0,100);store(KEYS.log,log);renderLog()}
-function page(name){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id===name));document.querySelectorAll("nav button[data-page]").forEach(x=>x.classList.toggle("active",x.dataset.page===name));if(name==="saved")renderSaved()}
-document.querySelectorAll("[data-page]").forEach(b=>b.addEventListener("click",()=>page(b.dataset.page)));
-document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>page(b.dataset.go)));
-async function request(data){
- const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(data)});
+const KEY={saved:"aicc3_saved",log:"aicc3_log",trades:"aicc3_trades"};
+function read(k){try{return JSON.parse(localStorage.getItem(k)||"[]")}catch(e){return []}}
+function store(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+let saved=read(KEY.saved),log=read(KEY.log),trades=read(KEY.trades);
+let scenes=[],sceneIndex=0,videoURL=null;
+
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function record(message){log.unshift({message,time:new Date().toLocaleString()});log=log.slice(0,100);store(KEY.log,log);renderLog()}
+function page(name){
+ document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===name));
+ document.querySelectorAll("nav button[data-page]").forEach(b=>b.classList.toggle("active",b.dataset.page===name));
+ if(name==="saved")renderSaved();
+}
+document.querySelectorAll("[data-page]").forEach(b=>b.onclick=()=>page(b.dataset.page));
+document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>page(b.dataset.go));
+
+async function api(payload){
+ const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(payload)});
  const raw=await r.text();let d;
  try{d=JSON.parse(raw)}catch(e){throw Error("Server returned invalid JSON (HTTP "+r.status+").")}
  if(!r.ok||d.error||d.success===false)throw Error(d.error||d.message||"Request failed: HTTP "+r.status);
  return d;
 }
-function result(d){return d.reply||d.text||d.content||d.result||JSON.stringify(d,null,2)}
-async function runAI(message,target,button){
+function reply(d){return d.reply||d.text||d.content||d.result||JSON.stringify(d,null,2)}
+async function ask(message,target,button){
  if(!message.trim()){$(target).textContent="Please enter a message.";return null}
- button.disabled=true;const original=button.textContent;button.textContent="Working…";$(target).textContent="Waiting for server…";
- try{const d=await request({action:"chat",message});$(target).textContent=result(d);record("AI request completed");return result(d)}
+ const original=button.textContent;button.disabled=true;button.textContent="Working…";$(target).textContent="Waiting for server…";
+ try{const d=await api({action:"chat",message});$(target).textContent=reply(d);record("AI request completed");return reply(d)}
  catch(e){$(target).textContent="Error: "+e.message;record("AI request failed: "+e.message);return null}
  finally{button.disabled=false;button.textContent=original}
 }
-$("ask").onclick=()=>runAI($("question").value,"answer",$("ask"));
+$("ask").onclick=()=>ask($("question").value,"answer",$("ask"));
 $("generate").onclick=async()=>{
  const topic=$("topic").value.trim();if(!topic){$("contentResult").textContent="Enter a topic first.";return}
- const prompt="Create an original "+$("duration").value+" short-form video package for "+$("platform").value+". Topic: "+topic+". Include title, hook, spoken script, scene ideas, on-screen text, caption, call to action and hashtags. Use clear headings. Do not claim it was published.";
- const d=await runAI(prompt,"contentResult",$("generate"));if(d){$("script").value=d;$("vtitle").value=topic}
+ const prompt="Create an original "+$("duration").value+" video content package for "+$("platform").value+". Topic: "+topic+". Include title, hook, spoken script, separate scene descriptions, on-screen text, caption, call to action, hashtags and thumbnail text. Use clear headings. Do not claim it was published.";
+ const d=await ask(prompt,"contentResult",$("generate"));
+ if(d){$("script").value=d;$("vtitle").value=topic}
 };
 $("save").onclick=()=>{
  const content=$("contentResult").textContent.trim();
- if(!content||content.startsWith("Generated title")||content.startsWith("Error:")){alert("Generate content successfully first.");return}
- saved.unshift({id:Date.now(),title:$("topic").value.trim()||"Saved content",content,time:new Date().toLocaleString()});saved=saved.slice(0,100);store(KEYS.saved,saved);renderSaved();record("Content saved");alert("Saved on this device.");
+ if(!content||content.startsWith("Generated content")||content.startsWith("Error:")){alert("Generate content first.");return}
+ saved.unshift({id:Date.now(),title:$("topic").value.trim()||"Saved content",content,time:new Date().toLocaleString()});
+ saved=saved.slice(0,100);store(KEY.saved,saved);renderSaved();record("Content saved");alert("Saved on this device.");
 };
-$("copy").onclick=async()=>{try{await navigator.clipboard.writeText($("contentResult").textContent);alert("Copied")}catch(e){alert("Clipboard unavailable. Select and copy the text manually.")}};
-$("toVideo").onclick=()=>{$("script").value=$("contentResult").textContent;$("vtitle").value=$("topic").value.trim();page("video")};
-function renderSaved(){
- $("savedList").innerHTML=saved.map(x=>'<div class="item"><b>'+escapeHTML(x.title)+'</b><p class="muted">'+escapeHTML(x.time)+'</p><p>'+escapeHTML(x.content.slice(0,350))+'</p><button data-load="'+x.id+'">Load</button> <button data-del="'+x.id+'">Delete</button></div>').join("")||'<p class="muted">No saved content yet.</p>';
- $("savedList").querySelectorAll("[data-load]").forEach(b=>b.onclick=()=>{const x=saved.find(y=>String(y.id)===b.dataset.load);if(x){$("topic").value=x.title;$("contentResult").textContent=x.content;page("content")}});
- $("savedList").querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{saved=saved.filter(x=>String(x.id)!==b.dataset.del);store(KEYS.saved,saved);renderSaved();updateCounts()});
- updateCounts();
-}
-function updateCounts(){$("savedCount").textContent=saved.length;$("activityCount").textContent=log.length}
-function renderLog(){
- const html=log.map(x=>'<div class="item">'+escapeHTML(x.message)+'<p class="muted">'+escapeHTML(x.time)+'</p></div>').join("")||'<p class="muted">No activity yet.</p>';
- $("log").innerHTML=html;$("recent").innerHTML=log.slice(0,4).map(x=>'<div class="item">'+escapeHTML(x.message)+'<p class="muted">'+escapeHTML(x.time)+'</p></div>').join("")||'<p class="muted">No activity yet.</p>';updateCounts();
-}
-$("clearLog").onclick=()=>{if(confirm("Clear activity log?")){log=[];store(KEYS.log,log);renderLog()}};
+$("copy").onclick=async()=>{
+ try{await navigator.clipboard.writeText($("contentResult").textContent);alert("Copied")}
+ catch(e){alert("Clipboard unavailable. Select and copy the text manually.")}
+};
+$("toVideo").onclick=()=>{$("script").value=$("contentResult").textContent;$("vtitle").value=$("topic").value.trim()||"My Video";page("video");prepareScenes()};
 
-$("preview").onclick=()=>{
- const c=$("canvas"),ctx=c.getContext("2d"),title=$("vtitle").value.trim()||"My Video",text=$("script").value.trim()||"Add your script to preview your video.";
- ctx.fillStyle="#09152f";ctx.fillRect(0,0,c.width,c.height);ctx.fillStyle="#83a2ff";ctx.fillRect(28,55,5,65);
- ctx.fillStyle="white";ctx.font="bold 24px Arial";
- const words=(title+" "+text).split(/\s+/);let lines=[],line="";
- for(const word of words){const test=line?line+" "+word:word;if(ctx.measureText(test).width>285&&line){lines.push(line);line=word}else line=test}
- if(line)lines.push(line);
- lines.slice(0,13).forEach((s,i)=>ctx.fillText(s,38,100+i*36));
- ctx.fillStyle="#83a2ff";ctx.font="bold 14px Arial";ctx.fillText("FOLLOW FOR MORE",28,600);
- $("videoStatus").textContent="Preview created. This preview does not export a video file or include audio.";
- record("Video preview created");
+function themeColors(){
+ const t=$("theme").value;
+ if(t==="green")return["#062b24","#35c99a"];
+ if(t==="sunset")return["#51254c","#ffad72"];
+ if(t==="black")return["#000000","#ffffff"];
+ return["#09152f","#83a2ff"];
+}
+function wrap(ctx,text,width){
+ const words=text.split(/\s+/),lines=[];let line="";
+ for(const word of words){
+  const test=line?line+" "+word:word;
+  if(ctx.measureText(test).width>width&&line){lines.push(line);line=word}else line=test;
+ }
+ if(line)lines.push(line);return lines;
+}
+function prepareScenes(){
+ scenes=$("script").value.trim().split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean).slice(0,30);
+ if(!scenes.length)scenes=["Enter your script to begin."];
+ sceneIndex=0;drawScene();$("videoStatus").textContent="Prepared "+scenes.length+" scene(s).";
+}
+function drawScene(){
+ const canvas=$("canvas"),ctx=canvas.getContext("2d"),[bg,accent]=themeColors();
+ const title=$("vtitle").value.trim()||"My Video",text=scenes[sceneIndex]||"Prepare your scenes first.";
+ ctx.fillStyle=bg;ctx.fillRect(0,0,canvas.width,canvas.height);
+ ctx.fillStyle=accent;ctx.fillRect(28,42,6,78);
+ ctx.fillStyle="#fff";ctx.font="bold 23px Arial";
+ const titleLines=wrap(ctx,title,275).slice(0,3);
+ titleLines.forEach((s,i)=>ctx.fillText(s,44,68+i*30));
+ ctx.fillStyle=accent;ctx.fillRect(28,145,304,2);
+ ctx.fillStyle="#fff";ctx.font="bold 21px Arial";
+ const lines=wrap(ctx,text,290).slice(0,12);
+ const start=Math.max(220,(canvas.height-lines.length*34)/2);
+ lines.forEach((s,i)=>ctx.fillText(s,34,start+i*34));
+ ctx.fillStyle=accent;ctx.font="bold 14px Arial";ctx.fillText("FOLLOW FOR MORE",28,585);
+ ctx.fillStyle="#aab8d0";ctx.font="12px Arial";
+ ctx.fillText("SCENE "+(sceneIndex+1)+" / "+scenes.length,28,615);
+ $("sceneLabel").textContent="Scene "+(sceneIndex+1)+" of "+scenes.length;
+}
+$("prepare").onclick=()=>{prepareScenes();record("Video scenes prepared")};
+$("preview").onclick=()=>{prepareScenes()};
+$("previous").onclick=()=>{if(!scenes.length)prepareScenes();sceneIndex=(sceneIndex-1+scenes.length)%scenes.length;drawScene()};
+$("next").onclick=()=>{if(!scenes.length)prepareScenes();sceneIndex=(sceneIndex+1)%scenes.length;drawScene()};
+
+$("speak").onclick=()=>{
+ if(!("speechSynthesis" in window)){ $("videoStatus").textContent="Voiceover is not supported by this browser.";return}
+ const text=scenes.length?scenes.join(". "):$("script").value.trim();
+ if(!text){$("videoStatus").textContent="Enter a script first.";return}
+ speechSynthesis.cancel();
+ const utterance=new SpeechSynthesisUtterance(text);
+ utterance.rate=0.95;
+ utterance.onstart=()=>{$("videoStatus").textContent="Playing browser voiceover…"};
+ utterance.onend=()=>{$("videoStatus").textContent="Voiceover finished."};
+ utterance.onerror=()=>{$("videoStatus").textContent="Voiceover could not be played. Try your phone's browser speech settings."};
+ speechSynthesis.speak(utterance);
+ record("Browser voiceover started");
 };
+$("stopVoice").onclick=()=>{if("speechSynthesis" in window)speechSynthesis.cancel();$("videoStatus").textContent="Voiceover stopped."};
+
+$("download").onclick=async()=>{
+ if(!window.MediaRecorder||!$("canvas").captureStream){$("videoStatus").textContent="Video recording is not supported by this browser. Try another browser or a computer.";return}
+ if(!scenes.length)prepareScenes();
+ const button=$("download");button.disabled=true;button.textContent="Rendering…";
+ let stream;
+ try{
+  const canvas=$("canvas");stream=canvas.captureStream(2);
+  let type="";
+  for(const t of ["video/webm;codecs=vp9","video/webm;codecs=vp8","video/webm"]){if(MediaRecorder.isTypeSupported(t)){type=t;break}}
+  if(!type)throw Error("No supported video recording format was found.");
+  const recorder=new MediaRecorder(stream,{mimeType:type}),chunks=[];
+  recorder.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+  const stopped=new Promise((resolve,reject)=>{recorder.onstop=resolve;recorder.onerror=()=>reject(Error("Video recording failed."))});
+  recorder.start();
+  for(let i=0;i<scenes.length;i++){sceneIndex=i;drawScene();await new Promise(resolve=>setTimeout(resolve,2500))}
+  recorder.stop();await stopped;
+  const blob=new Blob(chunks,{type});if(!blob.size)throw Error("The generated video was empty.");
+  if(videoURL)URL.revokeObjectURL(videoURL);
+  videoURL=URL.createObjectURL(blob);
+  const a=document.createElement("a");a.href=videoURL;
+  a.download=(($("vtitle").value.trim()||"ai-video").replace(/[^\w-]+/g,"-").slice(0,50))+".webm";
+  document.body.appendChild(a);a.click();a.remove();
+  $("videoStatus").textContent="Video download requested. This file contains animated text scenes without audio.";
+  record("Video exported as WebM");
+ }catch(e){$("videoStatus").textContent="Export error: "+e.message;record("Video export failed")}
+ finally{if(stream)stream.getTracks().forEach(t=>t.stop());button.disabled=false;button.textContent="Render & Download"}
+};
+
+function renderSaved(){
+ $("savedList").innerHTML=saved.map(x=>'<div class="item"><b>'+esc(x.title)+'</b><p class="muted">'+esc(x.time)+'</p><p>'+esc(x.content.slice(0,400))+'</p><button data-load="'+x.id+'">Load</button> <button data-delete="'+x.id+'">Delete</button></div>').join("")||'<p class="muted">No saved content yet.</p>';
+ $("savedList").querySelectorAll("[data-load]").forEach(b=>b.onclick=()=>{const x=saved.find(y=>String(y.id)===b.dataset.load);if(x){$("topic").value=x.title;$("contentResult").textContent=x.content;page("content")}});
+ $("savedList").querySelectorAll("[data-delete]").forEach(b=>b.onclick=()=>{saved=saved.filter(x=>String(x.id)!==b.dataset.delete);store(KEY.saved,saved);renderSaved();record("Saved content deleted")});
+ $("savedCount").textContent=saved.length;
+}
+function renderLog(){
+ const html=log.map(x=>'<div class="item">'+esc(x.message)+'<p class="muted">'+esc(x.time)+'</p></div>').join("")||'<p class="muted">No activity yet.</p>';
+ $("log").innerHTML=html;$("recent").innerHTML=log.slice(0,4).map(x=>'<div class="item">'+esc(x.message)+'<p class="muted">'+esc(x.time)+'</p></div>').join("")||'<p class="muted">No activity yet.</p>';
+ $("activityCount").textContent=log.length;
+}
+$("clearLog").onclick=()=>{if(confirm("Clear activity log?")){log=[];store(KEY.log,log);renderLog()}};
 
 $("market").onclick=async()=>{
  const b=$("market");b.disabled=true;$("marketResult").textContent="Fetching market data…";
- try{const d=await request({action:"market_data",symbol:$("symbol").value});$("marketResult").textContent=JSON.stringify(d,null,2);record("Market data requested: "+$("symbol").value)}
- catch(e){$("marketResult").textContent="Market error: "+e.message;record("Market request failed: "+e.message)}
+ try{const d=await api({action:"market_data",symbol:$("symbol").value});$("marketResult").textContent=JSON.stringify(d,null,2);record("Market data requested: "+$("symbol").value)}
+ catch(e){$("marketResult").textContent="Market error: "+e.message;record("Market request failed")}
  finally{b.disabled=false}
 };
 $("trade").onclick=async()=>{
  const quantity=Number($("qty").value),price=Number($("price").value);
- if(!Number.isInteger(quantity)||quantity<1||!Number.isFinite(price)||price<=0){$("tradeResult").textContent="Enter a valid whole-number quantity and positive price.";return}
+ if(!Number.isInteger(quantity)||quantity<1||!Number.isFinite(price)||price<=0){$("tradeResult").textContent="Enter a valid quantity and positive price.";return}
  const b=$("trade");b.disabled=true;
  try{
   const order={action:"paper_trade",symbol:$("tsymbol").value,side:$("side").value,quantity,price};
-  const d=await request(order);$("tradeResult").textContent=JSON.stringify(d,null,2);
-  trades.unshift({...order,id:Date.now(),time:new Date().toLocaleString(),value:quantity*price});trades=trades.slice(0,100);store(KEYS.trades,trades);renderTrades();record("Paper trade simulation requested");
- }catch(e){$("tradeResult").textContent="Simulation error: "+e.message;record("Paper trade failed: "+e.message)}
+  const d=await api(order);$("tradeResult").textContent=JSON.stringify(d,null,2);
+  trades.unshift({...order,id:Date.now(),time:new Date().toLocaleString(),value:quantity*price});
+  trades=trades.slice(0,100);store(KEY.trades,trades);renderTrades();record("Paper trade simulation requested");
+ }catch(e){$("tradeResult").textContent="Simulation error: "+e.message;record("Paper trade request failed")}
  finally{b.disabled=false}
 };
-function renderTrades(){$("trades").innerHTML=trades.map(t=>'<div class="item"><b>'+escapeHTML(t.side+" "+t.quantity+" "+t.symbol)+'</b><p class="muted">'+escapeHTML(t.time)+' · ₹'+Number(t.value).toLocaleString("en-IN")+'</p></div>').join("")||'<p class="muted">No simulated orders.</p>'}
-async function healthCheck(){
- try{await request({action:"chat",message:"Reply with exactly OK."});$("status").innerHTML='<span class="good">● Backend reachable</span>'}
- catch(e){$("status").innerHTML='<span class="bad">● Backend error:</span> '+escapeHTML(e.message)}
+function renderTrades(){
+ $("trades").innerHTML=trades.map(t=>
+'<div class="item"><b>'+esc(t.side+" "+t.quantity+" "+t.symbol)+'</b><p class="muted">'+esc(t.time)+' · ₹'+Number(t.value).toLocaleString("en-IN")+'</p></div>'
+).join("")||'<p class="muted">No simulated orders.</p>';
 }
-renderSaved();renderLog();renderTrades();healthCheck();
+
+async function healthCheck(){
+ try{
+  await api({action:"chat",message:"Reply with exactly OK."});
+  $("status").innerHTML='<span style="color:var(--green)">● Backend reachable</span>';
+ }catch(e){
+  $("status").innerHTML='<span style="color:var(--red)">● Backend error: '+esc(e.message)+'</span>';
+ }
+}
+
+renderSaved();
+renderLog();
+renderTrades();
+prepareScenes();
+healthCheck();
 </script>
 </body>
 </html>
