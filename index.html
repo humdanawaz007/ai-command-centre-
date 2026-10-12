@@ -285,32 +285,192 @@ $('previous').onclick=()=>{if(scenes.length){sceneIndex=Math.max(0,sceneIndex-1)
 $('next').onclick=()=>{if(scenes.length){sceneIndex=Math.min(scenes.length-1,sceneIndex+1);draw()}};
 $('theme').onchange=draw;
 $('vtitle').oninput=draw;
-$('download').onclick=async()=>{
- if(!scenes.length)prepare();if(!scenes.length)return;
- const c=$('canvas');
- if(!c.captureStream||!window.MediaRecorder){$('videoStatus').textContent='Video recording is not supported by this browser.';return}
- let stream=c.captureStream(2),rec;
- try{
-  rec=new MediaRecorder(stream,{mimeType:'video/webm'});
- }catch(e){
-  try{rec=new MediaRecorder(stream)}catch(err){$('videoStatus').textContent='Cannot create WebM recording on this device.';return}
- }
- const chunks=[];rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
- rec.onerror=()=>{$('videoStatus').textContent='Video recording failed.'};
- rec.onstop=()=>{
-  const blob=new Blob(chunks,{type:'video/webm'}),url=URL.createObjectURL(blob),a=document.createElement('a');
-  a.href=url;a.download=(($('vtitle').value||'ai-video').replace(/[^a-z0-9-_]/gi,'_'))+'.webm';
-  document.body.appendChild(a);a.click();a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url),60000);stream.getTracks().forEach(t=>t.stop());
-  $('videoStatus').textContent='Video download started.';log('WebM video rendered');
- };
- $('videoStatus').textContent='Rendering video…';
- rec.start();
- let i=0;
- const timer=setInterval(()=>{
-  sceneIndex=i;draw();i++;
-  if(i>=scenes.length){clearInterval(timer);setTimeout(()=>rec.stop(),800)}
- },1800);
+$('download').onclick = async () => {
+  const btn = $('download');
+  btn.disabled = true;
+
+  let audioContext;
+  let videoStream;
+  let recorder;
+  let timer;
+  let stopped = false;
+
+  try {
+    if (!scenes.length) prepare();
+    if (!scenes.length) throw Error('Please prepare scenes first.');
+
+    const scriptText = $('script').value.trim();
+    if (!scriptText) throw Error('Please enter a script.');
+
+    $('videoStatus').textContent = 'Generating voiceover audio...';
+
+    // Request real audio from your existing backend.
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'tts',
+        text: scriptText
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || data.error || !data.audio) {
+      throw Error(
+        data.error || 'Voiceover generation failed. Check your API key.'
+      );
+    }
+
+    // Decode the returned MP3 audio.
+    const binary = atob(data.audio);
+    const bytes = new Uint8Array(binary.length);
+
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+
+    audioContext = new AudioContext();
+    await audioContext.resume();
+
+    const audioBuffer = await audioContext.decodeAudioData(
+      bytes.buffer
+    );
+
+    // Create an audio stream for the video recorder.
+    const audioDestination =
+      audioContext.createMediaStreamDestination();
+
+    const audioSource = audioContext.createBufferSource();
+    audioSource.buffer = audioBuffer;
+    audioSource.connect(audioDestination);
+
+    // Capture the canvas video and combine its audio track.
+    videoStream = $('canvas').captureStream(2);
+
+    audioDestination.stream.getAudioTracks().forEach(track => {
+      videoStream.addTrack(track);
+    });
+
+    // Choose a supported WebM codec.
+    const types = [
+      'video/webm;codecs=vp9,opus',
+      'video/webm;codecs=vp8,opus',
+      'video/webm'
+    ];
+
+    const mimeType = types.find(type =>
+      MediaRecorder.isTypeSupported(type)
+    );
+
+    recorder = new MediaRecorder(
+      videoStream,
+      mimeType ? { mimeType } : undefined
+    );
+
+    const chunks = [];
+
+    recorder.ondataavailable = event => {
+      if (event.data.size) chunks.push(event.data);
+    };
+
+    recorder.onerror = () => {
+      $('videoStatus').textContent = 'Video recording failed.';
+    };
+
+    recorder.onstop = async () => {
+      if (stopped) return;
+      stopped = true;
+
+      clearInterval(timer);
+
+      try {
+        const blob = new Blob(chunks, {
+          type: recorder.mimeType || 'video/webm'
+        });
+
+        if (!blob.size) {
+          throw Error('The video file is empty.');
+        }
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+
+        link.href = url;
+        link.download =
+          (($('vtitle').value || 'ai-video')
+            .replace(/[^a-z0-9-_]/gi, '_')) + '.webm';
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+
+        $('videoStatus').textContent =
+          'Video with voiceover downloaded successfully.';
+
+        log('Video with audio rendered');
+      } catch (error) {
+        $('videoStatus').textContent = error.message;
+      } finally {
+        if (videoStream) {
+          videoStream.getTracks().forEach(track => track.stop());
+        }
+
+        if (audioContext && audioContext.state !== 'closed') {
+          await audioContext.close();
+        }
+
+        btn.disabled = false;
+      }
+    };
+
+    // Advance scenes throughout the audio duration.
+    sceneIndex = 0;
+    draw();
+
+    const sceneDuration = audioBuffer.duration / scenes.length;
+    let nextScene = 1;
+
+    $('videoStatus').textContent =
+      'Recording video and voiceover...';
+
+    recorder.start(250);
+    audioSource.start();
+
+    timer = setInterval(() => {
+      if (nextScene < scenes.length) {
+        sceneIndex = nextScene++;
+        draw();
+      }
+    }, Math.max(500, sceneDuration * 1000));
+
+    audioSource.onended = () => {
+      clearInterval(timer);
+
+      // Allow the final audio samples to be recorded.
+      setTimeout(() => {
+        if (recorder && recorder.state !== 'inactive') {
+          recorder.stop();
+        }
+      }, 500);
+    };
+
+  } catch (error) {
+    clearInterval(timer);
+
+    if (videoStream) {
+      videoStream.getTracks().forEach(track => track.stop());
+    }
+
+    if (audioContext && audioContext.state !== 'closed') {
+      await audioContext.close();
+    }
+
+    $('videoStatus').textContent = 'Error: ' + error.message;
+    btn.disabled = false;
+  }
 };
 $('speak').onclick=()=>{
  if(!('speechSynthesis'in window))return $('videoStatus').textContent='Browser voiceover is not supported.';
