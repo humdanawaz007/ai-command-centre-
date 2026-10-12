@@ -266,52 +266,174 @@ $("speak").onclick=()=>{
 };
 $("stopVoice").onclick=()=>{if(window.speechSynthesis)window.speechSynthesis.cancel();$("videoStatus").textContent="Voiceover stopped."};
 
+
 $("download").onclick=async()=>{
- const c=$("canvas"),button=$("download");
- if(!window.MediaRecorder||!c.captureStream){
-  $("videoStatus").textContent="Video recording is unsupported in this browser. Try Chrome updated to the latest version.";
-  return;
- }
- if(!scenes.length)prepareScenes();
- button.disabled=true;button.textContent="Rendering…";
- let stream=null,recorder=null,chunks=[];
+ const button=$("download");
+ let stream=null, recorder=null, audioContext=null, source=null;
+ let chunks=[], stopped=false;
+
  try{
-  stream=c.captureStream(5);
-  const types=["video/webm;codecs=vp8","video/webm;codecs=vp9","video/webm"];
-  const type=types.find(t=>MediaRecorder.isTypeSupported(t));
-  if(!type)throw Error("This browser has no supported WebM recording format.");
-  recorder=new MediaRecorder(stream,{mimeType:type});
-  recorder.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
-  const done=new Promise((resolve,reject)=>{
-   recorder.onstop=resolve;
-   recorder.onerror=()=>reject(Error("Recording failed in this browser."));
-  });
-  recorder.start(500);
-  for(let i=0;i<scenes.length;i++){
-   sceneIndex=i;drawScene();
-   await new Promise(resolve=>setTimeout(resolve,2200));
+  if(!window.MediaRecorder || !$("canvas").captureStream){
+   throw Error("Video recording is not supported. Try updated Chrome.");
   }
-  recorder.stop();await done;
+
+  if(!scenes.length) prepareScenes();
+
+  const scriptText=scenes.join("\n\n").trim();
+  if(!scriptText) throw Error("Enter a script first.");
+
+  button.disabled=true;
+  button.textContent="Generating voice…";
+  $("videoStatus").textContent="Generating AI voiceover. Please wait…";
+
+  const voice=await api({action:"tts",text:scriptText});
+
+  if(!voice.audio) throw Error("The server returned no audio.");
+
+  const binary=atob(voice.audio);
+  const bytes=new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
+
+  audioContext=new (window.AudioContext||window.webkitAudioContext)();
+  await audioContext.resume();
+
+  const audioBuffer=await audioContext.decodeAudioData(bytes.buffer);
+  if(!audioBuffer.duration) throw Error("The voiceover audio is empty.");
+
+  const audioDestination=audioContext.createMediaStreamDestination();
+  source=audioContext.createBufferSource();
+  source.buffer=audioBuffer;
+  source.connect(audioDestination);
+
+  const canvasStream=$("canvas").captureStream(5);
+  stream=new MediaStream([
+   ...canvasStream.getVideoTracks(),
+   ...audioDestination.stream.getAudioTracks()
+  ]);
+
+  const types=[
+   "video/webm;codecs=vp9,opus",
+   "video/webm;codecs=vp8,opus",
+   "video/webm"
+  ];
+  const type=types.find(t=>MediaRecorder.isTypeSupported(t));
+  if(!type) throw Error("No supported WebM recording format.");
+
+  recorder=new MediaRecorder(stream,{mimeType:type});
+  recorder.ondataavailable=e=>{
+   if(e.data&&e.data.size) chunks.push(e.data);
+  };
+
+  const done=new Promise((resolve,reject)=>{
+   recorder.onstop=()=>{stopped=true;resolve()};
+   recorder.onerror=()=>reject(Error("Video recording failed."));
+  });
+
+  const c=$("canvas");
+  const sceneDuration=audioBuffer.duration/scenes.length;
+  let renderTimer=null;
+
+  function updateScene(){
+   const index=Math.min(
+    scenes.length-1,
+    Math.floor(audioContext.currentTime*0 + sourceStartTime())
+   );
+   return index;
+  }
+
+  let startedAt=0;
+  function sourceStartTime(){
+   return Math.max(0,(audioContext.currentTime-startedAt)/sceneDuration);
+  }
+
+  sceneIndex=0;
+  drawScene();
+  recorder.start(250);
+
+  await new Promise(resolve=>setTimeout(resolve,150));
+  startedAt=audioContext.currentTime;
+  source.start();
+
+  await new Promise((resolve,reject)=>{
+   let finished=false;
+   const finish=()=>{
+    if(finished)return;
+    finished=true;
+    if(renderTimer)clearInterval(renderTimer);
+    resolve();
+   };
+
+   source.onended=finish;
+   renderTimer=setInterval(()=>{
+    if(recorder.state==="inactive"){finish();return}
+    const index=Math.min(
+     scenes.length-1,
+     Math.floor((audioContext.currentTime-startedAt)/sceneDuration)
+    );
+    if(index!==sceneIndex){
+     sceneIndex=index;
+     drawScene();
+    }
+   },100);
+
+   setTimeout(()=>{
+    if(!finished)finish();
+   },Math.ceil(audioBuffer.duration*1000)+1200);
+  });
+
+  if(recorder.state!=="inactive"){
+   recorder.stop();
+   await done;
+  }
+
+  if(!chunks.length) throw Error("No video data was recorded.");
+
   const blob=new Blob(chunks,{type:"video/webm"});
-  if(!blob.size)throw Error("The video file is empty.");
+  if(!blob.size) throw Error("The video file is empty.");
+
   if(videoURL)URL.revokeObjectURL(videoURL);
   videoURL=URL.createObjectURL(blob);
+
+  const filename=(($("vtitle").value.trim()||"ai-video")
+   .replace(/[^\w-]+/g,"-").slice(0,45))+".webm";
+
   const a=document.createElement("a");
-  a.href=videoURL;a.download=(($("vtitle").value.trim()||"ai-video").replace(/[^\w-]+/g,"-").slice(0,45))+".webm";
-  document.body.appendChild(a);a.click();a.remove();
-  $("videoStatus").textContent="Video created. If it did not save automatically, open the download link below.";
-  const link=document.createElement("a");link.href=videoURL;link.download=a.download;link.textContent="Tap here to download video";
-  link.style.display="block";link.style.marginTop="12px";link.style.color="#83a2ff";
-  const box=$("videoStatus");box.appendChild(document.createElement("br"));box.appendChild(link);
-  record("Video exported");
+  a.href=videoURL;
+  a.download=filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+
+  $("videoStatus").textContent=
+   "Video with AI voiceover created. If it did not download, use the link below.";
+
+  const link=document.createElement("a");
+  link.href=videoURL;
+  link.download=filename;
+  link.textContent="Tap here to download video with audio";
+  link.style.display="block";
+  link.style.marginTop="12px";
+  link.style.color="#83a2ff";
+  $("videoStatus").appendChild(document.createElement("br"));
+  $("videoStatus").appendChild(link);
+
+  record("Video with AI voiceover exported");
  }catch(e){
-  if(recorder&&recorder.state!=="inactive")try{recorder.stop()}catch(x){}
-  $("videoStatus").textContent="Export error: "+e.message;record("Video export failed");
+  $("videoStatus").textContent="Export error: "+e.message;
+  record("Video export failed: "+e.message);
  }finally{
+  if(recorder&&recorder.state!=="inactive"){
+   try{recorder.stop()}catch(e){}
+  }
   if(stream)stream.getTracks().forEach(t=>t.stop());
-  button.disabled=false;button.textContent="Render & Download";
+  if(audioContext){
+   try{await audioContext.close()}catch(e){}
+  }
+  button.disabled=false;
+  button.textContent="Render & Download";
  }
 };
+
 
 function renderSaved(){
  $("savedList").innerHTML=saved.map(x=>'<div class="item"><b>'+esc(x.title)+'</b><p class="muted">'+esc(x.time)+'</p><p>'+esc(x.content.slice(0,350))+'</p><button data-load="'+x.id+'">Load</button> <button data-delete="'+x.id+'">Delete</button></div>').join("")||'<p class="muted">No saved content yet.</p>';
