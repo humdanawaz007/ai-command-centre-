@@ -262,96 +262,150 @@ module.exports = async function handler(req, res) {
     // The browser voiceover does not require this endpoint.
     // =====================================================
 
-    if (action === "tts") {
-      const apiKey = process.env.OPENAI_API_KEY;
+    
+if (action === "tts") {
+  const apiKey = process.env.GEMINI_API_KEY;
 
-      if (!apiKey) {
-        return res.status(503).json({
-          success: false,
-          error: "OpenAI voice is unavailable. Use browser voiceover instead."
-        });
-      }
+  if (!apiKey) {
+    return res.status(503).json({
+      success: false,
+      error: "GEMINI_API_KEY is missing in Vercel"
+    });
+  }
 
-      const text = String(req.body?.text || "").trim();
+  const text = String(req.body?.text || "").trim();
 
-      if (!text) {
-        return res.status(400).json({
-          success: false,
-          error: "Text is required for voice generation"
-        });
-      }
+  if (!text) {
+    return res.status(400).json({
+      success: false,
+      error: "Text is required for voice generation"
+    });
+  }
 
-      if (text.length > 4096) {
-        return res.status(400).json({
-          success: false,
-          error: "Text is too long for one voice request"
-        });
-      }
+  if (text.length > 8000) {
+    return res.status(400).json({
+      success: false,
+      error: "Voiceover text is too long. Shorten the script."
+    });
+  }
 
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 60000);
+  const model = "gemini-3.1-flash-tts-preview";
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 90000);
 
-      let response;
+  let response;
 
-      try {
-        response = await fetch(
-          "https://api.openai.com/v1/audio/speech",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": "Bearer " + apiKey
-            },
-            body: JSON.stringify({
-              model: process.env.OPENAI_TTS_MODEL || "gpt-4o-mini-tts",
-              voice: process.env.OPENAI_TTS_VOICE || "alloy",
-              input: text,
-              response_format: "mp3"
-            }),
-            signal: controller.signal
+  try {
+    response = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models/" +
+        model + ":generateContent",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: "Read the following script naturally and clearly, " +
+                "with a friendly short-video narrator voice. " +
+                "Read only the script:\n\n" + text
+            }]
+          }],
+          generationConfig: {
+            responseModalities: ["AUDIO"],
+            speechConfig: {
+              voiceConfig: {
+                prebuiltVoiceConfig: {
+                  voiceName: "Kore"
+                }
+              }
+            }
           }
-        );
-      } catch (error) {
-        clearTimeout(timeout);
-
-        return res.status(
-          error?.name === "AbortError" ? 504 : 502
-        ).json({
-          success: false,
-          error: error?.name === "AbortError"
-            ? "Voice generation timed out"
-            : "Unable to connect to OpenAI voice service"
-        });
+        }),
+        signal: controller.signal
       }
+    );
+  } catch (error) {
+    clearTimeout(timeout);
 
-      clearTimeout(timeout);
+    return res.status(
+      error?.name === "AbortError" ? 504 : 502
+    ).json({
+      success: false,
+      error: error?.name === "AbortError"
+        ? "Voice generation timed out. Try a shorter script."
+        : "Could not connect to Gemini voice generation."
+    });
+  }
 
-      if (!response.ok) {
-        let errorData = {};
+  clearTimeout(timeout);
 
-        try {
-          errorData = await response.json();
-        } catch (_) {}
+  let data;
 
-        return res.status(response.status).json({
-          success: false,
-          error: errorData?.error?.message ||
-            "OpenAI voice generation failed"
-        });
-      }
+  try {
+    data = await response.json();
+  } catch (_) {
+    return res.status(502).json({
+      success: false,
+      error: "Gemini voice service returned invalid JSON."
+    });
+  }
 
-      const audioBuffer = Buffer.from(
-        await response.arrayBuffer()
-      );
+  if (!response.ok) {
+    return res.status(response.status).json({
+      success: false,
+      error: data?.error?.message ||
+        "Gemini voice generation failed."
+    });
+  }
 
-      return res.status(200).json({
-        success: true,
-        audio: audioBuffer.toString("base64"),
-        mimeType: "audio/mpeg",
-        model: process.env.OPENAI_TTS_MODEL || "gpt-4o-mini-tts",
-        voice: process.env.OPENAI_TTS_VOICE || "alloy"
-      });
-    }
+  const parts = data?.candidates?.[0]?.content?.parts || [];
+  const audioPart = parts.find(
+    part => part?.inlineData?.data
+  );
+
+  if (!audioPart) {
+    return res.status(502).json({
+      success: false,
+      error: "Gemini returned no audio. Check model access and try again."
+    });
+  }
+
+  const pcm = Buffer.from(audioPart.inlineData.data, "base64");
+
+  // Gemini 3.1 TTS returns 24 kHz, mono, 16-bit PCM.
+  // Add a WAV header so the browser can decode the audio.
+  const sampleRate = 24000;
+  const channels = 1;
+  const bitsPerSample = 16;
+  const wav = Buffer.alloc(44 + pcm.length);
+
+  wav.write("RIFF", 0);
+  wav.writeUInt32LE(36 + pcm.length, 4);
+  wav.write("WAVE", 8);
+  wav.write("fmt ", 12);
+  wav.writeUInt32LE(16, 16);
+  wav.writeUInt16LE(1, 20);
+  wav.writeUInt16LE(channels, 22);
+  wav.writeUInt32LE(sampleRate, 24);
+  wav.writeUInt32LE(sampleRate * channels * bitsPerSample / 8, 28);
+  wav.writeUInt16LE(channels * bitsPerSample / 8, 32);
+  wav.writeUInt16LE(bitsPerSample, 34);
+  wav.write("data", 36);
+  wav.writeUInt32LE(pcm.length, 40);
+  pcm.copy(wav, 44);
+
+  return res.status(200).json({
+    success: true,
+    audio: wav.toString("base64"),
+    mimeType: "audio/wav",
+    model,
+    voice: "Kore"
+  });
+}
+
 
     // =====================================================
     // NORMAL AI CHAT — GOOGLE GEMINI
