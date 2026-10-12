@@ -338,3 +338,22 @@ renderSaved();renderLog();renderTrades();draw();
 </script>
 </body>
 </html>
+
+<script>
+(function () {
+  const canvas = document.getElementById('canvas');
+  if (!canvas) return;
+
+  const originalDraw = window.draw;
+  // Add a subtle animated glow to the video preview.
+  canvas.style.transition = 'filter 0.65s ease';
+  canvas.style.filter = 'drop-shadow(0 0 0 transparent)';
+
+  canvas.addEventListener('click', function () {
+    canvas.style.filter = 'drop-shadow(0 0 12px #a4e6a0)';
+    setTimeout(function () {
+      canvas.style.filter = 'drop-shadow(0 0 0 transparent)';
+    }, 700);
+  });
+})();
+</script>
