@@ -351,13 +351,87 @@ $('market').onclick=async()=>{
  }catch(e){$('marketResult').textContent='Market error: '+e.message;log('Market request failed')}
  finally{b.disabled=false}
 };
-$('trade').onclick=()=>{
-const symbol=$('tsymbol').value,side=$('side').value,qty=Number($('qty').value),price=Number($('price').value);
-if(!Number.isInteger(qty)||qty<1||!Number.isFinite(price)||price<=0){$('tradeResult').textContent='Enter a whole quantity of at least 1 and a valid positive test price.';return}
-const t={symbol,side,qty,price,total:qty*price,time:new Date().toLocaleString()};
-trades.unshift(t);trades=trades.slice(0,100);store(KEY.trades,trades);renderTrades();renderPortfolio();
-$('tradeResult').textContent='SIMULATED ONLY\n'+side+' '+qty+' '+symbol+'\nTest price: ₹'+price.toFixed(2)+'\nTotal: ₹'+t.total.toFixed(2);
-log('Paper order simulated: '+side+' '+qty+' '+symbol);
+let tradeProcessing = false;
+
+$('trade').onclick = () => {
+if (tradeProcessing) return;
+tradeProcessing = true;
+const btn = $('trade');
+btn.disabled = true;
+
+try {
+const symbol = $('tsymbol').value;
+const side = $('side').value;
+const qty = Number($('qty').value);
+const price = Number($('price').value);
+
+if (!Number.isSafeInteger(qty) || qty < 1 ||
+    !Number.isFinite(price) || price <= 0) {
+  $('tradeResult').textContent =
+    'Enter a whole quantity of at least 1 and a valid positive test price.';
+  return;
+}
+
+let cash = STARTING_CASH;
+const positions = {};
+
+trades.slice().reverse().forEach(t => {
+  const q = Number(t.qty);
+  const p = Number(t.price);
+  if (!Number.isSafeInteger(q) || q < 1 ||
+      !Number.isFinite(p) || p <= 0) return;
+
+  if (!positions[t.symbol]) positions[t.symbol] = 0;
+
+  if (t.side === 'BUY') {
+    cash -= q * p;
+    positions[t.symbol] += q;
+  } else if (t.side === 'SELL' &&
+             positions[t.symbol] >= q) {
+    cash += q * p;
+    positions[t.symbol] -= q;
+  }
+});
+
+const total = qty * price;
+
+if (side === 'BUY' && total > cash) {
+  $('tradeResult').textContent =
+    'Order rejected: insufficient virtual cash. Available: ₹' +
+    cash.toFixed(2);
+  return;
+}
+
+if (side === 'SELL' &&
+    (positions[symbol] || 0) < qty) {
+  $('tradeResult').textContent =
+    'Order rejected: insufficient holdings of ' + symbol +
+    '. Available units: ' + (positions[symbol] || 0);
+  return;
+}
+
+const order = {
+  symbol, side, qty, price, total,
+  time: new Date().toLocaleString()
+};
+
+trades.unshift(order);
+trades = trades.slice(0, 100);
+store(KEY.trades, trades);
+renderTrades();
+renderPortfolio();
+
+$('tradeResult').textContent =
+  'SIMULATED ONLY\n' + side + ' ' + qty + ' ' + symbol +
+  '\nTest price: ₹' + price.toFixed(2) +
+  '\nTotal: ₹' + total.toFixed(2);
+
+log('Paper order simulated: ' + side + ' ' + qty + ' ' + symbol);
+
+} finally {
+tradeProcessing = false;
+btn.disabled = false;
+}
 };
 function renderTrades(){
  $('trades').innerHTML=trades.map(t=>'<div class="item"><strong>'+esc(t.side)+' '+esc(t.qty)+' '+esc(t.symbol)+'</strong><br>₹'+Number(t.price).toFixed(2)+' · Total ₹'+Number(t.total).toFixed(2)+'<br><small>'+esc(t.time)+'</small></div>').join('')||'No simulated orders.';
