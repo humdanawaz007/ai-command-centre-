@@ -1,591 +1,500 @@
+'use strict';
+
+const SYMBOLS = Object.freeze({
+  // India
+  NIFTY: '^NSEI',
+  SENSEX: '^BSESN',
+  RELIANCE: 'RELIANCE.NS',
+  TCS: 'TCS.NS',
+  INFY: 'INFY.NS',
+  HDFCBANK: 'HDFCBANK.NS',
+  ICICIBANK: 'ICICIBANK.NS',
+  SBIN: 'SBIN.NS',
+
+  // International stocks
+  AAPL: 'AAPL',
+  MSFT: 'MSFT',
+  GOOGL: 'GOOGL',
+  AMZN: 'AMZN',
+  NVDA: 'NVDA',
+  TSLA: 'TSLA',
+  META: 'META',
+  NFLX: 'NFLX',
+  AMD: 'AMD',
+  INTC: 'INTC',
+  ORCL: 'ORCL',
+  IBM: 'IBM',
+  JPM: 'JPM',
+  V: 'V',
+  WMT: 'WMT',
+  DIS: 'DIS',
+  BABA: 'BABA',
+  TSM: 'TSM',
+
+  // ETFs
+  SPY: 'SPY',
+  QQQ: 'QQQ',
+  DIA: 'DIA',
+  IWM: 'IWM',
+
+  // Crypto, commodities and forex
+  'BTC-USD': 'BTC-USD',
+  'ETH-USD': 'ETH-USD',
+  'GC=F': 'GC=F',
+  'SI=F': 'SI=F',
+  'CL=F': 'CL=F',
+  'EURUSD=X': 'EURUSD=X',
+  'GBPUSD=X': 'GBPUSD=X',
+  'USDJPY=X': 'USDJPY=X'
+});
+
+const MAX_BODY_CHARS = 40000;
+const CHAT_MODEL =
+  process.env.GEMINI_CHAT_MODEL || 'gemini-3.1-flash-lite';
+const TTS_MODEL =
+  process.env.GEMINI_TTS_MODEL || 'gemini-3.1-flash-tts-preview';
+
+function send(res, status, data) {
+  res.statusCode = status;
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store');
+  return res.end(JSON.stringify(data));
+}
+
+function timeoutSignal(ms) {
+  return AbortSignal.timeout(ms);
+}
+
+async function readJsonResponse(response, label) {
+  const raw = await response.text();
+  let data;
+
+  try {
+    data = JSON.parse(raw);
+  } catch (_) {
+    throw new Error(
+      label + ' returned an invalid response (HTTP ' +
+      response.status + ').'
+    );
+  }
+
+  if (!response.ok) {
+    const message =
+      data?.error?.message ||
+      data?.message ||
+      label + ' request failed (HTTP ' + response.status + ').';
+
+    const error = new Error(message);
+    error.statusCode = response.status === 429 ? 429 : 502;
+    throw error;
+  }
+
+  return data;
+}
+
+function extractGeminiText(data) {
+  return (data?.candidates?.[0]?.content?.parts || [])
+    .map(part => part.text || '')
+    .join('')
+    .trim();
+}
+
+function pcmToWavBase64(
+  base64Pcm,
+  sampleRate = 24000,
+  channels = 1,
+  bitsPerSample = 16
+) {
+  const pcm = Buffer.from(base64Pcm, 'base64');
+  const header = Buffer.alloc(44);
+  const byteRate = sampleRate * channels * bitsPerSample / 8;
+  const blockAlign = channels * bitsPerSample / 8;
+
+  header.write('RIFF', 0);
+  header.writeUInt32LE(36 + pcm.length, 4);
+  header.write('WAVE', 8);
+  header.write('fmt ', 12);
+  header.writeUInt32LE(16, 16);
+  header.writeUInt16LE(1, 20);
+  header.writeUInt16LE(channels, 22);
+  header.writeUInt32LE(sampleRate, 24);
+  header.writeUInt32LE(byteRate, 28);
+  header.writeUInt16LE(blockAlign, 32);
+  header.writeUInt16LE(bitsPerSample, 34);
+  header.write('data', 36);
+  header.writeUInt32LE(pcm.length, 40);
+
+  return Buffer.concat([header, pcm]).toString('base64');
+}
+
+async function getMarketData(symbol) {
+  const key = String(symbol || '').trim().toUpperCase();
+  const yahooSymbol = SYMBOLS[key];
+
+  if (!yahooSymbol) {
+    const error = new Error(
+      'Unsupported symbol. Choose an instrument listed in the Market Monitor.'
+    );
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const url =
+    'https://query1.finance.yahoo.com/v8/finance/chart/' +
+    encodeURIComponent(yahooSymbol) +
+    '?range=5d&interval=1d';
+
+  const response = await fetch(url, {
+    headers: {
+      Accept: 'application/json',
+      'User-Agent': 'Mozilla/5.0 AICommandCentre/1.0'
+    },
+    signal: timeoutSignal(12000)
+  });
+
+  const data = await readJsonResponse(response, 'Market data provider');
+  const result = data?.chart?.result?.[0];
+
+  if (!result) {
+    throw new Error(
+      data?.chart?.error?.description ||
+      'No market data was returned for ' + key + '.'
+    );
+  }
+
+  const meta = result.meta || {};
+  const quotes = result.indicators?.quote?.[0] || {};
+  const closes = (quotes.close || []).filter(Number.isFinite);
+
+  const current = Number.isFinite(meta.regularMarketPrice)
+    ? meta.regularMarketPrice
+    : closes.at(-1);
+
+  const previous = Number.isFinite(meta.chartPreviousClose)
+    ? meta.chartPreviousClose
+    : Number.isFinite(meta.previousClose)
+      ? meta.previousClose
+      : closes.at(-2);
+
+  if (!Number.isFinite(current)) {
+    throw new Error('The provider returned no usable price for ' + key + '.');
+  }
+
+  const change = Number.isFinite(previous)
+    ? current - previous
+    : null;
+
+  return {
+    success: true,
+    symbol: key,
+    providerSymbol: yahooSymbol,
+    name: meta.longName || meta.shortName || key,
+    price: current,
+    currency: meta.currency || 'Unknown',
+    exchange: meta.exchangeName || null,
+    previousClose: Number.isFinite(previous) ? previous : null,
+    change,
+    changePercent:
+      Number.isFinite(previous) && previous !== 0
+        ? change / previous * 100
+        : null,
+    marketState: meta.marketState || 'UNKNOWN',
+    asOf: meta.regularMarketTime
+      ? new Date(meta.regularMarketTime * 1000).toISOString()
+      : null,
+    disclaimer:
+      'Market data may be delayed or unavailable. Not financial advice.'
+  };
+}
+
+async function generateChat(message, conversation) {
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (!apiKey) {
+    const error = new Error(
+      'Missing GEMINI_API_KEY in Vercel Project Settings → Environment Variables.'
+    );
+    error.statusCode = 503;
+    throw error;
+  }
+
+  const history = Array.isArray(conversation)
+    ? conversation.slice(-12).map(item => {
+        const role =
+          item?.role === 'model' || item?.role === 'assistant'
+            ? 'model'
+            : 'user';
+
+        return {
+          role,
+          parts: [{
+            text: String(item?.content ?? item?.text ?? '').slice(0, 8000)
+          }]
+        };
+      }).filter(item => item.parts[0].text.trim())
+    : [];
+
+  const contents = [
+    ...history,
+    { role: 'user', parts: [{ text: message }] }
+  ];
+
+  const response = await fetch(
+    'https://generativelanguage.googleapis.com/v1beta/models/' +
+    encodeURIComponent(CHAT_MODEL) +
+    ':generateContent?key=' + encodeURIComponent(apiKey),
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents,
+        generationConfig: {
+          temperature: 0.75,
+          maxOutputTokens: 4096
+        }
+      }),
+      signal: timeoutSignal(45000)
+    }
+  );
+
+  const data = await readJsonResponse(response, 'Gemini AI');
+  const reply = extractGeminiText(data);
+
+  if (!reply) {
+    throw new Error(
+      'The AI returned an empty response. Please try again.'
+    );
+  }
+
+  return { success: true, reply, model: CHAT_MODEL };
+}
+
+async function generateTts(text) {
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (!apiKey) {
+    const error = new Error(
+      'Missing GEMINI_API_KEY in Vercel Project Settings → Environment Variables.'
+    );
+    error.statusCode = 503;
+    throw error;
+  }
+
+  const response = await fetch(
+    'https://generativelanguage.googleapis.com/v1beta/models/' +
+    encodeURIComponent(TTS_MODEL) +
+    ':generateContent?key=' + encodeURIComponent(apiKey),
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text:
+              'Read the following script clearly and naturally. ' +
+              'Do not add any words before or after it.\n\n' + text
+          }]
+        }],
+        generationConfig: {
+          responseModalities: ['AUDIO'],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: 'Kore' }
+            }
+          }
+        }
+      }),
+      signal: timeoutSignal(60000)
+    }
+  );
+
+  const data = await readJsonResponse(response, 'Gemini text-to-speech');
+  const parts = data?.candidates?.[0]?.content?.parts || [];
+  const audioPart = parts.find(part => part.inlineData?.data);
+
+  if (!audioPart) {
+    throw new Error(
+      'TTS returned no audio. Check whether the selected Gemini TTS model is enabled.'
+    );
+  }
+
+  const mime = audioPart.inlineData.mimeType || 'audio/L16;rate=24000';
+  const match = mime.match(/rate=(\d+)/i);
+  const sampleRate = match ? Number(match[1]) : 24000;
+  const wav = pcmToWavBase64(audioPart.inlineData.data, sampleRate);
+
+  return {
+    success: true,
+    audio: wav,
+    mimeType: 'audio/wav',
+    model: TTS_MODEL
+  };
+}
 
 module.exports = async function handler(req, res) {
-  res.setHeader("Content-Type", "application/json; charset=utf-8");
-
-  if (req.method !== "POST") {
-    return res.status(405).json({
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST');
+    return send(res, 405, {
       success: false,
-      error: "Method not allowed"
+      error: 'Method not allowed. Use POST.'
     });
   }
 
   try {
-    const action = req.body?.action || "chat";
+    let body = req.body;
 
-    // =====================================================
-    // MARKET DATA — Yahoo Finance
-    // =====================================================
-
-    if (action === "market_data") {
-      const symbol = String(req.body?.symbol || "NIFTY")
-        .trim()
-        .toUpperCase();
-
-      const symbolMap = {
-        NIFTY: "^NSEI",
-        SENSEX: "^BSESN",
-        RELIANCE: "RELIANCE.NS",
-        TCS: "TCS.NS",
-        INFY: "INFY.NS",
-        HDFCBANK: "HDFCBANK.NS",
-        ICICIBANK: "ICICIBANK.NS",
-        SBIN: "SBIN.NS"
-      };
-
-      const yahooSymbol = symbolMap[symbol];
-
-      if (!yahooSymbol) {
-        return res.status(400).json({
+    if (typeof body === 'string') {
+      if (body.length > MAX_BODY_CHARS) {
+        return send(res, 413, {
           success: false,
-          error: "Unsupported market symbol",
-          supportedSymbols: Object.keys(symbolMap)
+          error: 'Request is too large.'
         });
       }
 
-      let marketData = null;
-      let lastError = "Market data unavailable";
-
-      for (const host of [
-        "query1.finance.yahoo.com",
-        "query2.finance.yahoo.com"
-      ]) {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 15000);
-
-        try {
-          const url =
-            "https://" + host +
-            "/v8/finance/chart/" +
-            encodeURIComponent(yahooSymbol) +
-            "?range=1d&interval=5m";
-
-          const response = await fetch(url, {
-            headers: {
-              "User-Agent": "Mozilla/5.0"
-            },
-            signal: controller.signal
-          });
-
-          clearTimeout(timeout);
-
-          if (!response.ok) {
-            lastError = "Yahoo Finance HTTP " + response.status;
-            continue;
-          }
-
-          const json = await response.json();
-
-          if (json?.chart?.result?.[0]) {
-            marketData = json.chart.result[0];
-            break;
-          }
-
-          lastError = "No market data returned";
-        } catch (error) {
-          clearTimeout(timeout);
-          lastError = error?.name === "AbortError"
-            ? "Market data request timed out"
-            : "Unable to connect to Yahoo Finance";
-        }
-      }
-
-      if (!marketData) {
-        return res.status(502).json({
+      try {
+        body = JSON.parse(body);
+      } catch (_) {
+        return send(res, 400, {
           success: false,
-          error: lastError,
-          symbol
+          error: 'Request body must be valid JSON.'
         });
       }
+    }
 
-      const meta = marketData.meta || {};
-      const timestamps = marketData.timestamp || [];
-      const quote = marketData.indicators?.quote?.[0] || {};
-      const closes = quote.close || [];
-      const opens = quote.open || [];
-      const highs = quote.high || [];
-      const lows = quote.low || [];
-      const volumes = quote.volume || [];
-
-      let latestIndex = -1;
-
-      for (let i = closes.length - 1; i >= 0; i--) {
-        if (
-          typeof closes[i] === "number" &&
-          Number.isFinite(closes[i]) &&
-          closes[i] > 0
-        ) {
-          latestIndex = i;
-          break;
-        }
-      }
-
-      let price = latestIndex >= 0
-        ? Number(closes[latestIndex])
-        : Number(meta.regularMarketPrice);
-
-      if (!Number.isFinite(price) || price <= 0) {
-        price = Number(meta.regularMarketPrice);
-      }
-
-      if (!Number.isFinite(price) || price <= 0) {
-        return res.status(502).json({
-          success: false,
-          error: "No valid market price returned",
-          symbol
-        });
-      }
-
-      let previousClose = Number(
-        meta.previousClose ?? meta.chartPreviousClose
-      );
-
-      if (!Number.isFinite(previousClose) || previousClose <= 0) {
-        previousClose = price;
-      }
-
-      const candles = [];
-
-      for (
-        let i = Math.max(0, closes.length - 100);
-        i < closes.length;
-        i++
-      ) {
-        if (
-          typeof closes[i] !== "number" ||
-          !Number.isFinite(closes[i])
-        ) {
-          continue;
-        }
-
-        candles.push({
-          timestamp: timestamps[i] ?? null,
-          open: opens[i] ?? null,
-          high: highs[i] ?? null,
-          low: lows[i] ?? null,
-          close: closes[i],
-          volume: volumes[i] ?? null
-        });
-      }
-
-      return res.status(200).json({
-        success: true,
-        symbol,
-        yahooSymbol,
-        currency: meta.currency || "INR",
-        exchange: meta.exchangeName || meta.fullExchangeName || "N/A",
-        marketState: meta.marketState || "UNKNOWN",
-        price,
-        currentPrice: price,
-        previousClose,
-        change: price - previousClose,
-        changePercent: previousClose
-          ? ((price - previousClose) / previousClose) * 100
-          : 0,
-        open: latestIndex >= 0 ? opens[latestIndex] ?? null : null,
-        high: latestIndex >= 0 ? highs[latestIndex] ?? null : null,
-        low: latestIndex >= 0 ? lows[latestIndex] ?? null : null,
-        volume: latestIndex >= 0 ? volumes[latestIndex] ?? null : null,
-        timestamp: latestIndex >= 0
-          ? timestamps[latestIndex] ?? null
-          : Math.floor(Date.now() / 1000),
-        candles,
-        dataSource: "Yahoo Finance",
-        paperTradingOnly: true,
-        fetchedAt: new Date().toISOString()
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return send(res, 400, {
+        success: false,
+        error: 'Request body must be a JSON object.'
       });
     }
 
-    // =====================================================
-    // PAPER TRADING — SIMULATED ONLY, NO REAL ORDERS
-    // =====================================================
+    if (Buffer.byteLength(JSON.stringify(body), 'utf8') > MAX_BODY_CHARS) {
+      return send(res, 413, {
+        success: false,
+        error: 'Request is too large.'
+      });
+    }
 
-    if (action === "paper_trade") {
-      const symbol = String(req.body?.symbol || "")
+    const action = String(body.action || 'chat').trim().toLowerCase();
+
+    if (action === 'market_data') {
+      return send(res, 200, await getMarketData(body.symbol));
+    }
+
+    if (action === 'paper_trade') {
+      // This endpoint only validates simulated orders.
+      // It never connects to a broker or places real trades.
+      const symbol = String(body.symbol || '')
         .trim()
-        .toUpperCase();
+        .toUpperCase()
+        .slice(0, 32);
 
-      const side = String(req.body?.side || "")
-        .trim()
-        .toUpperCase();
+      const side = String(body.side || '').toUpperCase();
+      const quantity = Number(body.quantity ?? body.qty);
+      const price = Number(body.price);
+      const total = quantity * price;
 
-      const quantity = Number(req.body?.quantity);
-      const price = Number(req.body?.price);
-
-      if (!symbol) {
-        return res.status(400).json({
+      if (
+        !/^[A-Z0-9.^=\-]{1,32}$/.test(symbol) ||
+        !['BUY', 'SELL'].includes(side) ||
+        !Number.isSafeInteger(quantity) ||
+        quantity < 1 ||
+        !Number.isFinite(price) ||
+        price <= 0 ||
+        !Number.isFinite(total)
+      ) {
+        return send(res, 400, {
           success: false,
-          error: "Symbol is required"
+          error:
+            'Invalid simulated order. Provide a symbol, BUY/SELL, ' +
+            'positive whole quantity and positive price.'
         });
       }
 
-      if (side !== "BUY" && side !== "SELL") {
-        return res.status(400).json({
-          success: false,
-          error: "Side must be BUY or SELL"
-        });
-      }
-
-      if (!Number.isFinite(quantity) || quantity <= 0) {
-        return res.status(400).json({
-          success: false,
-          error: "Quantity must be greater than zero"
-        });
-      }
-
-      if (!Number.isFinite(price) || price <= 0) {
-        return res.status(400).json({
-          success: false,
-          error: "Price must be greater than zero"
-        });
-      }
-
-      return res.status(200).json({
+      return send(res, 200, {
         success: true,
-        paperTrade: true,
-        realTradeExecuted: false,
+        simulated: true,
+        message: 'Simulation only. No real order was sent.',
         order: {
-          orderId: "PAPER-" + Date.now(),
           symbol,
           side,
           quantity,
           price,
-          value: quantity * price,
-          status: "SIMULATED",
+          total,
           createdAt: new Date().toISOString()
-        },
-        message: "Simulated trade only. No real order was placed."
+        }
       });
     }
 
-    // =====================================================
-    // OPTIONAL OPENAI TEXT-TO-SPEECH ENDPOINT
-    // The browser voiceover does not require this endpoint.
-    // =====================================================
+    if (action === 'tts') {
+      const text = String(body.text || '').trim();
 
-    
-if (action === "tts") {
-  const apiKey = process.env.GEMINI_API_KEY;
-
-  if (!apiKey) {
-    return res.status(503).json({
-      success: false,
-      error: "GEMINI_API_KEY is missing in Vercel"
-    });
-  }
-
-  const text = String(req.body?.text || "").trim();
-
-  if (!text) {
-    return res.status(400).json({
-      success: false,
-      error: "Text is required for voice generation"
-    });
-  }
-
-  if (text.length > 8000) {
-    return res.status(400).json({
-      success: false,
-      error: "Voiceover text is too long. Shorten the script."
-    });
-  }
-
-  const model = "gemini-3.1-flash-tts-preview";
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 90000);
-
-  let response;
-
-  try {
-    response = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/" +
-        model + ":generateContent",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": apiKey
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: "Read the following script naturally and clearly, " +
-                "with a friendly short-video narrator voice. " +
-                "Read only the script:\n\n" + text
-            }]
-          }],
-          generationConfig: {
-            responseModalities: ["AUDIO"],
-            speechConfig: {
-              voiceConfig: {
-                prebuiltVoiceConfig: {
-                  voiceName: "Kore"
-                }
-              }
-            }
-          }
-        }),
-        signal: controller.signal
-      }
-    );
-  } catch (error) {
-    clearTimeout(timeout);
-
-    return res.status(
-      error?.name === "AbortError" ? 504 : 502
-    ).json({
-      success: false,
-      error: error?.name === "AbortError"
-        ? "Voice generation timed out. Try a shorter script."
-        : "Could not connect to Gemini voice generation."
-    });
-  }
-
-  clearTimeout(timeout);
-
-  let data;
-
-  try {
-    data = await response.json();
-  } catch (_) {
-    return res.status(502).json({
-      success: false,
-      error: "Gemini voice service returned invalid JSON."
-    });
-  }
-
-  if (!response.ok) {
-    return res.status(response.status).json({
-      success: false,
-      error: data?.error?.message ||
-        "Gemini voice generation failed."
-    });
-  }
-
-  const parts = data?.candidates?.[0]?.content?.parts || [];
-  const audioPart = parts.find(
-    part => part?.inlineData?.data
-  );
-
-  if (!audioPart) {
-    return res.status(502).json({
-      success: false,
-      error: "Gemini returned no audio. Check model access and try again."
-    });
-  }
-
-  const pcm = Buffer.from(audioPart.inlineData.data, "base64");
-
-  // Gemini 3.1 TTS returns 24 kHz, mono, 16-bit PCM.
-  // Add a WAV header so the browser can decode the audio.
-  const sampleRate = 24000;
-  const channels = 1;
-  const bitsPerSample = 16;
-  const wav = Buffer.alloc(44 + pcm.length);
-
-  wav.write("RIFF", 0);
-  wav.writeUInt32LE(36 + pcm.length, 4);
-  wav.write("WAVE", 8);
-  wav.write("fmt ", 12);
-  wav.writeUInt32LE(16, 16);
-  wav.writeUInt16LE(1, 20);
-  wav.writeUInt16LE(channels, 22);
-  wav.writeUInt32LE(sampleRate, 24);
-  wav.writeUInt32LE(sampleRate * channels * bitsPerSample / 8, 28);
-  wav.writeUInt16LE(channels * bitsPerSample / 8, 32);
-  wav.writeUInt16LE(bitsPerSample, 34);
-  wav.write("data", 36);
-  wav.writeUInt32LE(pcm.length, 40);
-  pcm.copy(wav, 44);
-
-  return res.status(200).json({
-    success: true,
-    audio: wav.toString("base64"),
-    mimeType: "audio/wav",
-    model,
-    voice: "Kore"
-  });
-}
-
-
-    // =====================================================
-    // NORMAL AI CHAT — GOOGLE GEMINI
-    // =====================================================
-
-    const apiKey = process.env.GEMINI_API_KEY;
-
-    if (!apiKey) {
-      return res.status(500).json({
-        success: false,
-        error: "GEMINI_API_KEY is missing in Vercel"
-      });
-    }
-
-    const message = typeof req.body?.message === "string"
-      ? req.body.message.trim()
-      : "";
-
-    const conversation = Array.isArray(req.body?.conversation)
-      ? req.body.conversation
-      : [];
-
-    if (!message && conversation.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: "Message is required"
-      });
-    }
-
-    let contents = conversation
-      .filter((item) =>
-        item &&
-        typeof item.role === "string" &&
-        typeof item.content === "string" &&
-        item.content.trim()
-      )
-      .map((item) => ({
-        role: item.role === "assistant" || item.role === "model"
-          ? "model"
-          : "user",
-        parts: [{ text: item.content.trim() }]
-      }));
-
-    if (contents.length === 0 && message) {
-      contents = [{
-        role: "user",
-        parts: [{ text: message }]
-      }];
-    }
-
-    contents = contents.slice(-30);
-
-    // Gemini conversations must start with a user message.
-    while (contents.length && contents[0].role !== "user") {
-      contents.shift();
-    }
-
-    // Gemini does not accept consecutive messages with the same role.
-    const normalizedContents = [];
-
-    for (const item of contents) {
-      const previous = normalizedContents[
-        normalizedContents.length - 1
-      ];
-
-      if (previous && previous.role === item.role) {
-        previous.parts[0].text += "\n\n" + item.parts[0].text;
-      } else {
-        normalizedContents.push({
-          role: item.role,
-          parts: [{ text: item.parts[0].text }]
+      if (!text) {
+        return send(res, 400, {
+          success: false,
+          error: 'Text is required for voice generation.'
         });
       }
+
+      if (text.length > 8000) {
+        return send(res, 413, {
+          success: false,
+          error: 'Voiceover text is too long. Keep it under 8,000 characters.'
+        });
+      }
+
+      return send(res, 200, await generateTts(text));
     }
 
-    if (!normalizedContents.length) {
-      return res.status(400).json({
-        success: false,
-        error: "Please send a new message"
-      });
-    }
+    if (['chat', 'generate', 'content'].includes(action)) {
+      const message = String(body.message || body.prompt || '').trim();
 
-    const model = "gemini-3.1-flash-lite";
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 60000);
+      if (!message) {
+        return send(res, 400, {
+          success: false,
+          error: 'Please provide a message.'
+        });
+      }
 
-    let response;
+      if (message.length > 20000) {
+        return send(res, 413, {
+          success: false,
+          error: 'Message is too long.'
+        });
+      }
 
-    try {
-      response = await fetch(
-        "https://generativelanguage.googleapis.com/v1beta/models/" +
-          model +
-          ":generateContent?key=" +
-          encodeURIComponent(apiKey),
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            systemInstruction: {
-              parts: [{
-                text:
-                  "You are the AI Command Centre assistant. Help users create useful, accurate and practical content. For social media, provide ready-to-use titles, hooks, scripts, captions, calls to action and hashtags when relevant. For trading or investments, provide educational information only. Never claim to place real trades. Be clear about uncertainty."
-              }]
-            },
-            contents: normalizedContents,
-            generationConfig: {
-              maxOutputTokens: 2000,
-              temperature: 0.7
-            }
-          }),
-          signal: controller.signal
-        }
+      return send(
+        res,
+        200,
+        await generateChat(message, body.conversation)
       );
-    } catch (error) {
-      clearTimeout(timeout);
-
-      return res.status(
-        error?.name === "AbortError" ? 504 : 502
-      ).json({
-        success: false,
-        error: error?.name === "AbortError"
-          ? "Gemini request timed out. Please try again."
-          : "Unable to connect to Gemini"
-      });
     }
 
-    clearTimeout(timeout);
-
-    let data;
-
-    try {
-      data = await response.json();
-    } catch (_) {
-      return res.status(502).json({
-        success: false,
-        error: "Gemini returned invalid JSON"
-      });
-    }
-
-    if (!response.ok) {
-      return res.status(response.status).json({
-        success: false,
-        error: data?.error?.message || "Gemini request failed"
-      });
-    }
-
-    const reply = (
-      data?.candidates?.[0]?.content?.parts || []
-    )
-      .map((part) =>
-        typeof part?.text === "string" ? part.text : ""
-      )
-      .join("\n")
-      .trim();
-
-    if (!reply) {
-      const reason = data?.promptFeedback?.blockReason;
-
-      return res.status(502).json({
-        success: false,
-        error: reason
-          ? "Gemini could not answer this prompt: " + reason
-          : "Gemini returned no text. Please try again."
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      reply,
-      model
-    });
-
-  } catch (error) {
-    console.error("AI Command Centre API Error:", error);
-
-    return res.status(500).json({
+    return send(res, 400, {
       success: false,
-      error: "Server error"
+      error:
+        'Unknown action. Supported actions: chat, market_data, tts, paper_trade.'
+    });
+  } catch (error) {
+    const status =
+      Number.isInteger(error.statusCode)
+        ? error.statusCode
+        : error.name === 'TimeoutError' || error.name === 'AbortError'
+          ? 504
+          : 502;
+
+    // Do not log request bodies or API keys.
+    console.error('[api/chat]', error?.message || 'Request failed');
+
+    return send(res, status, {
+      success: false,
+      error: error?.message || 'Server request failed.'
     });
   }
+};
+
+module.exports._test = {
+  SYMBOLS,
+  pcmToWavBase64,
+  extractGeminiText
 };
