@@ -97,6 +97,7 @@ footer{text-align:center;color:var(--muted);padding:20px;font-size:12px}
 <div class="actions"><button id="save">Save Content</button><button id="copy">Copy</button><button id="toVideo">Open in Video Studio</button></div>
 </div>
 </section>
+
 <section id="video" class="view">
 <div class="card">
 <h2>Video Studio</h2>
@@ -108,9 +109,10 @@ footer{text-align:center;color:var(--muted);padding:20px;font-size:12px}
 <option value="blue">Midnight blue</option><option value="green">Pista green</option><option value="sunset">Sunset</option><option value="black">Black</option>
 </select>
 <div class="actions">
-<button class="primary" id="prepare">Prepare Scenes</button><button id="previous">Previous</button><button id="next">Next Scene</button>
+<button class="primary" id="prepare">Prepare Scenes</button><button id="makeImages">Generate Scene Images</button><button id="previous">Previous</button><button id="next">Next Scene</button>
 </div>
 <div id="sceneLabel">Scene 0</div>
+<div id="imageGallery" class="grid" aria-live="polite"></div>
 <canvas id="canvas" width="360" height="640"></canvas>
 <div class="actions">
 <button class="primary" id="download">Render & Download Video with Voice</button>
@@ -177,7 +179,7 @@ const $=id=>document.getElementById(id);
 const KEY={saved:'aicc_saved_v2',log:'aicc_log_v2',trades:'aicc_trades_v2'};
 function read(k){try{const v=JSON.parse(localStorage.getItem(k)||'[]');return Array.isArray(v)?v:[]}catch(e){return[]}}
 function store(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
-let saved=read(KEY.saved),logs=read(KEY.log),trades=read(KEY.trades),scenes=[],sceneIndex=0;
+let saved=read(KEY.saved),logs=read(KEY.log),trades=read(KEY.trades),scenes=[],sceneIndex=0,sceneImages=[],imageBusy=false;
 function statusText(s){$('status').textContent=s}
 function log(s){logs.unshift({message:s,time:new Date().toLocaleString()});logs=logs.slice(0,100);store(KEY.log,logs);renderLog()}
 function page(n){document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===n));document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===n));if(n==='saved')renderSaved()}
@@ -239,28 +241,46 @@ function wrap(ctx,text,width){
  if(line)lines.push(line);return lines;
 }
 function prepare(){
- scenes=$('script').value.trim().split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean).slice(0,30);
+ scenes=$('script').value.trim().split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean).slice(0,6);
  if(!scenes.length){$('videoStatus').textContent='Enter a script first.';return}
- sceneIndex=0;draw();$('videoStatus').textContent='Prepared '+scenes.length+' scenes.';log('Video scenes prepared');
+ sceneImages=[];$('imageGallery').innerHTML='';sceneIndex=0;draw();$('videoStatus').textContent='Prepared '+scenes.length+' scenes. Tap Generate Scene Images to create visual backgrounds.';log('Video scenes prepared');
+}
+async function generateSceneImages(){
+ if(!scenes.length)prepare();
+ if(!scenes.length||imageBusy)return;
+ imageBusy=true;const btn=$('makeImages');btn.disabled=true;btn.textContent='Generating…';sceneImages=[];$('imageGallery').innerHTML='';
+ try{
+  for(let i=0;i<scenes.length;i++){
+   $('videoStatus').textContent='Generating image '+(i+1)+' of '+scenes.length+'…';
+   const prompt='Create a polished cinematic vertical 9:16 video still for this short-video scene. Scene description: '+scenes[i]+'. Video title/topic: '+($('vtitle').value||'inspirational short video')+'. Style: realistic cinematic photography, clear subject, no text, no logos, visually striking composition. Maintain a consistent visual style and, when a person is described, a consistent fictional adult character across scenes.';
+   const d=await api({action:'generate_image',prompt});
+   if(!d.image||!d.mimeType)throw Error(d.error||'Image service returned no image for scene '+(i+1)+'.');
+   const img=new Image();img.src='data:'+d.mimeType+';base64,'+d.image;
+   await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(Error('Could not load generated scene image.'))});
+   sceneImages[i]=img;
+   const card=document.createElement('div');card.className='item';const thumb=document.createElement('img');thumb.src=img.src;thumb.alt='Generated image for scene '+(i+1);thumb.style.cssText='width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:8px';const cap=document.createElement('small');cap.textContent='Scene '+(i+1);card.append(thumb,cap);$('imageGallery').appendChild(card);
+   if(i===sceneIndex)draw();
+  }
+  $('videoStatus').textContent='Generated '+sceneImages.length+' scene images. Preview and render your video.';log('Scene images generated');
+ }catch(e){$('videoStatus').textContent='Image generation failed: '+e.message+' You can still render the text-based video.';log('Scene image generation failed')}
+ finally{imageBusy=false;btn.disabled=false;btn.textContent='Generate Scene Images'}
 }
 function draw(){
  const c=$('canvas'),ctx=c.getContext('2d'),W=c.width,H=c.height;
  const [bg,accent]=colors(),txt=scenes[sceneIndex]||'Enter a script and prepare scenes.',title=$('vtitle').value||'My Video';
  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
- const g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,bg);g.addColorStop(1,'#050a16');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+ const img=sceneImages[sceneIndex];
+ if(img){const scale=Math.max(W/img.width,H/img.height),iw=img.width*scale,ih=img.height*scale;ctx.drawImage(img,(W-iw)/2,(H-ih)/2,iw,ih);ctx.fillStyle='rgba(0,0,0,.48)';ctx.fillRect(0,0,W,H)}
+ else {const g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,bg);g.addColorStop(1,'#050a16');ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}
  ctx.strokeStyle=accent;ctx.lineWidth=2;ctx.strokeRect(14,14,W-28,H-28);
  ctx.fillStyle=accent;ctx.font='bold 12px Arial';ctx.fillText('AI COMMAND CENTRE',28,45);
- // Simple original vector mascot for visual interest; no external image dependency.
- const cx=292,cy=78;ctx.fillStyle=accent;ctx.beginPath();ctx.arc(cx,cy,18,0,Math.PI*2);ctx.fill();
- ctx.fillStyle=bg;ctx.beginPath();ctx.arc(cx,cy-2,11,0,Math.PI*2);ctx.fill();
- ctx.fillStyle=accent;ctx.beginPath();ctx.roundRect(cx-22,cy+18,44,25,8);ctx.fill();
- ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(cx-4,cy-3,2,0,Math.PI*2);ctx.arc(cx+4,cy-3,2,0,Math.PI*2);ctx.fill();
- ctx.fillStyle='#fff';ctx.font='bold 25px Arial';const titleLines=wrap(ctx,title,300).slice(0,3);titleLines.forEach((s,i)=>ctx.fillText(s,28,100+i*32));
+ ctx.fillStyle='#fff';ctx.font='bold 25px Arial';const titleLines=wrap(ctx,title,300).slice(0,2);titleLines.forEach((s,i)=>ctx.fillText(s,28,100+i*32));
  ctx.fillStyle=accent;ctx.fillRect(28,120+titleLines.length*28,300,2);
- ctx.fillStyle='#f4f7ff';ctx.font='bold 22px Arial';const lines=wrap(ctx,txt,300).slice(0,12),start=Math.max(230,350-lines.length*17);lines.forEach((s,i)=>ctx.fillText(s,28,start+i*32));
+ ctx.fillStyle='#fff';ctx.font='bold 22px Arial';const lines=wrap(ctx,txt,300).slice(0,8),start=Math.max(330,430-lines.length*22);lines.forEach((s,i)=>ctx.fillText(s,28,start+i*29));
  ctx.fillStyle=accent;ctx.font='12px Arial';ctx.fillText('SCENE '+(sceneIndex+1)+' / '+Math.max(scenes.length,1),28,590);
- $('sceneLabel').textContent='Scene '+(sceneIndex+1)+' of '+Math.max(scenes.length,1);
+ $('sceneLabel').textContent='Scene '+(sceneIndex+1)+' of '+Math.max(scenes.length,1)+(img?' · Image ready':'');
 }
+$('makeImages').onclick=generateSceneImages;
 $('prepare').onclick=prepare;
 $('previous').onclick=()=>{if(scenes.length){sceneIndex=Math.max(0,sceneIndex-1);draw()}};
 $('next').onclick=()=>{if(scenes.length){sceneIndex=Math.min(scenes.length-1,sceneIndex+1);draw()}};
