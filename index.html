@@ -355,7 +355,7 @@ $('trade').onclick=()=>{
 const symbol=$('tsymbol').value,side=$('side').value,qty=Number($('qty').value),price=Number($('price').value);
 if(!Number.isInteger(qty)||qty<1||!Number.isFinite(price)||price<=0){$('tradeResult').textContent='Enter a whole quantity of at least 1 and a valid positive test price.';return}
 const t={symbol,side,qty,price,total:qty*price,time:new Date().toLocaleString()};
-trades.unshift(t);trades=trades.slice(0,100);store(KEY.trades,trades);renderTrades();
+trades.unshift(t);trades=trades.slice(0,100);store(KEY.trades,trades);renderTrades();renderPortfolio();
 $('tradeResult').textContent='SIMULATED ONLY\n'+side+' '+qty+' '+symbol+'\nTest price: ₹'+price.toFixed(2)+'\nTotal: ₹'+t.total.toFixed(2);
 log('Paper order simulated: '+side+' '+qty+' '+symbol);
 };
