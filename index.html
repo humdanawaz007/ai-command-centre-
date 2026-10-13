@@ -357,3 +357,23 @@ renderSaved();renderLog();renderTrades();draw();
   });
 })();
 </script>
+renderSaved();renderLog();renderTrades();draw();
+</script>
+
+<script>
+(function () {
+  const canvas = document.getElementById('canvas');
+  if (!canvas) return;
+
+  canvas.style.transition = 'filter 0.65s ease';
+  canvas.style.filter = 'drop-shadow(0 0 0 transparent)';
+
+  canvas.addEventListener('click', function () {
+    canvas.style.filter = 'drop-shadow(0 0 12px #a4e6a0)';
+    setTimeout(function () {
+      canvas.style.filter = 'drop-shadow(0 0 0 transparent)';
+    }, 700);
+  });
+})();
+</script></body>
+</html>
