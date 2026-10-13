@@ -165,6 +165,17 @@ footer{text-align:center;color:var(--muted);padding:20px;font-size:12px}
 </div>
 <button class="primary" id="trade">Simulate Order</button>
 <div id="tradeResult" class="result">No order yet.</div>
+<div class="card">
+<h3>Virtual Portfolio</h3>
+<div class="stats">
+<div class="stat">Available Cash<strong id="virtualCash">₹100,000.00</strong></div>
+<div class="stat">Holdings<strong id="holdingCount">0</strong></div>
+<div class="stat">Realised P/L<strong id="realisedPL">₹0.00</strong></div>
+</div>
+<h3>Open Positions</h3>
+<div id="openPositions">No open positions yet.</div>
+<p class="notice">Simulation only. Values use your manually entered test prices and are not live valuations.</p>
+</div>
 <h3>Simulated Orders</h3><div id="trades"></div>
 </div>
 </section>
