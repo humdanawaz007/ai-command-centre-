@@ -141,7 +141,24 @@ footer{text-align:center;color:var(--muted);padding:20px;font-size:12px}
 <div class="card">
 <h2>Paper Trading</h2><p>Simulation only. No broker connection or real orders.</p>
 <div class="grid">
-<div><label for="tsymbol">Symbol</label><select id="tsymbol"><option>NIFTY</option><option>SENSEX</option><option>RELIANCE</option><option>TCS</option><option>INFY</option><option>HDFCBANK</option><option>ICICIBANK</option><option>SBIN</option></select></div>
+<div><label for="tsymbol">Symbol</label><select id="tsymbol"><option>NIFTY</option><option>SENSEX</option><option>RELIANCE</option><option>TCS</option><option value="NIFTY">NIFTY 50 (India)</option>
+<option value="SENSEX">SENSEX (India)</option>
+<option value="RELIANCE">Reliance (India)</option>
+<option value="TCS">TCS (India)</option>
+<option value="INFY">Infosys (India)</option>
+<option value="HDFCBANK">HDFC Bank (India)</option>
+<option value="ICICIBANK">ICICI Bank (India)</option>
+<option value="SBIN">SBI (India)</option>
+<option value="AAPL">Apple (US)</option>
+<option value="MSFT">Microsoft (US)</option>
+<option value="NVDA">NVIDIA (US)</option>
+<option value="GOOGL">Alphabet (US)</option>
+<option value="AMZN">Amazon (US)</option>
+<option value="TSLA">Tesla (US)</option>
+<option value="SPY">S&amp;P 500 ETF (US)</option>
+<option value="QQQ">Nasdaq-100 ETF (US)</option>
+<option value="BTC-USD">Bitcoin (USD)</option>
+<option value="ETH-USD">Ethereum (USD)</option></select></div>
 <div><label for="side">Side</label><select id="side"><option>BUY</option><option>SELL</option></select></div>
 <div><label for="qty">Quantity</label><input id="qty" type="number" min="1" step="1" value="1"></div>
 <div><label for="price">Test price (₹)</label><input id="price" type="number" min="0.01" step="0.01" placeholder="Enter price"></div>
