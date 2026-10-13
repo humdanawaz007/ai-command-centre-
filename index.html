@@ -363,6 +363,52 @@ function renderTrades(){
  $('trades').innerHTML=trades.map(t=>'<div class="item"><strong>'+esc(t.side)+' '+esc(t.qty)+' '+esc(t.symbol)+'</strong><br>₹'+Number(t.price).toFixed(2)+' · Total ₹'+Number(t.total).toFixed(2)+'<br><small>'+esc(t.time)+'</small></div>').join('')||'No simulated orders.';
 }
 renderSaved();renderLog();renderTrades();draw();
+const STARTING_CASH = 100000;
+
+function renderPortfolio() {
+let cash = STARTING_CASH;
+const positions = {};
+let realised = 0;
+
+trades.slice().reverse().forEach(t => {
+const symbol = t.symbol;
+const qty = Number(t.qty);
+const price = Number(t.price);
+
+if (!positions[symbol]) {
+  positions[symbol] = { qty: 0, cost: 0 };
+}
+
+const p = positions[symbol];
+
+if (t.side === 'BUY') {
+  cash -= qty * price;
+  p.cost += qty * price;
+  p.qty += qty;
+} else if (t.side === 'SELL' && p.qty >= qty) {
+  const averageCost = p.qty ? p.cost / p.qty : 0;
+  cash += qty * price;
+  realised += (price - averageCost) * qty;
+  p.cost -= averageCost * qty;
+  p.qty -= qty;
+}
+
+});
+
+$('virtualCash').textContent = '₹' + cash.toFixed(2);
+$('holdingCount').textContent = Object.values(positions)
+.filter(p => p.qty > 0).length;
+$('realisedPL').textContent = '₹' + realised.toFixed(2);
+
+$('openPositions').innerHTML = Object.entries(positions)
+.filter(([symbol, p]) => p.qty > 0)
+.map(([symbol, p]) =>
+'<div class="item"><strong>' + esc(symbol) +
+'</strong><br>Quantity: ' + p.qty +
+'<br>Average cost: ₹' + (p.cost / p.qty).toFixed(2) +
+'</div>'
+).join('') || 'No open positions yet.';
+}
 </script>
 </body>
 </html>
