@@ -1,500 +1,495 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1020">
+<title>AI Command Centre</title>
+<style>
+:root{--bg:#0b1020;--panel:#141e32;--line:#2a3853;--text:#edf3ff;--muted:#9caec7;--accent:#a4e6a0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,Arial}
+header,main{max-width:1000px;margin:auto}
+header{padding:18px;background:#101b30;border-bottom:1px solid var(--line)}
+h1{font-size:25px;margin:0}h2{font-size:19px;margin:0 0 12px}h3{font-size:15px}
+p,small{color:var(--muted)}
+main{padding:12px}
+nav{display:flex;gap:7px;overflow:auto;padding:10px 0;position:sticky;top:0;background:var(--bg);z-index:2}
+button,input,select,textarea{font:inherit}
+button{background:#20314e;color:var(--text);border:1px solid var(--line);border-radius:9px;padding:10px 13px;cursor:pointer}
+button.primary,button.active{background:#4568c8}
+button:disabled{opacity:.6}
+input,select,textarea{width:100%;padding:11px;background:#081323;color:var(--text);border:1px solid var(--line);border-radius:9px}
+textarea{min-height:110px}
+label{display:block;margin:12px 0 5px;color:var(--muted)}
+.card{background:var(--panel);border:1px solid var(--line);padding:15px;border-radius:14px;margin:12px 0}
+.view{display:none}.view.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stat,.result{padding:12px;background:#081323;border:1px solid var(--line);border-radius:9px;overflow-wrap:anywhere}
+.stat strong{display:block;font-size:18px;overflow-wrap:anywhere}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.result{white-space:pre-wrap;margin-top:10px;min-height:40px}
+.notice{background:#101b30;padding:10px;border-radius:8px;font-size:12px}
+canvas{width:100%;max-width:360px;height:auto;display:block;margin:12px auto;background:#050a16;border-radius:10px}
+.item{padding:12px 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
+footer{text-align:center;color:var(--muted);padding:20px;font-size:12px}
+@media(max-width:550px){.grid{grid-template-columns:1fr}main{padding:8px}.card{padding:12px}nav button{white-space:nowrap;font-size:12px}.stats{gap:5px}.stat{padding:8px}}
+</style>
+</head>
+<body>
+<header>
+<h1>🤖 AI Command Centre</h1>
+<p>AI Content · Video Studio · Markets · Paper Trading</p>
+<div id="status" role="status">Ready</div>
+</header>
+<main>
+<nav>
+<button class="active" data-page="home">Dashboard</button>
+<button data-page="content">AI Content</button>
+<button data-page="video">Video Studio</button>
+<button data-page="saved">Saved</button>
+<button data-page="markets">Markets</button>
+<button data-page="trading">Paper Trading</button>
+<button data-page="activity">Activity</button>
+</nav>
+
+<section id="home" class="view active">
+<div class="stats">
+<div class="stat">Saved<strong id="savedCount">0</strong></div>
+<div class="stat">Activities<strong id="activityCount">0</strong></div>
+<div class="stat">Trading<strong>Simulation</strong></div>
+</div>
+<div class="card">
+<h2>AI Assistant</h2>
+<label for="question">Ask anything</label>
+<textarea id="question" placeholder="Ask AI for help, ideas or a plan"></textarea>
+<button class="primary" id="ask">Ask AI</button>
+<div id="answer" class="result">Your answer appears here.</div>
+</div>
+<div class="card">
+<h2>Quick Actions</h2>
+<div class="actions">
+<button data-go="content">Generate Content</button>
+<button data-go="video">Create Video</button>
+<button data-go="markets">Market Monitor</button>
+<button data-go="trading">Paper Trading</button>
+</div>
+<p class="notice">No real trades or social-media publishing occur.</p>
+<h3>Recent Activity</h3><div id="recent"></div>
+</div>
+</section>
+
+<section id="content" class="view">
+<div class="card">
+<h2>AI Content Generator</h2>
+<label for="topic">Topic</label><input id="topic" placeholder="Enter your video topic">
+<div class="grid">
+<div><label for="platform">Platform</label><select id="platform">
+<option>YouTube Shorts</option><option>Instagram Reels</option><option>TikTok</option><option>Facebook Reels</option><option>Snapchat Spotlight</option>
+</select></div>
+<div><label for="duration">Duration</label><select id="duration">
+<option>15 seconds</option><option selected>30 seconds</option><option>45 seconds</option><option>60 seconds</option>
+</select></div>
+</div>
+<div class="actions"><button class="primary" id="generate">Generate Content</button></div>
+<div id="contentResult" class="result">Your content package appears here.</div>
+<div class="actions"><button id="save">Save Content</button><button id="copy">Copy</button><button id="toVideo">Open in Video Studio</button></div>
+</div>
+</section>
+
+<section id="video" class="view">
+<div class="card">
+<h2>Video Studio</h2>
+<label for="vtitle">Video title</label><input id="vtitle" placeholder="My video">
+<label for="script">Script (leave a blank line between scenes)</label>
+<textarea id="script" placeholder="Scene one: Hook&#10;&#10;Scene two: Main idea&#10;&#10;Scene three: Conclusion"></textarea>
+<label for="theme">Theme</label>
+<select id="theme">
+<option value="blue">Midnight blue</option><option value="green">Pista green</option><option value="sunset">Sunset</option><option value="black">Black</option>
+</select>
+<div class="actions">
+<button class="primary" id="prepare">Prepare Scenes</button><button id="makeImages">Generate Scene Images</button><button id="previous">Previous</button><button id="next">Next Scene</button>
+</div>
+<div id="sceneLabel">Scene 0</div>
+<div id="imageGallery" class="grid" aria-live="polite"></div>
+<canvas id="canvas" width="360" height="640"></canvas>
+<div class="actions">
+<button class="primary" id="download">Render & Download Video with Voice</button>
+<button id="speak">▶ Play Voiceover</button><button id="stopVoice">■ Stop Voiceover</button>
+</div>
+<div id="videoStatus" class="result">Enter a script and prepare scenes.</div>
+<p class="notice">Video export requests AI voice audio from your server and combines it with the recorded video. Audio generation and WebM support depend on your browser and server.</p>
+</div>
+</section>
+
+<section id="saved" class="view"><div class="card"><h2>Saved Content</h2><div id="savedList"></div></div></section>
+
+<section id="markets" class="view">
+<div class="card">
+<h2>Market Monitor</h2>
+<label for="symbol">Instrument</label>
+<select id="symbol">
+<option value="NIFTY">NIFTY 50</option><option value="SENSEX">SENSEX</option><option value="RELIANCE">Reliance</option><option value="TCS">TCS</option><option value="INFY">Infosys</option><option value="HDFCBANK">HDFC Bank</option><option value="ICICIBANK">ICICI Bank</option><option value="SBIN">SBI</option>
+<option value="AAPL">Apple (AAPL)</option><option value="MSFT">Microsoft (MSFT)</option><option value="GOOGL">Alphabet (GOOGL)</option><option value="AMZN">Amazon (AMZN)</option><option value="NVDA">NVIDIA (NVDA)</option><option value="TSLA">Tesla (TSLA)</option><option value="META">Meta (META)</option><option value="NFLX">Netflix (NFLX)</option><option value="SPY">S&amp;P 500 ETF (SPY)</option><option value="QQQ">Nasdaq 100 ETF (QQQ)</option><option value="BTC-USD">Bitcoin (BTC-USD)</option><option value="ETH-USD">Ethereum (ETH-USD)</option><option value="GC=F">Gold Futures (GC=F)</option><option value="CL=F">WTI Crude Futures (CL=F)</option><option value="EURUSD=X">EUR/USD (EURUSD=X)</option>
+</select>
+<button class="primary" id="market">Check Market</button>
+<div id="marketResult" class="result">Market data appears here.</div>
+<p class="notice">Market data is supplied by Yahoo Finance and may be delayed or unavailable. Currency depends on the instrument. Not financial advice.</p>
+</div>
+</section>
+
+<section id="trading" class="view">
+<div class="card">
+<h2>Paper Trading</h2>
+<p>Simulation only. No broker connection and no real orders.</p>
+<div class="grid">
+<div><label for="tsymbol">Symbol</label><select id="tsymbol">
+<option>NIFTY</option><option>SENSEX</option><option>RELIANCE</option><option>TCS</option><option>INFY</option><option>HDFCBANK</option><option>ICICIBANK</option><option>SBIN</option>
+<option>AAPL</option><option>MSFT</option><option>GOOGL</option><option>AMZN</option><option>NVDA</option><option>TSLA</option><option>SPY</option><option>QQQ</option><option>BTC-USD</option><option>ETH-USD</option>
+</select></div>
+<div><label for="side">Side</label><select id="side"><option>BUY</option><option>SELL</option></select></div>
+<div><label for="qty">Quantity</label><input id="qty" type="number" min="1" step="1" value="1" inputmode="numeric"></div>
+<div><label for="price">Manual test price (₹)</label><input id="price" type="number" min="0.01" step="0.01" placeholder="Enter test price" inputmode="decimal"></div>
+</div>
+<button class="primary" id="trade">Simulate Order</button>
+<div id="tradeResult" class="result" role="status">No order yet.</div>
+<div class="card">
+<h2>Virtual Portfolio</h2>
+<div class="stats">
+<div class="stat">Available cash<strong id="virtualCash">₹100,000.00</strong></div>
+<div class="stat">Open symbols<strong id="holdingCount">0</strong></div>
+<div class="stat">Realised P/L<strong id="realisedPL">₹0.00</strong></div>
+</div>
+<h3>Open Positions</h3><div id="openPositions">No open positions yet.</div>
+<p class="notice">All prices are manually entered test prices, not live valuations. Virtual cash starts at ₹100,000. Orders and portfolio are saved in this browser only. Changing or clearing browser storage may reset them.</p>
+<button id="resetPortfolio">Reset Virtual Portfolio</button>
+</div>
+<h3>Simulated Orders</h3><div id="trades"></div>
+</div>
+</section>
+
+<section id="activity" class="view"><div class="card"><h2>Activity Log</h2><button id="clearLog">Clear Log</button><div id="log"></div></div></section>
+<footer>AI Command Centre · Mobile-friendly · Paper trading only</footer>
+</main>
+
+<script>
 'use strict';
+const $=id=>document.getElementById(id);
+const KEY={saved:'aicc_saved_v2',log:'aicc_log_v2',trades:'aicc_trades_v2'};
+function read(k){try{const v=JSON.parse(localStorage.getItem(k)||'[]');return Array.isArray(v)?v:[]}catch(e){return[]}}
+function store(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+let saved=read(KEY.saved),logs=read(KEY.log),trades=read(KEY.trades),scenes=[],sceneIndex=0,sceneImages=[],imageBusy=false;
+function statusText(s){$('status').textContent=s}
+function log(s){logs.unshift({message:s,time:new Date().toLocaleString()});logs=logs.slice(0,100);store(KEY.log,logs);renderLog()}
+function page(n){document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===n));document.querySelectorAll('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===n));if(n==='saved')renderSaved()}
+document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>page(b.dataset.page));
+document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>page(b.dataset.go));
 
-const SYMBOLS = Object.freeze({
-  // India
-  NIFTY: '^NSEI',
-  SENSEX: '^BSESN',
-  RELIANCE: 'RELIANCE.NS',
-  TCS: 'TCS.NS',
-  INFY: 'INFY.NS',
-  HDFCBANK: 'HDFCBANK.NS',
-  ICICIBANK: 'ICICIBANK.NS',
-  SBIN: 'SBIN.NS',
-
-  // International stocks
-  AAPL: 'AAPL',
-  MSFT: 'MSFT',
-  GOOGL: 'GOOGL',
-  AMZN: 'AMZN',
-  NVDA: 'NVDA',
-  TSLA: 'TSLA',
-  META: 'META',
-  NFLX: 'NFLX',
-  AMD: 'AMD',
-  INTC: 'INTC',
-  ORCL: 'ORCL',
-  IBM: 'IBM',
-  JPM: 'JPM',
-  V: 'V',
-  WMT: 'WMT',
-  DIS: 'DIS',
-  BABA: 'BABA',
-  TSM: 'TSM',
-
-  // ETFs
-  SPY: 'SPY',
-  QQQ: 'QQQ',
-  DIA: 'DIA',
-  IWM: 'IWM',
-
-  // Crypto, commodities and forex
-  'BTC-USD': 'BTC-USD',
-  'ETH-USD': 'ETH-USD',
-  'GC=F': 'GC=F',
-  'SI=F': 'SI=F',
-  'CL=F': 'CL=F',
-  'EURUSD=X': 'EURUSD=X',
-  'GBPUSD=X': 'GBPUSD=X',
-  'USDJPY=X': 'USDJPY=X'
-});
-
-const MAX_BODY_CHARS = 40000;
-const CHAT_MODEL =
-  process.env.GEMINI_CHAT_MODEL || 'gemini-3.1-flash-lite';
-const TTS_MODEL =
-  process.env.GEMINI_TTS_MODEL || 'gemini-3.1-flash-tts-preview';
-
-function send(res, status, data) {
-  res.statusCode = status;
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
-  res.setHeader('Cache-Control', 'no-store');
-  return res.end(JSON.stringify(data));
+async function api(payload){
+ const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(payload)});
+ const raw=await r.text();let d;
+ try{d=JSON.parse(raw)}catch(e){throw Error('Server returned a non-JSON response (HTTP '+r.status+').')}
+ if(!r.ok||d.error||d.success===false)throw Error(d.error||d.message||('Request failed: '+r.status));
+ return d;
 }
-
-function timeoutSignal(ms) {
-  return AbortSignal.timeout(ms);
+function reply(d){return d.reply??d.text??d.content??d.result??JSON.stringify(d,null,2)}
+async function ask(text,target,btn){
+ if(!text.trim()){$(target).textContent='Please enter a message first.';return null}
+ btn.disabled=true;const old=btn.textContent;btn.textContent='Working…';$(target).textContent='Contacting AI server…';statusText('Request in progress');
+ try{const d=await api({action:'chat',message:text});const out=String(reply(d));$(target).textContent=out;log('AI request completed');statusText('Ready');return out}
+ catch(e){$(target).textContent='Error: '+e.message;statusText('Request failed');log('AI request failed');return null}
+ finally{btn.disabled=false;btn.textContent=old}
 }
+$('ask').onclick=()=>ask($('question').value,'answer',$('ask'));
+$('generate').onclick=async()=>{
+ const topic=$('topic').value.trim();if(!topic){$('contentResult').textContent='Enter a topic first.';return}
+ const prompt='Create an original '+$('duration').value+' short video package for '+$('platform').value+'. Topic: '+topic+'. Include title, hook, spoken script, at least 3 scene suggestions, on-screen text, caption, call to action, hashtags, thumbnail text and description.';
+ const out=await ask(prompt,'contentResult',$('generate'));if(out){$('script').value=out;$('vtitle').value=topic}
+};
+$('save').onclick=()=>{
+ const c=$('contentResult').textContent.trim();if(!c||c==='Your content package appears here.'||c.startsWith('Error:'))return alert('Generate content first.');
+ saved.unshift({title:$('topic').value.trim()||'Saved content',content:c,time:new Date().toLocaleString()});saved=saved.slice(0,100);store(KEY.saved,saved);renderSaved();log('Content saved');
+};
+$('copy').onclick=async()=>{try{await navigator.clipboard.writeText($('contentResult').textContent);alert('Copied')}catch(e){alert('Select and copy the text manually.')}};
+$('toVideo').onclick=()=>{const c=$('contentResult').textContent;if(!c||c.startsWith('Error:')||c==='Your content package appears here.')return alert('Generate content first.');$('script').value=c;$('vtitle').value=$('topic').value;page('video');prepare()};
 
-async function readJsonResponse(response, label) {
-  const raw = await response.text();
-  let data;
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function renderSaved(){
+ $('savedCount').textContent=saved.length;
+ $('savedList').innerHTML=saved.map((v,i)=>'<div class="item"><strong>'+esc(v.title)+'</strong><p>'+esc(v.time||'')+'</p><div>'+esc(v.content)+'</div><button data-delete="'+i+'">Delete</button></div>').join('')||'No saved content yet.';
+ $('savedList').querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>{saved.splice(+b.dataset.delete,1);store(KEY.saved,saved);renderSaved()});
+}
+function renderLog(){
+ $('activityCount').textContent=logs.length;
+ $('log').innerHTML=logs.map(v=>'<div class="item">'+esc(v.time)+'<br>'+esc(v.message)+'</div>').join('')||'No activity yet.';
+ $('recent').innerHTML=logs.slice(0,5).map(v=>'<div class="item">'+esc(v.message)+'</div>').join('')||'No recent activity.';
+}
+$('clearLog').onclick=()=>{if(!confirm('Clear the activity log?'))return;logs=[];store(KEY.log,logs);renderLog()};
 
+function colors(){
+ switch($('theme').value){
+ case 'green':return ['#092d25','#a4e6a0'];
+ case 'sunset':return ['#51254c','#ffad72'];
+ case 'black':return ['#05070d','#ffffff'];
+ default:return ['#09152f','#83a2ff'];
+ }
+}
+function wrap(ctx,text,width){
+ const lines=[];let line='';
+ String(text).split(/\s+/).forEach(w=>{const test=line?line+' '+w:w;if(ctx.measureText(test).width>width&&line){lines.push(line);line=w}else line=test});
+ if(line)lines.push(line);return lines;
+}
+function prepare(){
+ scenes=$('script').value.trim().split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean).slice(0,6);
+ if(!scenes.length){$('videoStatus').textContent='Enter a script first.';return}
+ sceneImages=[];$('imageGallery').innerHTML='';sceneIndex=0;draw();$('videoStatus').textContent='Prepared '+scenes.length+' scenes. Tap Generate Scene Images to create visual backgrounds.';log('Video scenes prepared');
+}
+async function generateSceneImages(){
+ if(!scenes.length)prepare();
+ if(!scenes.length||imageBusy)return;
+ imageBusy=true;const btn=$('makeImages');btn.disabled=true;btn.textContent='Generating…';sceneImages=[];$('imageGallery').innerHTML='';
+ try{
+  for(let i=0;i<scenes.length;i++){
+   $('videoStatus').textContent='Generating image '+(i+1)+' of '+scenes.length+'…';
+   const prompt='Create a polished cinematic vertical 9:16 video still for this short-video scene. Scene description: '+scenes[i]+'. Video title/topic: '+($('vtitle').value||'inspirational short video')+'. Style: realistic cinematic photography, clear subject, no text, no logos, visually striking composition. Maintain a consistent visual style and, when a person is described, a consistent fictional adult character across scenes.';
+   const d=await api({action:'generate_image',prompt});
+   if(!d.image||!d.mimeType)throw Error(d.error||'Image service returned no image for scene '+(i+1)+'.');
+   const img=new Image();img.src='data:'+d.mimeType+';base64,'+d.image;
+   await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(Error('Could not load generated scene image.'))});
+   sceneImages[i]=img;
+   const card=document.createElement('div');card.className='item';const thumb=document.createElement('img');thumb.src=img.src;thumb.alt='Generated image for scene '+(i+1);thumb.style.cssText='width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:8px';const cap=document.createElement('small');cap.textContent='Scene '+(i+1);card.append(thumb,cap);$('imageGallery').appendChild(card);
+   if(i===sceneIndex)draw();
+  }
+  $('videoStatus').textContent='Generated '+sceneImages.length+' scene images. Preview and render your video.';log('Scene images generated');
+ }catch(e){$('videoStatus').textContent='Image generation failed: '+e.message+' You can still render the text-based video.';log('Scene image generation failed')}
+ finally{imageBusy=false;btn.disabled=false;btn.textContent='Generate Scene Images'}
+}
+function draw(){
+ const c=$('canvas'),ctx=c.getContext('2d'),W=c.width,H=c.height;
+ const [bg,accent]=colors(),txt=scenes[sceneIndex]||'Enter a script and prepare scenes.',title=$('vtitle').value||'My Video';
+ ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+ const img=sceneImages[sceneIndex];
+ if(img){const scale=Math.max(W/img.width,H/img.height),iw=img.width*scale,ih=img.height*scale;ctx.drawImage(img,(W-iw)/2,(H-ih)/2,iw,ih);ctx.fillStyle='rgba(0,0,0,.48)';ctx.fillRect(0,0,W,H)}
+ else {const g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,bg);g.addColorStop(1,'#050a16');ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}
+ ctx.strokeStyle=accent;ctx.lineWidth=2;ctx.strokeRect(14,14,W-28,H-28);
+ ctx.fillStyle=accent;ctx.font='bold 12px Arial';ctx.fillText('AI COMMAND CENTRE',28,45);
+ ctx.fillStyle='#fff';ctx.font='bold 25px Arial';const titleLines=wrap(ctx,title,300).slice(0,2);titleLines.forEach((s,i)=>ctx.fillText(s,28,100+i*32));
+ ctx.fillStyle=accent;ctx.fillRect(28,120+titleLines.length*28,300,2);
+ ctx.fillStyle='#fff';ctx.font='bold 22px Arial';const lines=wrap(ctx,txt,300).slice(0,8),start=Math.max(330,430-lines.length*22);lines.forEach((s,i)=>ctx.fillText(s,28,start+i*29));
+ ctx.fillStyle=accent;ctx.font='12px Arial';ctx.fillText('SCENE '+(sceneIndex+1)+' / '+Math.max(scenes.length,1),28,590);
+ $('sceneLabel').textContent='Scene '+(sceneIndex+1)+' of '+Math.max(scenes.length,1)+(img?' · Image ready':'');
+}
+$('makeImages').onclick=generateSceneImages;
+$('prepare').onclick=prepare;
+$('previous').onclick=()=>{if(scenes.length){sceneIndex=Math.max(0,sceneIndex-1);draw()}};
+$('next').onclick=()=>{if(scenes.length){sceneIndex=Math.min(scenes.length-1,sceneIndex+1);draw()}};
+$('theme').onchange=draw;$('vtitle').oninput=draw;
+
+$('download').onclick=async()=>{
+ const btn=$('download');btn.disabled=true;
+ let audioContext=null,videoStream=null,recorder=null,timer=null,source=null,finished=false;
+ const stopTracks=()=>{if(videoStream)videoStream.getTracks().forEach(t=>t.stop())};
+ const cleanup=async()=>{stopTracks();if(audioContext&&audioContext.state!=='closed'){try{await audioContext.close()}catch(e){}}btn.disabled=false};
+ try{
+  if(!scenes.length)prepare();
+  if(!scenes.length)throw Error('Please enter a script and prepare scenes.');
+  if(!window.MediaRecorder||!$('canvas').captureStream)throw Error('Video recording is not supported in this browser.');
+  const scriptText=$('script').value.trim();if(!scriptText)throw Error('Enter a script first.');
+  $('videoStatus').textContent='Generating AI voiceover…';
+  const response=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({action:'tts',text:scriptText})});
+  const raw=await response.text();let data;
+  try{data=JSON.parse(raw)}catch(e){throw Error('The voice server did not return JSON. Check the Vercel deployment.')}
+  if(!response.ok||data.error||!data.audio)throw Error(data.error||'AI voice generation failed. Check the TTS API key and server logs.');
+  $('videoStatus').textContent='Preparing voice audio…';
+  const binary=atob(data.audio),bytes=new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+  audioContext=new(window.AudioContext||window.webkitAudioContext)();
+  await audioContext.resume();
+  const audioBuffer=await audioContext.decodeAudioData(bytes.buffer.slice(0));
+  if(!audioBuffer.duration||!audioBuffer.length)throw Error('The server returned empty audio.');
+  const destination=audioContext.createMediaStreamDestination();
+  source=audioContext.createBufferSource();source.buffer=audioBuffer;source.connect(destination);
+  videoStream=$('canvas').captureStream(10);
+  destination.stream.getAudioTracks().forEach(t=>videoStream.addTrack(t));
+  if(!videoStream.getAudioTracks().length)throw Error('Could not attach the voiceover audio track.');
+  const types=['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
+  const mimeType=types.find(t=>MediaRecorder.isTypeSupported(t));
+  recorder=new MediaRecorder(videoStream,mimeType?{mimeType}:undefined);
+  const chunks=[];
+  recorder.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+  recorder.onerror=async()=>{if(finished)return;finished=true;clearInterval(timer);$('videoStatus').textContent='The browser failed to record the video. Try Chrome.';await cleanup()};
+  recorder.onstop=async()=>{
+   if(finished)return;finished=true;clearInterval(timer);
+   try{
+    const blob=new Blob(chunks,{type:recorder.mimeType||'video/webm'});
+    if(!blob.size)throw Error('The recorded file is empty.');
+    const url=URL.createObjectURL(blob),link=document.createElement('a');
+    link.href=url;link.download=(($('vtitle').value||'ai-video').replace(/[^a-z0-9-_]/gi,'_'))+'.webm';
+    document.body.appendChild(link);link.click();link.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),60000);
+    $('videoStatus').textContent='Video export finished. Test the downloaded file with sound.';
+    log('Video export completed with audio track');
+   }catch(e){$('videoStatus').textContent='Export error: '+e.message}
+   await cleanup();
+  };
+  sceneIndex=0;draw();
+  const sceneMs=audioBuffer.duration*1000/Math.max(scenes.length,1);let next=1;
+  $('videoStatus').textContent='Recording video with AI voice…';
+  recorder.start(250);
+  timer=setInterval(()=>{if(next<scenes.length){sceneIndex=next++;draw()}},Math.max(500,sceneMs));
+  source.onended=()=>{clearInterval(timer);setTimeout(()=>{if(recorder&&recorder.state!=='inactive')recorder.stop()},800)};
+  source.start();
+ }catch(e){
+  clearInterval(timer);
+  if(recorder&&recorder.state!=='inactive'){try{recorder.stop()}catch(ignore){}}
+  $('videoStatus').textContent='Error: '+e.message;
+  if(!finished)await cleanup();
+ }
+};
+
+$('speak').onclick=()=>{
+ if(!('speechSynthesis'in window))return $('videoStatus').textContent='Browser voiceover is not supported.';
+ speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance($('script').value);
+ utterance.onend=()=>$('videoStatus').textContent='Browser voiceover finished.';
+ speechSynthesis.speak(utterance);$('videoStatus').textContent='Playing browser voiceover.';
+};
+$('stopVoice').onclick=()=>{if('speechSynthesis'in window)speechSynthesis.cancel();$('videoStatus').textContent='Voiceover stopped.'};
+
+$('market').onclick=async()=>{
+ const b=$('market');b.disabled=true;$('marketResult').textContent='Requesting market data…';
+ try{
+  const d=await api({action:'market_data',symbol:$('symbol').value});
+  $('marketResult').textContent=JSON.stringify(d,null,2);log('Market request completed');
+ }catch(e){$('marketResult').textContent='Market error: '+e.message;log('Market request failed')}
+ finally{b.disabled=false}
+};
+const STARTING_CASH = 100000;
+const portfolioKey = 'aicc_portfolio_state_v3';
+function loadPortfolioState() {
   try {
-    data = JSON.parse(raw);
-  } catch (_) {
-    throw new Error(
-      label + ' returned an invalid response (HTTP ' +
-      response.status + ').'
-    );
-  }
-
-  if (!response.ok) {
-    const message =
-      data?.error?.message ||
-      data?.message ||
-      label + ' request failed (HTTP ' + response.status + ').';
-
-    const error = new Error(message);
-    error.statusCode = response.status === 429 ? 429 : 502;
-    throw error;
-  }
-
-  return data;
+    const x = JSON.parse(localStorage.getItem(portfolioKey) || 'null');
+    if (x && typeof x === 'object' && Array.isArray(x.trades)) {
+      trades = x.trades;
+      return;
+    }
+  } catch (e) {}
+  // The older simulator accepted orders without cash checks, so its ledger may
+  // be inconsistent. Preserve it as an archive and start a clean, balanced ledger.
+  try {
+    if (trades.length && !localStorage.getItem('aicc_legacy_trades_archive_v1')) {
+      localStorage.setItem('aicc_legacy_trades_archive_v1', JSON.stringify(trades));
+    }
+  } catch (e) {}
+  trades = [];
+  store(KEY.trades, trades);
+  store(portfolioKey, {trades});
 }
-
-function extractGeminiText(data) {
-  return (data?.candidates?.[0]?.content?.parts || [])
-    .map(part => part.text || '')
-    .join('')
-    .trim();
+function savePortfolioState() {
+  store(portfolioKey, {trades});
 }
-
-function pcmToWavBase64(
-  base64Pcm,
-  sampleRate = 24000,
-  channels = 1,
-  bitsPerSample = 16
-) {
-  const pcm = Buffer.from(base64Pcm, 'base64');
-  const header = Buffer.alloc(44);
-  const byteRate = sampleRate * channels * bitsPerSample / 8;
-  const blockAlign = channels * bitsPerSample / 8;
-
-  header.write('RIFF', 0);
-  header.writeUInt32LE(36 + pcm.length, 4);
-  header.write('WAVE', 8);
-  header.write('fmt ', 12);
-  header.writeUInt32LE(16, 16);
-  header.writeUInt16LE(1, 20);
-  header.writeUInt16LE(channels, 22);
-  header.writeUInt32LE(sampleRate, 24);
-  header.writeUInt32LE(byteRate, 28);
-  header.writeUInt16LE(blockAlign, 32);
-  header.writeUInt16LE(bitsPerSample, 34);
-  header.write('data', 36);
-  header.writeUInt32LE(pcm.length, 40);
-
-  return Buffer.concat([header, pcm]).toString('base64');
-}
-
-async function getMarketData(symbol) {
-  const key = String(symbol || '').trim().toUpperCase();
-  const yahooSymbol = SYMBOLS[key];
-
-  if (!yahooSymbol) {
-    const error = new Error(
-      'Unsupported symbol. Choose an instrument listed in the Market Monitor.'
-    );
-    error.statusCode = 400;
-    throw error;
-  }
-
-  const url =
-    'https://query1.finance.yahoo.com/v8/finance/chart/' +
-    encodeURIComponent(yahooSymbol) +
-    '?range=5d&interval=1d';
-
-  const response = await fetch(url, {
-    headers: {
-      Accept: 'application/json',
-      'User-Agent': 'Mozilla/5.0 AICommandCentre/1.0'
-    },
-    signal: timeoutSignal(12000)
+function calculatePortfolio() {
+  let cash = STARTING_CASH;
+  let realised = 0;
+  const positions = {};
+  // Replay oldest-to-newest so BUY/SELL cash and holdings remain consistent.
+  trades.slice().reverse().forEach(t => {
+    const symbol = String(t.symbol || '');
+    const qty = Number(t.qty);
+    const price = Number(t.price);
+    if (!symbol || !Number.isInteger(qty) || qty <= 0 || !Number.isFinite(price) || price <= 0) return;
+    if (!positions[symbol]) positions[symbol] = {qty: 0, cost: 0};
+    const p = positions[symbol];
+    if (t.side === 'BUY') {
+      cash -= qty * price;
+      p.cost += qty * price;
+      p.qty += qty;
+    } else if (t.side === 'SELL' && p.qty >= qty) {
+      const avg = p.qty ? p.cost / p.qty : 0;
+      cash += qty * price;
+      realised += (price - avg) * qty;
+      p.cost -= avg * qty;
+      p.qty -= qty;
+      if (Math.abs(p.cost) < 0.000001) p.cost = 0;
+    }
   });
-
-  const data = await readJsonResponse(response, 'Market data provider');
-  const result = data?.chart?.result?.[0];
-
-  if (!result) {
-    throw new Error(
-      data?.chart?.error?.description ||
-      'No market data was returned for ' + key + '.'
-    );
-  }
-
-  const meta = result.meta || {};
-  const quotes = result.indicators?.quote?.[0] || {};
-  const closes = (quotes.close || []).filter(Number.isFinite);
-
-  const current = Number.isFinite(meta.regularMarketPrice)
-    ? meta.regularMarketPrice
-    : closes.at(-1);
-
-  const previous = Number.isFinite(meta.chartPreviousClose)
-    ? meta.chartPreviousClose
-    : Number.isFinite(meta.previousClose)
-      ? meta.previousClose
-      : closes.at(-2);
-
-  if (!Number.isFinite(current)) {
-    throw new Error('The provider returned no usable price for ' + key + '.');
-  }
-
-  const change = Number.isFinite(previous)
-    ? current - previous
-    : null;
-
-  return {
-    success: true,
-    symbol: key,
-    providerSymbol: yahooSymbol,
-    name: meta.longName || meta.shortName || key,
-    price: current,
-    currency: meta.currency || 'Unknown',
-    exchange: meta.exchangeName || null,
-    previousClose: Number.isFinite(previous) ? previous : null,
-    change,
-    changePercent:
-      Number.isFinite(previous) && previous !== 0
-        ? change / previous * 100
-        : null,
-    marketState: meta.marketState || 'UNKNOWN',
-    asOf: meta.regularMarketTime
-      ? new Date(meta.regularMarketTime * 1000).toISOString()
-      : null,
-    disclaimer:
-      'Market data may be delayed or unavailable. Not financial advice.'
-  };
+  return {cash, realised, positions};
 }
-
-async function generateChat(message, conversation) {
-  const apiKey = process.env.GEMINI_API_KEY;
-
-  if (!apiKey) {
-    const error = new Error(
-      'Missing GEMINI_API_KEY in Vercel Project Settings → Environment Variables.'
-    );
-    error.statusCode = 503;
-    throw error;
-  }
-
-  const history = Array.isArray(conversation)
-    ? conversation.slice(-12).map(item => {
-        const role =
-          item?.role === 'model' || item?.role === 'assistant'
-            ? 'model'
-            : 'user';
-
-        return {
-          role,
-          parts: [{
-            text: String(item?.content ?? item?.text ?? '').slice(0, 8000)
-          }]
-        };
-      }).filter(item => item.parts[0].text.trim())
-    : [];
-
-  const contents = [
-    ...history,
-    { role: 'user', parts: [{ text: message }] }
-  ];
-
-  const response = await fetch(
-    'https://generativelanguage.googleapis.com/v1beta/models/' +
-    encodeURIComponent(CHAT_MODEL) +
-    ':generateContent?key=' + encodeURIComponent(apiKey),
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents,
-        generationConfig: {
-          temperature: 0.75,
-          maxOutputTokens: 4096
-        }
-      }),
-      signal: timeoutSignal(45000)
-    }
-  );
-
-  const data = await readJsonResponse(response, 'Gemini AI');
-  const reply = extractGeminiText(data);
-
-  if (!reply) {
-    throw new Error(
-      'The AI returned an empty response. Please try again.'
-    );
-  }
-
-  return { success: true, reply, model: CHAT_MODEL };
+function money(n) {
+  return '₹' + Number(n).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 }
-
-async function generateTts(text) {
-  const apiKey = process.env.GEMINI_API_KEY;
-
-  if (!apiKey) {
-    const error = new Error(
-      'Missing GEMINI_API_KEY in Vercel Project Settings → Environment Variables.'
-    );
-    error.statusCode = 503;
-    throw error;
-  }
-
-  const response = await fetch(
-    'https://generativelanguage.googleapis.com/v1beta/models/' +
-    encodeURIComponent(TTS_MODEL) +
-    ':generateContent?key=' + encodeURIComponent(apiKey),
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text:
-              'Read the following script clearly and naturally. ' +
-              'Do not add any words before or after it.\n\n' + text
-          }]
-        }],
-        generationConfig: {
-          responseModalities: ['AUDIO'],
-          speechConfig: {
-            voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: 'Kore' }
-            }
-          }
-        }
-      }),
-      signal: timeoutSignal(60000)
-    }
-  );
-
-  const data = await readJsonResponse(response, 'Gemini text-to-speech');
-  const parts = data?.candidates?.[0]?.content?.parts || [];
-  const audioPart = parts.find(part => part.inlineData?.data);
-
-  if (!audioPart) {
-    throw new Error(
-      'TTS returned no audio. Check whether the selected Gemini TTS model is enabled.'
-    );
-  }
-
-  const mime = audioPart.inlineData.mimeType || 'audio/L16;rate=24000';
-  const match = mime.match(/rate=(\d+)/i);
-  const sampleRate = match ? Number(match[1]) : 24000;
-  const wav = pcmToWavBase64(audioPart.inlineData.data, sampleRate);
-
-  return {
-    success: true,
-    audio: wav,
-    mimeType: 'audio/wav',
-    model: TTS_MODEL
-  };
+function renderPortfolio() {
+  const portfolio = calculatePortfolio();
+  $('virtualCash').textContent = money(portfolio.cash);
+  $('holdingCount').textContent = Object.values(portfolio.positions).filter(p => p.qty > 0).length;
+  $('realisedPL').textContent = money(portfolio.realised);
+  $('openPositions').innerHTML = Object.entries(portfolio.positions)
+    .filter(([symbol, p]) => p.qty > 0)
+    .map(([symbol, p]) => '<div class="item"><strong>' + esc(symbol) + '</strong><br>Quantity: ' + p.qty +
+      '<br>Average cost: ' + money(p.cost / p.qty) + '</div>').join('') || 'No open positions yet.';
 }
-
-module.exports = async function handler(req, res) {
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
-    return send(res, 405, {
-      success: false,
-      error: 'Method not allowed. Use POST.'
-    });
+function renderTrades() {
+  $('trades').innerHTML = trades.map(t =>
+    '<div class="item"><strong>' + esc(t.side) + ' ' + esc(t.qty) + ' ' + esc(t.symbol) +
+    '</strong><br>' + money(t.price) + ' · Total ' + money(t.total) +
+    '<br><small>' + esc(t.time || '') + '</small></div>'
+  ).join('') || 'No simulated orders.';
+}
+$('trade').onclick = () => {
+  const btn = $('trade');
+  if (btn.disabled) return;
+  const symbol = $('tsymbol').value;
+  const side = $('side').value;
+  const qty = Number($('qty').value);
+  const price = Number($('price').value);
+  const result = $('tradeResult');
+  if (!Number.isInteger(qty) || qty < 1 || !Number.isFinite(price) || price <= 0) {
+    result.textContent = 'Order rejected: enter a whole quantity of at least 1 and a valid positive test price.';
+    return;
   }
-
-  try {
-    let body = req.body;
-
-    if (typeof body === 'string') {
-      if (body.length > MAX_BODY_CHARS) {
-        return send(res, 413, {
-          success: false,
-          error: 'Request is too large.'
-        });
-      }
-
-      try {
-        body = JSON.parse(body);
-      } catch (_) {
-        return send(res, 400, {
-          success: false,
-          error: 'Request body must be valid JSON.'
-        });
-      }
-    }
-
-    if (!body || typeof body !== 'object' || Array.isArray(body)) {
-      return send(res, 400, {
-        success: false,
-        error: 'Request body must be a JSON object.'
-      });
-    }
-
-    if (Buffer.byteLength(JSON.stringify(body), 'utf8') > MAX_BODY_CHARS) {
-      return send(res, 413, {
-        success: false,
-        error: 'Request is too large.'
-      });
-    }
-
-    const action = String(body.action || 'chat').trim().toLowerCase();
-
-    if (action === 'market_data') {
-      return send(res, 200, await getMarketData(body.symbol));
-    }
-
-    if (action === 'paper_trade') {
-      // This endpoint only validates simulated orders.
-      // It never connects to a broker or places real trades.
-      const symbol = String(body.symbol || '')
-        .trim()
-        .toUpperCase()
-        .slice(0, 32);
-
-      const side = String(body.side || '').toUpperCase();
-      const quantity = Number(body.quantity ?? body.qty);
-      const price = Number(body.price);
-      const total = quantity * price;
-
-      if (
-        !/^[A-Z0-9.^=\-]{1,32}$/.test(symbol) ||
-        !['BUY', 'SELL'].includes(side) ||
-        !Number.isSafeInteger(quantity) ||
-        quantity < 1 ||
-        !Number.isFinite(price) ||
-        price <= 0 ||
-        !Number.isFinite(total)
-      ) {
-        return send(res, 400, {
-          success: false,
-          error:
-            'Invalid simulated order. Provide a symbol, BUY/SELL, ' +
-            'positive whole quantity and positive price.'
-        });
-      }
-
-      return send(res, 200, {
-        success: true,
-        simulated: true,
-        message: 'Simulation only. No real order was sent.',
-        order: {
-          symbol,
-          side,
-          quantity,
-          price,
-          total,
-          createdAt: new Date().toISOString()
-        }
-      });
-    }
-
-    if (action === 'tts') {
-      const text = String(body.text || '').trim();
-
-      if (!text) {
-        return send(res, 400, {
-          success: false,
-          error: 'Text is required for voice generation.'
-        });
-      }
-
-      if (text.length > 8000) {
-        return send(res, 413, {
-          success: false,
-          error: 'Voiceover text is too long. Keep it under 8,000 characters.'
-        });
-      }
-
-      return send(res, 200, await generateTts(text));
-    }
-
-    if (['chat', 'generate', 'content'].includes(action)) {
-      const message = String(body.message || body.prompt || '').trim();
-
-      if (!message) {
-        return send(res, 400, {
-          success: false,
-          error: 'Please provide a message.'
-        });
-      }
-
-      if (message.length > 20000) {
-        return send(res, 413, {
-          success: false,
-          error: 'Message is too long.'
-        });
-      }
-
-      return send(
-        res,
-        200,
-        await generateChat(message, body.conversation)
-      );
-    }
-
-    return send(res, 400, {
-      success: false,
-      error:
-        'Unknown action. Supported actions: chat, market_data, tts, paper_trade.'
-    });
-  } catch (error) {
-    const status =
-      Number.isInteger(error.statusCode)
-        ? error.statusCode
-        : error.name === 'TimeoutError' || error.name === 'AbortError'
-          ? 504
-          : 502;
-
-    // Do not log request bodies or API keys.
-    console.error('[api/chat]', error?.message || 'Request failed');
-
-    return send(res, status, {
-      success: false,
-      error: error?.message || 'Server request failed.'
-    });
+  const total = qty * price;
+  if (!Number.isFinite(total) || total <= 0) {
+    result.textContent = 'Order rejected: total value is invalid.';
+    return;
   }
+  const portfolio = calculatePortfolio();
+  if (side === 'BUY' && total > portfolio.cash + 0.000001) {
+    result.textContent = 'Order rejected: insufficient virtual cash. Available: ' + money(portfolio.cash) + '. Order total: ' + money(total) + '.';
+    return;
+  }
+  const holding = portfolio.positions[symbol] || {qty: 0, cost: 0};
+  if (side === 'SELL' && qty > holding.qty) {
+    result.textContent = 'Order rejected: insufficient holdings of ' + symbol + '. Available units: ' + holding.qty + '.';
+    return;
+  }
+  const order = {symbol, side, qty, price, total, time: new Date().toLocaleString()};
+  trades.unshift(order);
+  // Keep the full ledger for correct portfolio replay; cap at a high safety limit.
+  if (trades.length > 2000) {
+    trades = trades.slice(0, 2000);
+    result.textContent = 'Older orders were trimmed from this browser ledger. Portfolio replay may no longer include the earliest trades.';
+  } else {
+    result.textContent = 'SIMULATED ONLY\\n' + side + ' ' + qty + ' ' + symbol +
+      '\\nTest price: ' + money(price) + '\\nTotal: ' + money(total);
+  }
+  store(KEY.trades, trades);
+  savePortfolioState();
+  renderTrades();
+  renderPortfolio();
+  log('Paper order simulated: ' + side + ' ' + qty + ' ' + symbol + ' at ' + money(price));
 };
-
-module.exports._test = {
-  SYMBOLS,
-  pcmToWavBase64,
-  extractGeminiText
+$('resetPortfolio').onclick = () => {
+  if (!confirm('Reset virtual portfolio to ₹100,000 and delete this browser’s simulated order history? This cannot be undone.')) return;
+  trades = [];
+  store(KEY.trades, trades);
+  savePortfolioState();
+  renderTrades();
+  renderPortfolio();
+  $('tradeResult').textContent = 'Virtual portfolio reset. Starting cash: ' + money(STARTING_CASH) + '.';
+  log('Virtual portfolio reset');
 };
+loadPortfolioState();
+renderSaved();renderLog();renderTrades();renderPortfolio();draw();
+</script>
+</body>
+</html>
