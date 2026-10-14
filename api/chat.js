@@ -5,143 +5,230 @@ module.exports = async function handler(req, res) {
 
   const key = process.env.GEMINI_API_KEY;
   if (!key) {
-    return res.status(500).json({ error: "GEMINI_API_KEY is missing in Vercel Environment Variables." });
+    return res.status(500).json({
+      error: "GEMINI_API_KEY is missing in Vercel Environment Variables."
+    });
   }
 
   try {
-    const { action = "chat", message, text, prompt, symbol } = req.body || {};
+    const {
+      action = "chat",
+      message,
+      text,
+      prompt,
+      symbol
+    } = req.body || {};
 
-    async function gemini(model, body) {
+    // Current Gemini Interactions API.
+    async function interact(model, input, options = {}) {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+        "https://generativelanguage.googleapis.com/v1beta/interactions",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body)
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": key
+          },
+          body: JSON.stringify({
+            model,
+            input,
+            ...options
+          })
         }
       );
 
-      const data = await response.json();
+      const raw = await response.text();
+      let data;
+
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        throw new Error(
+          "Google AI returned a non-JSON response (HTTP " +
+          response.status + ")."
+        );
+      }
 
       if (!response.ok) {
-        throw new Error(data.error?.message || `Gemini API error ${response.status}`);
+        throw new Error(
+          data.error?.message ||
+          data.message ||
+          "Google AI request failed (HTTP " + response.status + ")."
+        );
       }
 
       return data;
     }
 
-    if (action === "chat") {
-      if (!message || !String(message).trim()) {
-        return res.status(400).json({ error: "Message is required." });
+    // Collect output blocks from Interactions API responses.
+    function collectBlocks(value, result = [], depth = 0) {
+      if (!value || typeof value !== "object" || depth > 12) {
+        return result;
       }
 
-      const data = await gemini("gemini-2.5-flash", {
-        contents: [{
-          role: "user",
-          parts: [{ text: String(message) }]
-        }]
-      });
+      if (Array.isArray(value)) {
+        for (const item of value) {
+          collectBlocks(item, result, depth + 1);
+        }
+        return result;
+      }
 
-      const reply = data.candidates?.[0]?.content?.parts
-        ?.map(part => part.text || "")
-        .join("")
-        .trim();
+      if (typeof value.data === "string" &&
+          (value.type === "image" ||
+           value.type === "audio" ||
+           value.mime_type ||
+           value.mimeType)) {
+        result.push(value);
+      }
 
-      if (!reply) throw new Error("The AI returned no text.");
+      for (const [name, child] of Object.entries(value)) {
+        if (name === "data" || name === "output_text") continue;
+        if (child && typeof child === "object") {
+          collectBlocks(child, result, depth + 1);
+        }
+      }
+
+      return result;
+    }
+
+    function collectText(value, result = [], depth = 0) {
+      if (!value || typeof value !== "object" || depth > 12) {
+        return result;
+      }
+
+      if (Array.isArray(value)) {
+        for (const item of value) {
+          collectText(item, result, depth + 1);
+        }
+        return result;
+      }
+
+      if (value.type === "text" && typeof value.text === "string") {
+        result.push(value.text);
+      }
+
+      for (const [name, child] of Object.entries(value)) {
+        if (name === "data" || name === "output_text") continue;
+        if (child && typeof child === "object") {
+          collectText(child, result, depth + 1);
+        }
+      }
+
+      return result;
+    }
+
+    // 1. AI chat and content generation.
+    if (action === "chat") {
+      if (!message || !String(message).trim()) {
+        return res.status(400).json({
+          error: "Message is required."
+        });
+      }
+
+      const data = await interact(
+        "gemini-3.8-flash",
+        String(message).trim(),
+        { store: false }
+      );
+
+      const reply = (
+        data.output_text ||
+        collectText(data.steps || data.output || data).join("\n")
+      ).trim();
+
+      if (!reply) {
+        throw new Error("The AI returned no text. Please try again.");
+      }
+
       return res.status(200).json({ reply });
     }
 
+    // 2. Generate scene images for Video Studio.
     if (action === "generate_image") {
       if (!prompt || !String(prompt).trim()) {
-        return res.status(400).json({ error: "Image prompt is required." });
+        return res.status(400).json({
+          error: "Image prompt is required."
+        });
       }
 
-      const data = await gemini("gemini-2.5-flash-image", {
-        contents: [{
-          role: "user",
-          parts: [{
-            text: String(prompt) +
-              " Create one high-quality vertical 9:16 cinematic image. No written text or logos."
-          }]
-        }],
-        generationConfig: {
-          responseModalities: ["TEXT", "IMAGE"]
-        }
+      const data = await interact(
+        "gemini-nano-banana-2.1",
+        String(prompt).trim() +
+          " Create one high-quality vertical 9:16 cinematic image. " +
+          "Do not include written text, watermarks, or logos.",
+        { store: false }
+      );
+
+      const blocks = collectBlocks(data.steps || data.output || data);
+      const images = blocks.filter(block => {
+        const mime = block.mime_type || block.mimeType || "";
+        return block.type === "image" || mime.startsWith("image/");
       });
 
-      const parts = data.candidates?.[0]?.content?.parts || [];
-      const imagePart = parts.find(part => part.inlineData?.data);
+      const image = images[images.length - 1];
 
-      if (!imagePart) {
+      if (!image?.data) {
         throw new Error(
-          parts.map(part => part.text || "").filter(Boolean).join(" ") ||
-          "The image model returned no image. Check model availability for your API key."
+          "The image model returned no image. Check image-model access " +
+          "for your Gemini API key and try again."
         );
       }
 
       return res.status(200).json({
-        image: imagePart.inlineData.data,
-        mimeType: imagePart.inlineData.mimeType || "image/png"
+        image: image.data,
+        mimeType: image.mime_type || image.mimeType || "image/png"
       });
     }
 
+    // 3. AI voiceover for exported videos.
     if (action === "tts") {
       if (!text || !String(text).trim()) {
-        return res.status(400).json({ error: "Text is required for voiceover." });
+        return res.status(400).json({
+          error: "Text is required for voiceover."
+        });
       }
 
-      const data = await gemini("gemini-2.5-flash-preview-tts", {
-        contents: [{
-          parts: [{
-            text: "Read this script naturally and clearly for a short video: " +
-              String(text).slice(0, 8000)
-          }]
-        }],
-        generationConfig: {
-          responseModalities: ["AUDIO"],
-          speechConfig: {
-            voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: "Kore" }
-            }
+      const data = await interact(
+        "gemini-3.8-flash-tts",
+        String(text).trim().slice(0, 8000),
+        {
+          store: false,
+          response_format: { type: "audio" },
+          generation_config: {
+            speech_config: [{ voice: "Kore" }]
           }
         }
-      });
+      );
 
-      const parts = data.candidates?.[0]?.content?.parts || [];
-      const audioPart = parts.find(part => part.inlineData?.data);
+      const audioBlock =
+        data.output_audio ||
+        collectBlocks(data.steps || data.output || data).find(block => {
+          const mime = block.mime_type || block.mimeType || "";
+          return block.type === "audio" || mime.startsWith("audio/");
+        });
 
-      if (!audioPart) throw new Error("The voice model returned no audio.");
+      if (!audioBlock?.data) {
+        throw new Error(
+          "The voice model returned no audio. Please try again."
+        );
+      }
 
-      const pcm = Buffer.from(audioPart.inlineData.data, "base64");
-      const sampleRate = 24000;
-      const channels = 1;
-      const bitsPerSample = 16;
-      const byteRate = sampleRate * channels * bitsPerSample / 8;
-      const wav = Buffer.alloc(44 + pcm.length);
-
-      wav.write("RIFF", 0);
-      wav.writeUInt32LE(36 + pcm.length, 4);
-      wav.write("WAVE", 8);
-      wav.write("fmt ", 12);
-      wav.writeUInt32LE(16, 16);
-      wav.writeUInt16LE(1, 20);
-      wav.writeUInt16LE(channels, 22);
-      wav.writeUInt32LE(sampleRate, 24);
-      wav.writeUInt32LE(byteRate, 28);
-      wav.writeUInt16LE(channels * bitsPerSample / 8, 32);
-      wav.writeUInt16LE(bitsPerSample, 34);
-      wav.write("data", 36);
-      wav.writeUInt32LE(pcm.length, 40);
-      pcm.copy(wav, 44);
-
+      // The current non-streaming TTS API returns WAV audio.
       return res.status(200).json({
-        audio: wav.toString("base64"),
-        mimeType: "audio/wav"
+        audio: audioBlock.data,
+        mimeType: audioBlock.mime_type ||
+          audioBlock.mimeType ||
+          "audio/wav"
       });
     }
 
+    // 4. Market data. No live-trading connection.
     if (action === "market_data") {
-      if (!symbol) return res.status(400).json({ error: "Symbol is required." });
+      if (!symbol) {
+        return res.status(400).json({
+          error: "Symbol is required."
+        });
+      }
 
       const symbols = {
         NIFTY: "^NSEI",
@@ -155,22 +242,38 @@ module.exports = async function handler(req, res) {
       };
 
       const ticker = symbols[symbol] || symbol;
+
       if (!/^[A-Za-z0-9.^=-]{1,30}$/.test(ticker)) {
-        return res.status(400).json({ error: "Invalid market symbol." });
+        return res.status(400).json({
+          error: "Invalid market symbol."
+        });
       }
 
       const url =
         "https://query1.finance.yahoo.com/v8/finance/chart/" +
-        encodeURIComponent(ticker) + "?range=5d&interval=1d";
+        encodeURIComponent(ticker) +
+        "?range=5d&interval=1d";
 
       const response = await fetch(url, {
         headers: { "User-Agent": "Mozilla/5.0" }
       });
-      const data = await response.json();
+
+      const raw = await response.text();
+      let data;
+
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        throw new Error("Market provider returned invalid data.");
+      }
+
       const result = data.chart?.result?.[0];
 
       if (!response.ok || !result) {
-        throw new Error(data.chart?.error?.description || "Market data is unavailable.");
+        throw new Error(
+          data.chart?.error?.description ||
+          "Market data is unavailable for " + ticker + "."
+        );
       }
 
       const meta = result.meta || {};
@@ -182,7 +285,8 @@ module.exports = async function handler(req, res) {
         throw new Error("No recent price was returned for this symbol.");
       }
 
-      const previous = meta.chartPreviousClose ??
+      const previous =
+        meta.chartPreviousClose ??
         meta.previousClose ??
         closes.at(-2) ??
         latest;
@@ -194,26 +298,45 @@ module.exports = async function handler(req, res) {
         price: latest,
         previousClose: previous,
         change: latest - previous,
-        changePercent: previous ? ((latest - previous) / previous) * 100 : 0,
+        changePercent: previous
+          ? ((latest - previous) / previous) * 100
+          : 0,
         marketTime: meta.regularMarketTime || null,
         source: "Yahoo Finance",
         delayed: true
       });
     }
 
+    // 5. Simulation only. Never sends a real order.
     if (action === "paper_trade") {
-      const { side, quantity, price: tradePrice } = req.body || {};
+      const {
+        side,
+        quantity,
+        price: tradePrice
+      } = req.body || {};
 
       if (!["BUY", "SELL"].includes(side)) {
-        return res.status(400).json({ error: "Side must be BUY or SELL." });
+        return res.status(400).json({
+          error: "Side must be BUY or SELL."
+        });
       }
 
-      if (!Number.isInteger(Number(quantity)) || Number(quantity) < 1) {
-        return res.status(400).json({ error: "Quantity must be a positive whole number." });
+      if (
+        !Number.isInteger(Number(quantity)) ||
+        Number(quantity) < 1
+      ) {
+        return res.status(400).json({
+          error: "Quantity must be a positive whole number."
+        });
       }
 
-      if (!Number.isFinite(Number(tradePrice)) || Number(tradePrice) <= 0) {
-        return res.status(400).json({ error: "Price must be greater than zero." });
+      if (
+        !Number.isFinite(Number(tradePrice)) ||
+        Number(tradePrice) <= 0
+      ) {
+        return res.status(400).json({
+          error: "Price must be greater than zero."
+        });
       }
 
       return res.status(200).json({
@@ -228,9 +351,12 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    return res.status(400).json({ error: "Unsupported action: " + action });
+    return res.status(400).json({
+      error: "Unsupported action: " + action
+    });
   } catch (error) {
     console.error("AI Command Centre API error:", error);
+
     return res.status(500).json({
       error: error.message || "The server request failed."
     });
