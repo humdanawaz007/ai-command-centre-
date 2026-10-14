@@ -209,7 +209,7 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // 3. AI voiceover for exported videos.
+        // 3. AI voiceover with fallback.
     if (action === "tts") {
       if (!text || !String(text).trim()) {
         return res.status(400).json({
@@ -217,17 +217,45 @@ module.exports = async function handler(req, res) {
         });
       }
 
-      const data = await interact(
+      let data;
+      let lastError;
+
+      for (const model of [
         "gemini-3.8-flash-tts",
-        String(text).trim().slice(0, 8000),
-        {
-          store: false,
-          response_format: { type: "audio" },
-          generation_config: {
-            speech_config: [{ voice: "Kore" }]
+        "gemini-3.8-flash-lite-tts"
+      ]) {
+        try {
+          data = await interact(
+            model,
+            String(text).trim().slice(0, 8000),
+            {
+              store: false,
+              response_format: { type: "audio" },
+              generation_config: {
+                speech_config: [{ voice: "Kore" }]
+              }
+            }
+          );
+          break;
+        } catch (error) {
+          lastError = error;
+          const msg = String(error.message || "").toLowerCase();
+          const temporary =
+            msg.includes("high demand") ||
+            msg.includes("overloaded") ||
+            msg.includes("unavailable") ||
+            msg.includes("429") ||
+            msg.includes("500") ||
+            msg.includes("503") ||
+            msg.includes("temporarily");
+
+          if (!temporary || model === "gemini-3.8-flash-lite-tts") {
+            throw error;
           }
         }
-      );
+      }
+
+      if (!data) throw lastError || new Error("Voiceover failed.");
 
       const audioBlock =
         data.output_audio ||
@@ -237,12 +265,9 @@ module.exports = async function handler(req, res) {
         });
 
       if (!audioBlock?.data) {
-        throw new Error(
-          "The voice model returned no audio. Please try again."
-        );
+        throw new Error("The voice model returned no audio.");
       }
 
-      // The current non-streaming TTS API returns WAV audio.
       return res.status(200).json({
         audio: audioBlock.data,
         mimeType: audioBlock.mime_type ||
