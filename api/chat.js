@@ -117,7 +117,7 @@ module.exports = async function handler(req, res) {
       return result;
     }
 
-    // 1. AI chat and content generation.
+        // 1. AI chat and content generation, with fallback.
     if (action === "chat") {
       if (!message || !String(message).trim()) {
         return res.status(400).json({
@@ -125,11 +125,40 @@ module.exports = async function handler(req, res) {
         });
       }
 
-      const data = await interact(
+      let data;
+      let lastError;
+
+      for (const model of [
         "gemini-3.8-flash",
-        String(message).trim(),
-        { store: false }
-      );
+        "gemini-3.5-flash-lite"
+      ]) {
+        try {
+          data = await interact(
+            model,
+            String(message).trim(),
+            { store: false }
+          );
+          break;
+        } catch (error) {
+          lastError = error;
+          const msg = String(error.message || "").toLowerCase();
+
+          const temporary =
+            msg.includes("high demand") ||
+            msg.includes("overloaded") ||
+            msg.includes("unavailable") ||
+            msg.includes("429") ||
+            msg.includes("500") ||
+            msg.includes("503") ||
+            msg.includes("temporarily");
+
+          if (!temporary || model === "gemini-3.5-flash-lite") {
+            throw error;
+          }
+        }
+      }
+
+      if (!data) throw lastError || new Error("AI request failed.");
 
       const reply = (
         data.output_text ||
