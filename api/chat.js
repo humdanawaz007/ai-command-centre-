@@ -172,40 +172,11 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ reply });
     }
 
-    // 2. Generate scene images for Video Studio.
+    
+    // 2. Image generation paused to avoid paid API usage.
     if (action === "generate_image") {
-      if (!prompt || !String(prompt).trim()) {
-        return res.status(400).json({
-          error: "Image prompt is required."
-        });
-      }
-
-      const data = await interact(
-        "gemini-nano-banana-2.1",
-        String(prompt).trim() +
-          " Create one high-quality vertical 9:16 cinematic image. " +
-          "Do not include written text, watermarks, or logos.",
-        { store: false }
-      );
-
-      const blocks = collectBlocks(data.steps || data.output || data);
-      const images = blocks.filter(block => {
-        const mime = block.mime_type || block.mimeType || "";
-        return block.type === "image" || mime.startsWith("image/");
-      });
-
-      const image = images[images.length - 1];
-
-      if (!image?.data) {
-        throw new Error(
-          "The image model returned no image. Check image-model access " +
-          "for your Gemini API key and try again."
-        );
-      }
-
-      return res.status(200).json({
-        image: image.data,
-        mimeType: image.mime_type || image.mimeType || "image/png"
+      return res.status(503).json({
+        error: "AI scene-image generation is temporarily paused to avoid paid API usage. Use Prepare Scenes and Render & Download for text-based videos."
       });
     }
 
