@@ -152,7 +152,12 @@ module.exports = async function handler(req, res) {
 
     if (!aiResponse.ok || typeof aiData.reply !== "string" ||
         !aiData.reply.trim()) {
-      throw new Error("AI draft generation failed.");
+      throw new Error(
+  "AI draft generation failed. HTTP " +
+  aiResponse.status +
+  ". " +
+  String(aiData.error || aiData.message || "No reply returned").slice(0, 300)
+);
     }
 
     const created = new Date().toISOString();
