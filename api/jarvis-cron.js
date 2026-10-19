@@ -52,7 +52,7 @@ error: "Task storage is not configured."
 
 try {
 const response = await fetch(
-redisUrl.replace(//+$/, ""),
+redisUrl.replace(/\/+$/, ""),
 {
 method: "POST",
 headers: {
