@@ -115,13 +115,6 @@ module.exports = async function handler(req, res) {
 
     const host = "ai-command-centre-plum.vercel.app";
 
-const aiResponse = await fetch(
-  "https://" + host + "/api/chat",
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
 
     const aiResponse = await fetch(
       "https://" + host + "/api/chat",
