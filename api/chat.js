@@ -180,6 +180,8 @@ async function interact(model, input, options = {}) {
           if (!temporary || model === "gemini-3.8-flash") {
   throw error;
 }
+        }
+      }
 
       if (!data) throw lastError || new Error("AI request failed.");
 
