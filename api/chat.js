@@ -154,9 +154,9 @@ async function interact(model, input, options = {}) {
       let lastError;
 
       for (const model of [
-        "gemini-3.8-flash",
-        "gemini-3.5-flash-lite"
-      ]) {
+  "gemini-3.5-flash-lite",
+  "gemini-3.8-flash"
+]) {
         try {
           data = await interact(
             model,
