@@ -245,26 +245,130 @@ function prepare(){
  if(!scenes.length){$('videoStatus').textContent='Enter a script first.';return}
  sceneImages=[];$('imageGallery').innerHTML='';sceneIndex=0;draw();$('videoStatus').textContent='Prepared '+scenes.length+' scenes. Tap Generate Scene Images to create visual backgrounds.';log('Video scenes prepared');
 }
-async function generateSceneImages(){
- if(!scenes.length)prepare();
- if(!scenes.length||imageBusy)return;
- imageBusy=true;const btn=$('makeImages');btn.disabled=true;btn.textContent='Generating…';sceneImages=[];$('imageGallery').innerHTML='';
- try{
-  for(let i=0;i<scenes.length;i++){
-   $('videoStatus').textContent='Generating image '+(i+1)+' of '+scenes.length+'…';
-   const prompt='Create a polished cinematic vertical 9:16 video still for this short-video scene. Scene description: '+scenes[i]+'. Video title/topic: '+($('vtitle').value||'inspirational short video')+'. Style: realistic cinematic photography, clear subject, no text, no logos, visually striking composition. Maintain a consistent visual style and, when a person is described, a consistent fictional adult character across scenes.';
-   const d=await api({action:'generate_image',prompt});
-   if(!d.image||!d.mimeType)throw Error(d.error||'Image service returned no image for scene '+(i+1)+'.');
-   const img=new Image();img.src='data:'+d.mimeType+';base64,'+d.image;
-   await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(Error('Could not load generated scene image.'))});
-   sceneImages[i]=img;
-   const card=document.createElement('div');card.className='item';const thumb=document.createElement('img');thumb.src=img.src;thumb.alt='Generated image for scene '+(i+1);thumb.style.cssText='width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:8px';const cap=document.createElement('small');cap.textContent='Scene '+(i+1);card.append(thumb,cap);$('imageGallery').appendChild(card);
-   if(i===sceneIndex)draw();
+
+async function generateSceneImages() {
+  if (!scenes.length) prepare();
+  if (!scenes.length || imageBusy) return;
+
+  imageBusy = true;
+  const btn = $('makeImages');
+  btn.disabled = true;
+  btn.textContent = 'Loading free images…';
+  sceneImages = [];
+  $('imageGallery').innerHTML = '';
+
+  const photoSets = [
+    {
+      words: ['mountain', 'nature', 'journey', 'never give up', 'motivation'],
+      urls: [
+        'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?auto=format&fit=crop&w=900&q=80'
+      ]
+    },
+    {
+      words: ['business', 'work', 'success', 'money', 'office'],
+      urls: [
+        'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=900&q=80'
+      ]
+    },
+    {
+      words: ['technology', 'computer', 'digital', 'ai', 'future'],
+      urls: [
+        'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=900&q=80',
+        'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=900&q=80'
+      ]
+    },
+    {
+      words: ['ocean', 'sea', 'water', 'peace', 'calm'],
+      urls: [
+        'https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=900&q=80'
+      ]
+    }
+  ];
+
+  const defaultPhotos = [
+    'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80',
+    'https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=900&q=80'
+  ];
+
+  let loaded = 0;
+
+  try {
+    for (let i = 0; i < scenes.length; i++) {
+      $('videoStatus').textContent =
+        'Loading free scene image ' + (i + 1) +
+        ' of ' + scenes.length + '…';
+
+      const description = (
+        scenes[i] + ' ' + ($('vtitle').value || '')
+      ).toLowerCase();
+
+      const matching = photoSets.find(set =>
+        set.words.some(word => description.includes(word))
+      );
+
+      const urls = matching ? matching.urls : defaultPhotos;
+      const url = urls[i % urls.length];
+
+      try {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.src = url;
+
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = () => reject(
+            new Error('Image could not be loaded')
+          );
+        });
+
+        sceneImages[i] = img;
+        loaded++;
+
+        const card = document.createElement('div');
+        card.className = 'item';
+
+        const thumb = document.createElement('img');
+        thumb.src = url;
+        thumb.alt = 'Background for scene ' + (i + 1);
+        thumb.style.cssText =
+          'width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:8px';
+
+        const caption = document.createElement('small');
+        caption.textContent = 'Scene ' + (i + 1);
+
+        card.append(thumb, caption);
+        $('imageGallery').appendChild(card);
+
+        if (i === sceneIndex) draw();
+      } catch (imageError) {
+        sceneImages[i] = null;
+      }
+    }
+
+    if (loaded > 0) {
+      $('videoStatus').textContent =
+        'Loaded ' + loaded + ' of ' + scenes.length +
+        ' free scene images. Preview and render your video.';
+      log('Free scene images loaded: ' + loaded);
+    } else {
+      $('videoStatus').textContent =
+        'Images could not load. Check your internet connection. ' +
+        'You can still render the text-based video.';
+    }
+
+    draw();
+  } catch (error) {
+    $('videoStatus').textContent =
+      'Scene image error: ' + error.message;
+  } finally {
+    imageBusy = false;
+    btn.disabled = false;
+    btn.textContent = 'Generate Scene Images';
   }
-  $('videoStatus').textContent='Generated '+sceneImages.length+' scene images. Preview and render your video.';log('Scene images generated');
- }catch(e){$('videoStatus').textContent='Image generation failed: '+e.message+' You can still render the text-based video.';log('Scene image generation failed')}
- finally{imageBusy=false;btn.disabled=false;btn.textContent='Generate Scene Images'}
 }
+ 
 function draw(){
  const c=$('canvas'),ctx=c.getContext('2d'),W=c.width,H=c.height;
  const [bg,accent]=colors(),txt=scenes[sceneIndex]||'Enter a script and prepare scenes.',title=$('vtitle').value||'My Video';
