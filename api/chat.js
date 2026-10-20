@@ -20,21 +20,69 @@ module.exports = async function handler(req, res) {
     } = req.body || {};
 
     // Current Gemini Interactions API.
-    async function interact(model, input, options = {}) {
-      const response = await fetch(
-        "https://generativelanguage.googleapis.com/v1beta/interactions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-goog-api-key": key
-          },
-          body: JSON.stringify({
-            model,
-            input,
-            ...options
-          })
-        }
+    
+async function interact(model, input, options = {}) {
+  let response;
+  let raw;
+
+  try {
+    response = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/interactions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": key
+        },
+        body: JSON.stringify({
+          model,
+          input,
+          ...options
+        }),
+        signal: AbortSignal.timeout(18000)
+      }
+    );
+
+    raw = await response.text();
+  } catch (error) {
+    if (
+      error.name === "TimeoutError" ||
+      error.name === "AbortError"
+    ) {
+      throw new Error(
+        "Google AI timed out after 18 seconds. Please try again."
+      );
+    }
+
+    throw new Error(
+      "Could not connect to Google AI: " +
+      (error.message || "Network error.")
+    );
+  }
+
+  let data;
+
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    throw new Error(
+      "Google AI returned a non-JSON response (HTTP " +
+      response.status + ")."
+    );
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      data.error?.message ||
+      data.message ||
+      "Google AI request failed (HTTP " +
+      response.status + ")."
+    );
+  }
+
+  return data;
+}
+
       );
 
       const raw = await response.text();
