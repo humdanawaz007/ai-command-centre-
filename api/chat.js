@@ -83,30 +83,7 @@ async function interact(model, input, options = {}) {
   return data;
 }
 
-      );
-
-      const raw = await response.text();
-      let data;
-
-      try {
-        data = JSON.parse(raw);
-      } catch {
-        throw new Error(
-          "Google AI returned a non-JSON response (HTTP " +
-          response.status + ")."
-        );
-      }
-
-      if (!response.ok) {
-        throw new Error(
-          data.error?.message ||
-          data.message ||
-          "Google AI request failed (HTTP " + response.status + ")."
-        );
-      }
-
-      return data;
-    }
+      
 
     // Collect output blocks from Interactions API responses.
     function collectBlocks(value, result = [], depth = 0) {
