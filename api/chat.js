@@ -177,11 +177,9 @@ async function interact(model, input, options = {}) {
             msg.includes("503") ||
             msg.includes("temporarily");
 
-          if (!temporary || model === "gemini-3.5-flash-lite") {
-            throw error;
-          }
-        }
-      }
+          if (!temporary || model === "gemini-3.8-flash") {
+  throw error;
+}
 
       if (!data) throw lastError || new Error("AI request failed.");
 
