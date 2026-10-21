@@ -39,7 +39,7 @@ async function interact(model, input, options = {}) {
           input,
           ...options
         }),
-        signal: AbortSignal.timeout(18000)
+        signal: AbortSignal.timeout(45000)
       }
     );
 
@@ -50,7 +50,7 @@ async function interact(model, input, options = {}) {
       error.name === "AbortError"
     ) {
       throw new Error(
-        "Google AI timed out after 18 seconds. Please try again."
+        "Google AI timed out after 45 seconds. Please try again."
       );
     }
 
